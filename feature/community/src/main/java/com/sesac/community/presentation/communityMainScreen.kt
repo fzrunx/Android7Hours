@@ -4,6 +4,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -32,6 +33,13 @@ import com.sesac.common.ui.theme.Android7HoursTheme
 
 //import com.sesac.common.ui.theme.Android7HoursTheme
 
+data class Post(
+    val id: Int,
+    val nickname: String,
+    val content: String,
+    val hashtag: String,
+    val imageUrl: String // 사진 URL (지금은 임시로 Text로 표시)
+)
 /**
  * 화면 전체의 레이아웃 (상단바, 하단바, FAB, 콘텐츠)
  */
@@ -40,8 +48,8 @@ import com.sesac.common.ui.theme.Android7HoursTheme
 fun CommunityMainScreen(modifier: Modifier = Modifier) {
     Scaffold(
         modifier = modifier,
-        topBar = { CommunityTopBar() },
-        bottomBar = { CommunityBottomNav() },
+//        topBar = { CommunityTopBar() },
+//        bottomBar = { CommunityBottomNav() },
         floatingActionButton = {
             FloatingActionButton(onClick = { /* TODO: 새 글 작성 로직 */ }) {
                 Icon(
@@ -71,22 +79,22 @@ fun CommunityMainScreen(modifier: Modifier = Modifier) {
 /**
  * 1. 상단 "Community" 타이틀 바
  */
-@Composable
-fun CommunityTopBar() {
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        color = Color(0xFFF5F5F5), // 이미지와 유사한 연한 회색
-        shadowElevation = 2.dp
-    ) {
-        Text(
-            text = "Community",
-            textAlign = TextAlign.Center,
-            modifier = Modifier.padding(vertical = 16.dp),
-            fontSize = 20.sp,
-            fontWeight = FontWeight.Bold
-        )
-    }
-}
+//@Composable
+//fun CommunityTopBar() {
+//    Surface(
+//        modifier = Modifier.fillMaxWidth(),
+//        color = Color(0xFFF5F5F5), // 이미지와 유사한 연한 회색
+//        shadowElevation = 2.dp
+//    ) {
+//        Text(
+//            text = "Community",
+//            textAlign = TextAlign.Center,
+//            modifier = Modifier.padding(vertical = 16.dp),
+//            fontSize = 20.sp,
+//            fontWeight = FontWeight.Bold
+//        )
+//    }
+//}
 
 /**
  * 2. "SNS" / "게시판" 탭 버튼
@@ -134,21 +142,26 @@ fun TabSection() {
  */
 @Composable
 fun PostFeed() {
+    // 1. 표시할 데이터 리스트를 준비합니다.
+    // (위에서 정의한 Post 데이터 클래스 사용)
+    val postList = listOf(
+        Post(1, "닉네임A", "사진에 대한 내용입니다.", "#해시태그1", "url_to_image_1"),
+        Post(2, "닉네임B", "산책로에 대한 내용입니다.", "#해시태그2 #산책", "url_to_image_2"),
+        Post(3, "닉네임C", "사진 + 산책로 내용입니다.", "#해시태그3", "url_to_image_3")
+    )
+
     // 스크롤 가능한 리스트
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
         verticalArrangement = Arrangement.spacedBy(24.dp) // 각 아이템 사이의 간격
     ) {
-        // 이미지와 같이 2개의 아이템을 임시로 추가
-        item { PostItem() }
-        item { PostItem() }
-
-        // (실제 앱에서는)
-        // val postList = ...
-        // items(postList) { post ->
-        //     PostItem(post)
-        // }
+        // 2. 기존 item { ... } 대신 items(postList) { ... } 를 사용합니다.
+        items(postList) { post ->
+            // postList에 있는 각 'post' 데이터에 대해
+            // PostItem Composable을 실행합니다.
+            PostItem(post = post) // PostItem에 데이터를 전달합니다.
+        }
     }
 }
 
@@ -156,7 +169,7 @@ fun PostFeed() {
  * 4. 개별 게시물 아이템
  */
 @Composable
-fun PostItem() {
+fun PostItem(post: Post) { // <-- (1) post: Post 파라미터를 받도록 수정
     Column(modifier = Modifier.fillMaxWidth()) {
         // 1. 프로필 영역 (아이콘 + 닉네임)
         Row(
@@ -170,7 +183,9 @@ fun PostItem() {
                     .background(Color(0xFF673AB7)) // 이미지의 보라색
             )
             Spacer(modifier = Modifier.width(8.dp))
-            Text("닉네임", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+
+            // (2) "닉네임" -> post.nickname 으로 수정
+            Text(post.nickname, fontWeight = FontWeight.Bold, fontSize = 16.sp)
         }
 
         // 2. 사진 영역
@@ -181,7 +196,8 @@ fun PostItem() {
                 .background(Color(0xFFEEEEEE)), // 연한 회색
             contentAlignment = Alignment.Center
         ) {
-            Text("사진", color = Color.Gray, fontSize = 24.sp)
+            // (3) 실제로는 AsyncImage(model = post.imageUrl, ...) 등을 사용
+            Text("사진 (${post.imageUrl})", color = Color.Gray, fontSize = 24.sp)
         }
 
         // 3. 아이콘 버튼 (좋아요, 저장, 댓글)
@@ -192,20 +208,22 @@ fun PostItem() {
             horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Icon(Icons.Outlined.FavoriteBorder, contentDescription = "좋아요")
-           /* Icon(Icons.Outlined.StarBorder, contentDescription = "저장")
+            /* Icon(Icons.Outlined.StarBorder, contentDescription = "저장")
             Icon(Icons.Outlined.ChatBubbleOutline, contentDescription = "댓글") */
         }
 
         // 4. 본문
         Text(
-            text = "사진에 대한 내용 or 산책로에 대한 내용 or 사진 + 산책로에 대한 내용",
+            // (4) 본문 텍스트 -> post.content 로 수정
+            text = post.content,
             fontSize = 14.sp,
             modifier = Modifier.padding(vertical = 8.dp)
         )
 
         // 5. 해시태그
         Text(
-            text = "# 해시태그 등등..",
+            // (5) 해시태그 텍스트 -> post.hashtag 로 수정
+            text = post.hashtag,
             fontSize = 14.sp,
             color = Color.Gray
         )

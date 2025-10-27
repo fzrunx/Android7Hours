@@ -29,21 +29,7 @@ fun CommunityCreateScreen() {
     var content by remember { mutableStateOf("") }
 
     Scaffold(
-        // 1. 상단 앱 바 (Top App Bar)
-        topBar = {
-            CenterAlignedTopAppBar(
-                title = { Text("Community detail") }, // 이미지의 제목
-                navigationIcon = {
-                    IconButton(onClick = { /* TODO: 닫기 동작 */ }) {
-                        Icon(Icons.Default.Close, contentDescription = "닫기")
-                    }
-                },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = Color.White // 배경 흰색
-                )
-            )
-        },
-        // 2. 하단 버튼 (Bottom Bar)
+        // 1. 하단 버튼 (Bottom Bar)
         bottomBar = {
             Button(
                 onClick = { /* TODO: 등록하기 동작 */ },
@@ -98,26 +84,6 @@ fun CommunityCreateScreen() {
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // '작성자' 입력 필드
-            TextField(
-                value = author,
-                onValueChange = { author = it },
-                modifier = Modifier.fillMaxWidth(),
-                placeholder = {
-                    Text(
-                        "작성자",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = Color.LightGray
-                    )
-                },
-                colors = TextFieldDefaults.textFieldColors(
-                    containerColor = Color.Transparent,
-                    focusedIndicatorColor = Color.Gray,
-                    unfocusedIndicatorColor = Color.LightGray
-                ),
-                singleLine = true,
-                textStyle = MaterialTheme.typography.bodyMedium
-            )
 
             Spacer(modifier = Modifier.height(24.dp))
 
@@ -148,7 +114,7 @@ fun CommunityCreateScreen() {
                     .heightIn(min = 200.dp), // 최소 높이 지정
                 placeholder = {
                     Text(
-                        "게시글 내용1\n게시글 내용2",
+                        "게시글 내용",
                         style = MaterialTheme.typography.bodyLarge,
                         color = Color.LightGray
                     )

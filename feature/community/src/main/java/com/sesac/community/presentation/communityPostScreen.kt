@@ -3,11 +3,12 @@ package com.sesac.community.presentation
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.DirectionsWalk
-import androidx.compose.material.icons.filled.DirectionsWalk
+
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Monitor
@@ -25,6 +26,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+
 
 // --- 데이터 클래스 정의 ---
 
@@ -64,6 +66,50 @@ val samplePosts = listOf(
 )
 
 // --- 메인 화면 Composable ---
+// ... (import 문들은 기존과 동일하게 유지)
+
+
+/**
+ * 1. 콘텐츠 영역에 추가될 새로운 검색바
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun CommunitySearchBar() {
+    // 검색어 상태
+    var searchText by remember { mutableStateOf("") }
+
+    // 검색창 UI
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp) // Column 내부에 맞게 패딩
+    ) {
+        OutlinedTextField(
+            value = searchText,
+            onValueChange = { searchText = it },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(50.dp),
+            placeholder = { Text("Community", color = Color.Gray) }, // 플레이스홀더
+            shape = RoundedCornerShape(8.dp), // 모서리 둥글게
+            singleLine = true,
+            colors = TextFieldDefaults.outlinedTextFieldColors(
+                containerColor = Color.White,
+                focusedBorderColor = Color.Blue, // Figma 이미지의 파란색 테두리
+                unfocusedBorderColor = Color.LightGray // 비포커스 시 연한 회색 테두리
+            ),
+            trailingIcon = {
+                // 검색 아이콘
+                IconButton(onClick = { /* TODO: 검색 로직 */ }) {
+                    Icon(
+                        imageVector = Icons.Default.Search,
+                        contentDescription = "검색"
+                    )
+                }
+            }
+        )
+    }
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -74,16 +120,16 @@ fun CommunityScreen() {
 
     Scaffold(
         // 1. 상단 앱 바
-        topBar = { CommunityTopAppBar() },
+//        topBar = { CommunityTopAppBar() },
 
         // 2. 하단 네비게이션 바
-        bottomBar = {
-            CommunityBottomNav(
-                items = bottomNavItems,
-                selectedIndex = selectedBottomIndex,
-                onItemSelected = { selectedBottomIndex = it }
-            )
-        },
+//        bottomBar = {
+//            CommunityBottomNav(
+//                items = bottomNavItems,
+//                selectedIndex = selectedBottomIndex,
+//                onItemSelected = { selectedBottomIndex = it }
+//            )
+//        },
         containerColor = Color.White // Scaffold 배경색을 흰색으로
     ) { paddingValues ->
         // 3. 메인 컨텐츠 (탭 + 게시글 목록)
@@ -96,30 +142,30 @@ fun CommunityScreen() {
 }
 
 // --- 1. 상단 앱 바 ---
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun CommunityTopAppBar() {
-    TopAppBar(
-        title = {
-            Text(
-                text = "Community",
-                modifier = Modifier.fillMaxWidth(),
-                textAlign = TextAlign.Center // 제목 중앙 정렬
-            )
-        },
-        actions = {
-            IconButton(onClick = { /* TODO: 검색 클릭 */ }) {
-                Icon(Icons.Default.Search, contentDescription = "검색")
-            }
-        },
-        // 이미지와 같이 흰색 배경, 검은색 아이콘
-        colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = Color.White,
-            titleContentColor = Color.Black,
-            actionIconContentColor = Color.Black
-        )
-    )
-}
+//@OptIn(ExperimentalMaterial3Api::class)
+//@Composable
+//fun CommunityTopAppBar() {
+//    TopAppBar(
+//        title = {
+//            Text(
+//                text = "Community",
+//                modifier = Modifier.fillMaxWidth(),
+//                textAlign = TextAlign.Center // 제목 중앙 정렬
+//            )
+//        },
+//        actions = {
+//            IconButton(onClick = { /* TODO: 검색 클릭 */ }) {
+//                Icon(Icons.Default.Search, contentDescription = "검색")
+//            }
+//        },
+//        // 이미지와 같이 흰색 배경, 검은색 아이콘
+//        colors = TopAppBarDefaults.topAppBarColors(
+//            containerColor = Color.White,
+//            titleContentColor = Color.Black,
+//            actionIconContentColor = Color.Black
+//        )
+//    )
+//}
 
 // --- 2. 하단 네비게이션 바 ---
 @Composable

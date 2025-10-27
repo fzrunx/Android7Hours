@@ -49,19 +49,19 @@ fun CommunityDetailScreen() {
     Scaffold(
         containerColor = Color.White,
         // 1. 상단 앱 바
-        topBar = {
-            CenterAlignedTopAppBar(
-                title = { Text("Community detail") },
-                navigationIcon = {
-                    IconButton(onClick = { /* TODO: 닫기 */ }) {
-                        Icon(Icons.Default.Close, contentDescription = "닫기")
-                    }
-                },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = Color.White
-                )
-            )
-        },
+//        topBar = {
+//            CenterAlignedTopAppBar(
+//                title = { Text("Community detail") },
+//                navigationIcon = {
+//                    IconButton(onClick = { /* TODO: 닫기 */ }) {
+//                        Icon(Icons.Default.Close, contentDescription = "닫기")
+//                    }
+//                },
+//                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+//                    containerColor = Color.White
+//                )
+//            )
+//        },
         // 2. 하단 댓글 입력창
         bottomBar = {
             Surface(
@@ -172,8 +172,7 @@ fun CommunityDetailScreen() {
                     )
 
                     // 4. 게시글 내용
-                    Text("게시글 내용1", style = MaterialTheme.typography.bodyLarge)
-                    Text("게시글 내용2", style = MaterialTheme.typography.bodyLarge)
+                    Text("게시글 내용", style = MaterialTheme.typography.bodyLarge)
 
                     Spacer(modifier = Modifier.height(8.dp))
 
