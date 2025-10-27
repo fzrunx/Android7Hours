@@ -2,10 +2,14 @@ package com.sesac.community.presentation
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.DirectionsWalk
 
@@ -15,13 +19,34 @@ import androidx.compose.material.icons.filled.Monitor
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.*
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.ListItem
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SearchBar
+import androidx.compose.material3.SearchBarDefaults
+import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRow
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextFieldDefaults
+
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.traversalIndex
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -74,41 +99,51 @@ val samplePosts = listOf(
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CommunitySearchBar() {
+fun ColumnScope.CommunitySearchBar(
+    textFieldState: TextFieldState,
+    searchResult: List<String>,
+) {
     // 검색어 상태
-    var searchText by remember { mutableStateOf("") }
+    var expanded by rememberSaveable { mutableStateOf(false) }
 
     // 검색창 UI
-    Box(
+    SearchBar(
         modifier = Modifier
+            .align(Alignment.CenterHorizontally)
+            .padding(start = 10.dp, end = 10.dp,)
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp) // Column 내부에 맞게 패딩
+            .semantics { traversalIndex = 0f },
+        inputField = {
+            SearchBarDefaults.InputField(
+                query = textFieldState.text.toString(),
+                onQueryChange = { textFieldState.edit { replace(0, Int.MAX_VALUE, it) } },
+                onSearch = {
+                    /* ToDo*/
+                    expanded = false
+                },
+                expanded = expanded,
+                onExpandedChange = { expanded = it },
+                placeholder = { Text("게시글 검색") }
+            )
+        },
+        expanded = expanded,
+        onExpandedChange = { expanded = it }
     ) {
-        OutlinedTextField(
-            value = searchText,
-            onValueChange = { searchText = it },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(50.dp),
-            placeholder = { Text("Community", color = Color.Gray) }, // 플레이스홀더
-            shape = RoundedCornerShape(8.dp), // 모서리 둥글게
-            singleLine = true,
-            colors = TextFieldDefaults.outlinedTextFieldColors(
-                containerColor = Color.White,
-                focusedBorderColor = Color.Blue, // Figma 이미지의 파란색 테두리
-                unfocusedBorderColor = Color.LightGray // 비포커스 시 연한 회색 테두리
-            ),
-            trailingIcon = {
-                // 검색 아이콘
-                IconButton(onClick = { /* TODO: 검색 로직 */ }) {
-                    Icon(
-                        imageVector = Icons.Default.Search,
-                        contentDescription = "검색"
-                    )
-                }
+        Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+            searchResult.forEach { searchResult ->
+                ListItem(
+                    headlineContent = { Text(searchResult) },
+                    modifier = Modifier
+                        .clickable {
+                            textFieldState.edit { replace(0, Int.MAX_VALUE, searchResult) }
+                            expanded = false
+                        }
+                        .fillMaxWidth()
+                )
             }
-        )
+        }
     }
+
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -196,11 +231,15 @@ fun CommunityBottomNav(
 }
 
 // --- 3. 메인 컨텐츠 (탭 + 게시글 목록) ---
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CommunityContent(modifier: Modifier = Modifier) {
     // 탭의 현재 선택된 아이템 인덱스
     var selectedTabIndex by remember { mutableStateOf(0) }
     val tabs = listOf("전체글", "추천글", "친구글")
+    val textFieldState: TextFieldState = TextFieldState()
+    var expanded by rememberSaveable { mutableStateOf(false) }
+    val searchResult = listOf("1", "22", "333")
 
     Column(modifier = modifier) {
         // --- 3-1. 탭 + 메뉴 아이콘 ---
@@ -230,9 +269,11 @@ fun CommunityContent(modifier: Modifier = Modifier) {
             }
         }
 
+        CommunitySearchBar(textFieldState, searchResult)
+
         // --- 3-2. 게시글 목록 ---
         LazyColumn(
-            contentPadding = PaddingValues(16.dp), // 목록 전체의 패딩
+            contentPadding = PaddingValues(10.dp), // 목록 전체의 패딩
             verticalArrangement = Arrangement.spacedBy(12.dp) // 아이템 사이의 간격
         ) {
             items(samplePosts) { post ->
