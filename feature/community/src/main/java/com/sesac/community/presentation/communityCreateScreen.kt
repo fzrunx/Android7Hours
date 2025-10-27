@@ -73,11 +73,11 @@ fun CommunityCreateScreen() {
                         color = Color.LightGray
                     )
                 },
-                colors = TextFieldDefaults.textFieldColors(
-                    containerColor = Color.Transparent, // 배경 투명
-                    focusedIndicatorColor = Color.Gray, // 포커스 시 밑줄
-                    unfocusedIndicatorColor = Color.LightGray // 비포커스 시 밑줄
-                ),
+//                colors = TextFieldDefaults.textFieldColors(
+//                    containerColor = Color.Transparent, // 배경 투명
+//                    focusedIndicatorColor = Color.Gray, // 포커스 시 밑줄
+//                    unfocusedIndicatorColor = Color.LightGray // 비포커스 시 밑줄
+//                ),
                 singleLine = true,
                 textStyle = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold)
             )
@@ -119,11 +119,11 @@ fun CommunityCreateScreen() {
                         color = Color.LightGray
                     )
                 },
-                colors = TextFieldDefaults.textFieldColors(
-                    containerColor = Color.Transparent,
-                    focusedIndicatorColor = Color.Transparent, // 내용 필드는 밑줄 제거
-                    unfocusedIndicatorColor = Color.Transparent
-                ),
+//                colors = TextFieldDefaults.textFieldColors(
+//                    containerColor = Color.Transparent,
+//                    focusedIndicatorColor = Color.Transparent, // 내용 필드는 밑줄 제거
+//                    unfocusedIndicatorColor = Color.Transparent
+//                ),
                 textStyle = MaterialTheme.typography.bodyLarge
             )
 
