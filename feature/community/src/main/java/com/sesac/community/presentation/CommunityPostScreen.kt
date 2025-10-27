@@ -2,14 +2,10 @@ package com.sesac.community.presentation
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.input.TextFieldState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.DirectionsWalk
 
@@ -18,25 +14,19 @@ import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Monitor
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PhotoCamera
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SearchBar
-import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextFieldDefaults
 
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -45,12 +35,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.semantics.traversalIndex
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import com.sesac.common.component.CommonSearchBar
 
 
 // --- 데이터 클래스 정의 ---
@@ -93,58 +81,6 @@ val samplePosts = listOf(
 // --- 메인 화면 Composable ---
 // ... (import 문들은 기존과 동일하게 유지)
 
-
-/**
- * 1. 콘텐츠 영역에 추가될 새로운 검색바
- */
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun ColumnScope.CommunitySearchBar(
-    textFieldState: TextFieldState,
-    searchResult: List<String>,
-) {
-    // 검색어 상태
-    var expanded by rememberSaveable { mutableStateOf(false) }
-
-    // 검색창 UI
-    SearchBar(
-        modifier = Modifier
-            .align(Alignment.CenterHorizontally)
-            .padding(start = 10.dp, end = 10.dp,)
-            .fillMaxWidth()
-            .semantics { traversalIndex = 0f },
-        inputField = {
-            SearchBarDefaults.InputField(
-                query = textFieldState.text.toString(),
-                onQueryChange = { textFieldState.edit { replace(0, Int.MAX_VALUE, it) } },
-                onSearch = {
-                    /* ToDo*/
-                    expanded = false
-                },
-                expanded = expanded,
-                onExpandedChange = { expanded = it },
-                placeholder = { Text("게시글 검색") }
-            )
-        },
-        expanded = expanded,
-        onExpandedChange = { expanded = it }
-    ) {
-        Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
-            searchResult.forEach { searchResult ->
-                ListItem(
-                    headlineContent = { Text(searchResult) },
-                    modifier = Modifier
-                        .clickable {
-                            textFieldState.edit { replace(0, Int.MAX_VALUE, searchResult) }
-                            expanded = false
-                        }
-                        .fillMaxWidth()
-                )
-            }
-        }
-    }
-
-}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -233,12 +169,15 @@ fun CommunityBottomNav(
 // --- 3. 메인 컨텐츠 (탭 + 게시글 목록) ---
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CommunityContent(modifier: Modifier = Modifier) {
+fun CommunityContent(
+    modifier: Modifier = Modifier
+) {
     // 탭의 현재 선택된 아이템 인덱스
     var selectedTabIndex by remember { mutableStateOf(0) }
     val tabs = listOf("전체글", "추천글", "친구글")
     val textFieldState: TextFieldState = TextFieldState()
     var expanded by rememberSaveable { mutableStateOf(false) }
+    val onSearch = { s: String -> Unit }
     val searchResult = listOf("1", "22", "333")
 
     Column(modifier = modifier) {
@@ -269,7 +208,12 @@ fun CommunityContent(modifier: Modifier = Modifier) {
             }
         }
 
-        CommunitySearchBar(textFieldState, searchResult)
+        CommonSearchBar(
+            Alignment.CenterHorizontally,
+            textFieldState,
+            onSearch,
+            searchResult,
+        )
 
         // --- 3-2. 게시글 목록 ---
         LazyColumn(
