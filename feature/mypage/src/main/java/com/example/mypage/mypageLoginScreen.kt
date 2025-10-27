@@ -28,11 +28,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
-// 하단 내비게이션 아이템을 위한 data class
-data class NavItem(
-    val label: String,
-    val icon: ImageVector
-)
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -43,15 +39,6 @@ fun LoginScreen() {
     var password by remember { mutableStateOf("") }
     var keepLoggedIn by remember { mutableStateOf(false) }
 
-    // 하단 내비게이션 상태
-    var selectedNavItem by remember { mutableStateOf(4) } // 마이페이지 선택
-    val navItems = listOf(
-        NavItem("홈", Icons.Default.Home),
-        NavItem("산책로", Icons.Default.Hiking),
-        NavItem("모니터링", Icons.Default.Monitor),
-        NavItem("커뮤니티", Icons.Default.Comment),
-        NavItem("마이페이지", Icons.Default.Person)
-    )
 
     // 화면 전체의 옅은 하늘색 (Top/Bottom Bar)
     val lightBlueBg = Color(0xFFE6F7FF)

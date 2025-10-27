@@ -67,16 +67,6 @@ fun JoinScreen() {
     }
 
 
-    // 하단 내비게이션 상태 (이전 코드와 동일)
-    var selectedNavItem by remember { mutableStateOf(0) }
-    val navItems = listOf(
-        NavItem("홈", Icons.Default.Home),
-        NavItem("산책로", Icons.Default.Hiking),
-        NavItem("모니터링", Icons.Default.Monitor),
-        NavItem("커뮤니티", Icons.Default.Comment),
-        NavItem("마이페이지", Icons.Default.Person)
-    )
-
     val lightBlueBg = Color(0xFFE6F7FF)
     val contentBg = Color(0xFFF8F9FA) // 옅은 회색 배경
 
