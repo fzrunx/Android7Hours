@@ -1,7 +1,7 @@
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.android)
-    id("org.jetbrains.kotlin.plugin.compose") version "2.2.0"
+    alias(libs.plugins.kotlin.compose)
 }
 
 android {
@@ -36,9 +36,9 @@ android {
     buildFeatures {
         compose = true
     }
-    composeOptions {
-        kotlinCompilerExtensionVersion = libs.versions.composeCompiler.get()
-    }
+//    composeOptions {
+//        kotlinCompilerExtensionVersion = libs.versions.composeCompiler.get()
+//    }
 }
 
 dependencies {

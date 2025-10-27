@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.DirectionsWalk
 import androidx.compose.material.icons.filled.DirectionsWalk
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Menu
@@ -48,7 +49,7 @@ data class PostItemData(
 // 하단 네비게이션 아이템 리스트
 val bottomNavItems = listOf(
     BottomNavItem("홈", Icons.Default.Home),
-    BottomNavItem("산책로", Icons.Default.DirectionsWalk),
+    BottomNavItem("산책로", Icons.AutoMirrored.Filled.DirectionsWalk),
     BottomNavItem("모니터링", Icons.Default.Monitor),
     BottomNavItem("커뮤니티", Icons.Default.PhotoCamera), // 이미지에 있는 카메라 아이콘
     BottomNavItem("마이페이지", Icons.Default.Person)
