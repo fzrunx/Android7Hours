@@ -1,4 +1,4 @@
-package com.sesac.android7hours.ui.theme
+package com.sesac.common.ui.theme
 
 import android.app.Activity
 import android.os.Build

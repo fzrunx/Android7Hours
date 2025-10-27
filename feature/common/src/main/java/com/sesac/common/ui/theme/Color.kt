@@ -1,4 +1,4 @@
-package com.sesac.android7hours.ui.theme
+package com.sesac.common.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
