@@ -90,6 +90,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.sesac.common.component.CommonArticlePreviewList
+import com.sesac.common.component.CommonArticlePreviewListItem
+import com.sesac.common.component.CommonSearchBar
+import com.sesac.common.component.CommonSegmentedButton
 import com.sesac.home.R
 import com.sesac.common.R as commonR
 
@@ -119,7 +123,7 @@ fun HomeScreen(
 ) {
 
     var expanded by rememberSaveable { mutableStateOf(false) }
-    var tabSelectedIndex by rememberSaveable { mutableIntStateOf(0) }
+    var tabSelectedIndex = rememberSaveable { mutableIntStateOf(0) }
 
     val length = 20
     val space = dimensionResource(commonR.dimen.default_space)
@@ -162,9 +166,9 @@ fun HomeScreen(
         )
     }
     val sampleCoummunityItems = listOf(
-        SampleCommunityItem("title1", painterResource(R.drawable.dog_sample_banner_1), "배고파", Icons.Outlined.AccountCircle, "Hong"),
-        SampleCommunityItem("title2", painterResource(R.drawable.dog_sample_banner_2), "졸려", Icons.Filled.AccountCircle, "Gil"),
-        SampleCommunityItem("title2", painterResource(R.drawable.dog_sample_banner_3), "lol", Icons.Default.AccountCircle, "Dong"),
+        CommonArticlePreviewListItem(title = "title1", sumnail = painterResource(R.drawable.dog_sample_banner_1), content = "배고파".repeat(30), icon = Icons.Outlined.AccountCircle, author = "Hong"),
+        CommonArticlePreviewListItem(title = "title2", content = "졸려".repeat(30), icon = Icons.Filled.AccountCircle, author = "Gil"),
+        CommonArticlePreviewListItem(title = "title2", sumnail = painterResource(R.drawable.dog_sample_banner_3), content = "lol".repeat(30), icon = Icons.Default.AccountCircle, author = "Dong"),
     )
     // ...
 
@@ -201,78 +205,23 @@ fun HomeScreen(
             CustomHomeCarousel(text = "산책로 추천", recommendImages =  pathRecommendImages,)
             CustomHomeCarousel(text = "여행지 추천", recommendImages = tripRecommendImages,)
 
-            FlowRow(
-                Modifier
-                    .padding(horizontal = space, vertical = textSpace)
-                    .fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(tabSpace),
-                verticalArrangement = Arrangement.spacedBy(textSpace),
-            ) {
-                SingleChoiceSegmentedButtonRow {
-                    tabOptions.forEachIndexed { index, string ->
-                        SegmentedButton(
-                            modifier = Modifier
-                                .wrapContentWidth()
-                                .width(100.dp),
-                            shape = SegmentedButtonDefaults.itemShape(
-                                index = index,
-                                count = tabOptions.size
-                            ),
-                            icon = {
-                                Icon(
-                                    imageVector = if (tabSelectedIndex == index) checkedIcons[index] else unCheckedIcons[index],
-                                    contentDescription = string
-                                )
-                            },
-                            onClick = { tabSelectedIndex = index },
-                            selected = index == tabSelectedIndex,
-                            label = { Text(string) }
-                        )
-                    }
-                }
-            }
+            CommonSegmentedButton(
+                tabOptions,
+                tabSelectedIndex,
+                checkedIcons,
+                unCheckedIcons
+            )
 
-            CustomHomeCommunityCard(communityItems = sampleCoummunityItems)
+            CommonArticlePreviewList(items = sampleCoummunityItems)
         }
 
-        SearchBar(
-            modifier = Modifier
-                .align(Alignment.TopCenter)
-                .fillMaxWidth()
-                .padding(space)
-                .semantics { traversalIndex = -1f },
-            colors = SearchBarDefaults.colors(inputFieldColors = TextFieldDefaults.colors(Color.Black)),
-            inputField = {
-                SearchBarDefaults.InputField(
-                    query = textFieldState.text.toString(),
-                    onQueryChange = { textFieldState.edit { replace(0, Int.MAX_VALUE, it) } },
-                    onSearch = {
-                        onSearch(textFieldState.text.toString())
-                        expanded = false
-                    },
-                    expanded = expanded,
-                    onExpandedChange = { expanded = it },
-                    placeholder = { Text("Search") }
-                )
-            },
-            expanded = expanded,
-            onExpandedChange = { expanded = it }
-        ) {
-            // Display search results in a scrollable column
-            Column(Modifier.verticalScroll(searchResultsScrollState)) {
-                searchResults.forEach { result ->
-                    ListItem(
-                        headlineContent = { Text(result) },
-                        modifier = Modifier
-                            .clickable {
-                                textFieldState.edit { replace(0, length, result) }
-                                expanded = false
-                            }
-                            .fillMaxWidth()
-                    )
-                }
-            }
-        }
+        CommonSearchBar(
+            Alignment.TopCenter,
+            TextFieldState(),
+            onSearch,
+            searchResults,
+            searchResultsScrollState)
+
     }
 }
 
@@ -328,96 +277,6 @@ fun ColumnScope.CustomHomeCarousel(
                 contentDescription = item.contentDescription,
                 contentScale = ContentScale.FillBounds
             )
-        }
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun CustomHomeCommunityCard(
-    modifier: Modifier = Modifier,
-    communityItems: List<SampleCommunityItem>,
-    space: Dp = dimensionResource(commonR.dimen.default_space),
-    imageHeight: Dp = dimensionResource(commonR.dimen.carousel_image_height)
-) {
-    Column(
-        verticalArrangement = Arrangement.spacedBy(space),
-        modifier = modifier.padding(bottom = space)
-    ) {
-        communityItems.forEach { communityItem ->
-            Card(
-                modifier = Modifier
-                    .padding(horizontal = space)
-                    .fillMaxWidth()
-                    .height(imageHeight),
-                shape = RoundedCornerShape(15.dp),
-                colors = CardDefaults.cardColors(containerColor = Color(0xfff2e2d1)),
-                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-            ) {
-                Row {
-                    Image(
-                        modifier = Modifier
-                            .padding(horizontal = space, vertical = space)
-                            .fillMaxHeight()
-                            .weight(1f),
-                        painter = communityItem.sumnail,
-                        contentDescription = "community sample image"
-                    )
-
-                    Column(
-                        modifier = Modifier
-                            .weight(2f)
-                            .fillMaxHeight(),
-                        verticalArrangement = Arrangement.Center
-                    ) {
-                        Text(
-                            modifier = Modifier
-                                .padding(start = space, top = space)
-                                .weight(1f),
-                            fontSize = 13.sp,
-                            fontWeight = FontWeight.ExtraBold,
-                            maxLines = 1,
-                            text = communityItem.tile
-                        )
-
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                modifier = Modifier
-                                    .wrapContentSize(Alignment.CenterStart)
-                                    .padding(start = space)
-                                    .size(15.dp),
-                                imageVector = communityItem.icon,
-                                contentDescription = "icon"
-                            )
-
-                            Text(
-                                modifier = Modifier
-                                    .padding(horizontal = space/3),
-                                fontSize = 10.sp,
-                                maxLines = 1,
-                                text = communityItem.author
-                            )
-                        }
-
-                        Text(
-                            modifier = Modifier
-                                .weight(2f)
-                                .padding(start = space),
-                            maxLines = 2,
-                            overflow = TextOverflow.Ellipsis,
-                            text = communityItem.content.repeat(100)    // ui 테스트용
-                        )
-
-                    }
-
-                    Spacer(Modifier.padding(space))
-
-                }
-            }
-
         }
     }
 }
