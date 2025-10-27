@@ -45,7 +45,8 @@ android {
 dependencies {
 
     implementation(project(":feature"))
-    implementation(project(":feature:"))
+    implementation(project(":feature:community"))
+    implementation(project(":feature:common"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
