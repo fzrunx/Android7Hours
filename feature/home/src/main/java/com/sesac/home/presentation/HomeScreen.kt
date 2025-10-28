@@ -206,10 +206,10 @@ fun HomeScreen(
             CustomHomeCarousel(text = "여행지 추천", recommendImages = tripRecommendImages,)
 
             CommonSegmentedButton(
-                tabOptions,
-                tabSelectedIndex,
-                checkedIcons,
-                unCheckedIcons
+                tabOptions =  tabOptions,
+                tabSelectedIndex =  tabSelectedIndex,
+                checkedIcons = checkedIcons,
+                unCheckedIcons = unCheckedIcons
             )
 
             CommonArticlePreviewList(items = sampleCoummunityItems)
