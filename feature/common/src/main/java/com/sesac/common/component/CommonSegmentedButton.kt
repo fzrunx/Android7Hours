@@ -1,7 +1,5 @@
 package com.sesac.common.component
 
-import android.annotation.SuppressLint
-import android.graphics.drawable.Icon
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -21,7 +19,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -36,8 +33,10 @@ import com.sesac.common.R
 fun CommonSegmentedButton(
     tabOptions: List<String>,
     tabSelectedIndex: MutableState<Int>,
-    checkedIcons: List<ImageVector>,
-    unCheckedIcons: List<ImageVector>,
+    verticalAlignment: Arrangement.Vertical = Arrangement.Center,
+    horizontalArrangement: Arrangement.Horizontal = Arrangement.Absolute.Center,
+    checkedIcons: List<ImageVector> = emptyList<ImageVector>(),
+    unCheckedIcons: List<ImageVector> = emptyList<ImageVector>(),
     textSpace: Dp = dimensionResource(R.dimen.text_top_bottom_space),
     space: Dp = dimensionResource(R.dimen.default_space),
 ) {
@@ -45,8 +44,8 @@ fun CommonSegmentedButton(
         Modifier
             .padding(horizontal = space, vertical = textSpace)
             .fillMaxWidth(),
-        horizontalArrangement = Arrangement.Absolute.Center,
-        verticalArrangement = Arrangement.Center,
+        horizontalArrangement = horizontalArrangement,
+        verticalArrangement = verticalAlignment,
     ) {
         SingleChoiceSegmentedButtonRow {
             tabOptions.forEachIndexed { index, string ->
@@ -59,10 +58,12 @@ fun CommonSegmentedButton(
                         count = tabOptions.size
                     ),
                     icon = {
-                        Icon(
-                            imageVector = if (tabSelectedIndex.value == index) checkedIcons[index] else unCheckedIcons[index],
-                            contentDescription = string
-                        )
+                        if(checkedIcons.isNotEmpty() and unCheckedIcons.isNotEmpty()){
+                            Icon(
+                                imageVector = if (tabSelectedIndex.value == index) checkedIcons[index] else unCheckedIcons[index],
+                                contentDescription = string
+                            )
+                        }
                     },
                     onClick = { tabSelectedIndex.value = index },
                     selected = index == tabSelectedIndex.value,
@@ -82,8 +83,8 @@ fun CommonSegmentedButtonPreview() {
         CommonSegmentedButton(
             listOf("a", "b", "c"),
             tabSelectedIndex,
-            listOf(Icons.Default.Preview),
-            listOf(Icons.Default.Star),
+            checkedIcons = listOf(Icons.Default.Preview),
+            unCheckedIcons = listOf(Icons.Default.Star),
         )
     }
 }
