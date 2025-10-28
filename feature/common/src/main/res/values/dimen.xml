@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <dimen name="default_space">10dp</dimen>
+    <dimen name="default_space">15dp</dimen>
     <dimen name="tab_space">2dp</dimen>
     <dimen name="text_top_bottom_space">20dp</dimen>
     <dimen name="carousel_image_height">100dp</dimen>
