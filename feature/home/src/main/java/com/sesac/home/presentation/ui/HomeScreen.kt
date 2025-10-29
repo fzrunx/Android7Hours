@@ -1,32 +1,17 @@
-package com.sesac.home.presentation
+package com.sesac.home.presentation.ui
 
 
-import android.graphics.Paint
-import android.graphics.drawable.Icon
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.gestures.snapping.SnapPosition
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ColumnScope
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.layout.wrapContentSize
-import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
@@ -42,27 +27,7 @@ import androidx.compose.material.icons.outlined.AccountCircle
 import androidx.compose.material.icons.outlined.LocalHospital
 import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material.icons.outlined.Map
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CardElevation
-import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.ListItem
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedIconToggleButton
-import androidx.compose.material3.SearchBar
-import androidx.compose.material3.SearchBarColors
-import androidx.compose.material3.SearchBarDefaults
-import androidx.compose.material3.SegmentedButton
-import androidx.compose.material3.SegmentedButtonDefaults
-import androidx.compose.material3.SegmentedButtonDefaults.Icon
-import androidx.compose.material3.SingleChoiceSegmentedButtonRow
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextFieldColors
-import androidx.compose.material3.TextFieldDefaults
-import androidx.compose.material3.carousel.HorizontalUncontainedCarousel
-import androidx.compose.material3.carousel.rememberCarouselState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -73,29 +38,22 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.layout.ModifierLocalBeyondBoundsLayout
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.isTraversalGroup
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.semantics.traversalIndex
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.sesac.common.component.CommonArticlePreviewList
 import com.sesac.common.component.CommonArticlePreviewListItem
 import com.sesac.common.component.CommonSearchBar
 import com.sesac.common.component.CommonSegmentedButton
 import com.sesac.home.R
+import com.sesac.home.presentation.component.HomeCarousel
 import com.sesac.common.R as commonR
 
 data class CarouselItem(
@@ -207,8 +165,8 @@ fun HomeScreen(
                 )
             }
 
-            CustomHomeCarousel(text = stringResource(commonR.string.home_carousel_title_trail_recommendation), recommendImages =  pathRecommendImages)
-            CustomHomeCarousel(text =  stringResource(commonR.string.home_carousel_title_trip_recommendation), recommendImages = tripRecommendImages)
+            HomeCarousel(text = stringResource(commonR.string.home_carousel_title_trail_recommendation), recommendImages =  pathRecommendImages)
+            HomeCarousel(text =  stringResource(commonR.string.home_carousel_title_community_recommendation), recommendImages = tripRecommendImages)
 
             CommonSegmentedButton(
                 tabOptions =  tabOptions,
@@ -230,61 +188,6 @@ fun HomeScreen(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun ColumnScope.CustomHomeCarousel(
-    modifier: Modifier = Modifier,
-    text: String?,
-    recommendImages: List<CarouselItem>,
-    textSpace: Dp = dimensionResource(commonR.dimen.text_top_bottom_space),
-    space: Dp = dimensionResource(commonR.dimen.default_space),
-    imageWidth: Dp = dimensionResource(commonR.dimen.carousel_image_width),
-    imageHeight: Dp = dimensionResource(commonR.dimen.carousel_image_height),
-) {
-    Column {
-        if(!text.isNullOrBlank()){
-            Row {
-                Text(
-                    modifier = Modifier
-                        .wrapContentSize(Alignment.CenterStart)
-                        .weight(1f)
-                        .padding(horizontal = textSpace, vertical = space),
-                    text = text
-                )
-
-                Text(
-                    modifier = Modifier
-                        .wrapContentSize(Alignment.CenterEnd)
-                        .weight(1f)
-                        .padding(horizontal = textSpace, vertical = space),
-                    color = Color(0xfff08130),
-                    text = stringResource(commonR.string.common_see_all)
-                )
-            }
-        }
-
-        HorizontalUncontainedCarousel(
-            state = rememberCarouselState { recommendImages.count() },
-            modifier = modifier
-                .align(Alignment.Start)
-                .wrapContentWidth()
-                .padding(bottom = 0.dp),
-            itemWidth = imageWidth,
-            itemSpacing = space,
-            contentPadding = PaddingValues(horizontal = space)
-        ) { i ->
-            val item = recommendImages[i]
-            Image(
-                modifier = Modifier
-                    .height(imageHeight)
-                    .maskClip(MaterialTheme.shapes.medium),
-                painter = painterResource(id = item.imageResId),
-                contentDescription = item.contentDescription,
-                contentScale = ContentScale.FillBounds
-            )
-        }
-    }
-}
 
 @Preview(showBackground = true)
 @Composable

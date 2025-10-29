@@ -4,7 +4,7 @@
 <resources>
     <!-- ========= Home ========== -->
     <string name="home_carousel_title_trail_recommendation" >산책로 추천</string>
-    <string name="home_carousel_title_trip_recommendation">여행지 추천</string>
+    <string name="home_carousel_title_community_recommendation">커뮤니티</string>
     <string name="home_tab_trail">산책로</string>
     <string name="home_tab_trip">여행지</string>
     <string name="home_tab_hospital">병원</string>
