@@ -45,9 +45,12 @@ android {
 dependencies {
 
     implementation(project(":feature"))
-    implementation(project(":feature:community"))
     implementation(project(":feature:common"))
     implementation(project(":feature:home"))
+    implementation(project(":feature:community"))
+    implementation(project(":feature:trail"))
+    implementation(project(":feature:monitor"))
+    implementation(project(":feature:mypage"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
@@ -57,6 +60,8 @@ dependencies {
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
+    implementation(libs.bundles.navigation)
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
