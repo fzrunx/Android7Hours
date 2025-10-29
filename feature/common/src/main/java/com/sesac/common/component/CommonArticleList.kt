@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
@@ -37,26 +38,48 @@ import androidx.compose.ui.unit.dp
 import com.sesac.common.R
 
 @Composable
-fun CommonArticleList(
+fun <T> CommonArticleList(
+    modifier: Modifier = Modifier,
     listState: LazyListState,
-    routes: List<PathInfo>,
-    selectedRoute: PathInfo?,
-    onRouteClick: (PathInfo) -> Unit,
+    items: List<T>,
+    articleHorrPadding: Dp = dimensionResource(R.dimen.tail_chip_text_horr_padding),
+    articleVerticalSpaceBy: Dp = dimensionResource(R.dimen.article_ver_arrangement),
+    content: @Composable (T) -> Unit,
 ) {
+
     LazyColumn(
+        modifier = modifier,
         state = listState,
-        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+        contentPadding = PaddingValues(horizontal = articleHorrPadding, vertical = articleHorrPadding/2),
+        verticalArrangement = Arrangement.spacedBy(articleVerticalSpaceBy)
     ) {
-        items(routes) { route ->
-            CommonArticle(
-                route = route,
-                isSelected = selectedRoute?.id == route.id,
-                onClick = { onRouteClick(route) }
-            )
+        items(items) { item ->
+            content(item)
         }
     }
 }
+
+@Composable
+fun <T> CommonArticleList(
+    modifier: Modifier = Modifier,
+    items: List<T>,
+    articleHorrPadding: Dp = dimensionResource(R.dimen.tail_chip_text_horr_padding),
+    articleVerticalSpaceBy: Dp = dimensionResource(R.dimen.article_ver_arrangement),
+    content: @Composable (T) -> Unit,
+) {
+
+    Column(
+        modifier = modifier
+            .padding(horizontal = articleHorrPadding, vertical = articleHorrPadding/2),
+        verticalArrangement = Arrangement.spacedBy(articleVerticalSpaceBy)
+    ) {
+        items.forEach { item ->
+            content(item)
+        }
+
+    }
+}
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
