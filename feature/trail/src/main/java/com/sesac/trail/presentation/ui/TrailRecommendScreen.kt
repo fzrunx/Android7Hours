@@ -1,5 +1,6 @@
 package com.sesac.trail.presentation.ui
 
+import android.util.Log
 import com.sesac.common.R as cR
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -48,6 +49,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberBottomSheetScaffoldState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -62,11 +64,13 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.sesac.common.component.CommonArticle
 import com.sesac.common.component.CommonArticleList
 import com.sesac.common.component.CommonSegmentedButton
 import com.sesac.common.component.PathInfo
 import com.sesac.trail.presentation.component.TrailControlIconList
 import com.sesac.trail.presentation.component.SegmentedMenuItem
+import com.sesac.trail.presentation.component.TrailControlButton
 import com.sesac.trail.utils.FilterSheetContent
 
 data class FilterState(
@@ -80,12 +84,12 @@ data class FilterState(
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
-@Preview(showSystemUi = true)
 @Composable
 fun TrailRecommendScreen(
     current: String = "recommend",                         // 현재 선택된 메뉴 id (임시 초기값
-    onSelectMenu: (String) -> Unit = {} // (String) -> Unit           // 메뉴 선택 이벤트 콜백
+    trailSelectedMenu: MutableState<String>,       // 메뉴 선택 이벤트 콜백
 ) {
+    val recommend = stringResource(cR.string.trail_button_recommend)
     // 상단 SegmentedMenu
     val menuItems = listOf(
         SegmentedMenuItem("recommend", stringResource(cR.string.trail_button_recommend)),
@@ -123,22 +127,26 @@ fun TrailRecommendScreen(
         sheetDragHandle = null,
         sheetContent = {
             // 모드에 따라 다른 컨텐츠 표시
-            if (showFilterMode) {
-                FilterSheetContent(
-                    filterState = filterState,
-                    onFilterChange = { filterState = it },
-                    onBack = { showFilterMode = false },
-                    onApply = { showFilterMode = false }
-                )
+            if(trailSelectedMenu.value == recommend) {
+                if (showFilterMode) {
+                    FilterSheetContent(
+                        filterState = filterState,
+                        onFilterChange = { filterState = it },
+                        onBack = { showFilterMode = false },
+                        onApply = { showFilterMode = false }
+                    )
+                } else {
+                    WalkListBottomSheet(
+                        routes = sampleRoutes,
+                        selectedRoute = selectedRoute,
+                        listState = listState,
+                        filterCount = filterState.activeCount,
+                        onRouteClick = { selectedRoute = it },
+                        onFilterClick = { showFilterMode = true }
+                    )
+                }
             } else {
-                WalkListBottomSheet(
-                    routes = sampleRoutes,
-                    selectedRoute = selectedRoute,
-                    listState = listState,
-                    filterCount = filterState.activeCount,
-                    onRouteClick = { selectedRoute = it },
-                    onFilterClick = { showFilterMode = true }
-                )
+                TrailControlButton()
             }
         }
     ) { padding ->
@@ -154,10 +162,15 @@ fun TrailRecommendScreen(
                     .fillMaxSize()
                     .background(Color(0xFFE8F5E9))
             ) {
-                CommonSegmentedButton(
-                    tabOptions =  tabOptions,
-                    tabSelectedIndex = tabSelectedIndex,
-                )
+
+                Log.d("TagTrailRecommend", trailSelectedMenu.value)
+                if(trailSelectedMenu.value == recommend) {
+                    CommonSegmentedButton(
+                        tabOptions =  tabOptions,
+                        tabSelectedIndex = tabSelectedIndex,
+                        selectedMenuState = trailSelectedMenu,
+                    )
+                }
 
                 Column(
                     modifier = Modifier.align(Alignment.Center),
@@ -176,6 +189,7 @@ fun TrailRecommendScreen(
                         color = Color.Gray
                     )
                 }
+
             }
 
             TrailControlIconList(surfaceIconList)
@@ -279,7 +293,7 @@ fun WalkListBottomSheet(
             listState = listState,
             items = routes,
         ) { route ->
-            com.sesac.common.component.CommonArticle(
+            CommonArticle(
                 route = route,
                 isSelected = selectedRoute?.id == route.id,
                 onClick = { onRouteClick(route) }
@@ -289,3 +303,11 @@ fun WalkListBottomSheet(
     }
 }
 
+@Preview(showBackground = true)
+@Composable
+fun TrailRecommendScreenPreview() {
+    val recommend = stringResource(cR.string.trail_button_recommend)
+    TrailRecommendScreen(
+        trailSelectedMenu = remember { mutableStateOf(recommend) }
+    )
+}
