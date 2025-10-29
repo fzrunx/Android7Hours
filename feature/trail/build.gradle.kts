@@ -40,6 +40,7 @@ android {
 
 dependencies {
     implementation(project(":domain"))
+    implementation(project(":feature:common"))
 //    implementation(project(":core"))
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.core.ktx)

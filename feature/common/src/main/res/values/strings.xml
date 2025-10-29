@@ -1,2 +1,82 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources></resources>
+
+
+<resources>
+    <!-- ========= Home ========== -->
+    <string name="home_carousel_title_trail_recommendation" >산책로 추천</string>
+    <string name="home_carousel_title_trip_recommendation">여행지 추천</string>
+    <string name="home_tab_trail">산책로</string>
+    <string name="home_tab_trip">여행지</string>
+    <string name="home_tab_hospital">병원</string>
+
+    <!-- ========= Community ========== -->
+    <string name="community_button_SNS">SNS</string>
+    <string name="community_button_post">게시판</string>
+    <string name="community_button_register">등록하기</string>
+    <string name="community_placeholder_title">My Post</string>
+    <string name="community_placeholder_post_content">게시글 내용</string>
+    <string name="community_placeholder_comment_write">댓글을 작성해주세요</string>
+    <string name="community_title_like">좋아요</string>
+    <string name="community_title_comment">댓글</string>
+    <string name="community_title_list">목록</string>
+    <string name="community_title_share">공유하기</string>
+    <string name="community_title_create_auth">작성자</string>
+    <string name="community_title_create_date">작성 날짜</string>
+    <string name="community_title_post_image">게시글 이미지</string>
+
+    <!-- ========= Monitor ========== -->
+    <string name="monitor_button_webcam">영상</string>
+    <string name="monitor_button_GPS">GPS</string>
+
+    <!-- ========= Trail ========== -->
+    <string name="trail_button_start">Start</string>
+    <string name="trail_button_pause">Pause</string>
+    <string name="trail_button_stop">Stop</string>
+    <string name="trail_button_resume">Resume</string>
+    <string name="trail_button_restart">Restart</string>
+    <string name="trail_button_recommend">추천</string>
+    <string name="trail_button_follow">따라가기</string>
+    <string name="trail_button_record">기록</string>
+    <string name="trail_title_nearby_trails">주변 산책로</string>
+    <string name="trail_title_filter">필터</string>
+    <string name="trail_title_filter_option">필터 옵션</string>
+    <string name="trail_title_reset">초기화</string>
+    <string name="trail_title_distace">거리</string>
+    <string name="trail_title_hours">시간</string>
+    <string name="trail_title_level">난이도</string>
+    <string name="trail_title_dog_size">반려견 크기</string>
+    <string name="trail_button_apply">적용하기</string>
+
+    <string name="trail_distance_under_1km">1km 이하</string>
+    <string name="trail_distance_1_to_3km">1-3km</string>
+    <string name="trail_distance_3_to_5km">3-5km</string>
+    <string name="trail_distance_over_5km">5km 이상</string>
+    <string name="trail_time_under_30min">30분 이하</string>
+    <string name="trail_time_30_to_60min">30-60분</string>
+    <string name="trail_time_1_to_2_hours">1-2시간</string>
+    <string name="trail_time_over_2_hours">2시간 이상</string>
+    <string name="trail_level_low">하</string>
+    <string name="trail_level_medium">중</string>
+    <string name="trail_level_high">상</string>
+    <string name="dog_size_small">소형</string>
+    <string name="dog_size_medium">중형</string>
+    <string name="dog_size_large">대형</string>
+
+    <!-- ========= Mypage ========= -->
+    <string name="mypage_button_management">관리</string>
+    <string name="mypage_button_favorite">즐겨찾기</string>
+    <string name="mypage_button_setting">설정</string>
+    <string name="mypage_button_myinfo">내 정보</string>
+    <string name="mypage_button_like">좋아요</string>
+    <string name="mypage_button_create_list">작성목록</string>
+
+    <!-- ========= Common ========= -->
+    <string name="common_see_all">전체보기</string>
+
+</resources>
+
+
+
+
+
+

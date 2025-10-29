@@ -1,5 +1,6 @@
 package com.sesac.trail.presentation.component
 
+import com.sesac.common.R as commonR
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -19,6 +20,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 
@@ -53,7 +55,7 @@ fun TrailControlBar(
                         contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
                         modifier = Modifier.weight(1f)
                     ) {
-                        Text("Start", style = MaterialTheme.typography.labelLarge)
+                        Text(stringResource(commonR.string.trail_button_start), style = MaterialTheme.typography.labelLarge)
                     }
                 }
 
@@ -63,7 +65,7 @@ fun TrailControlBar(
                         contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
                         modifier = Modifier.weight(1f)
                     ) {
-                        Text("Pause", style = MaterialTheme.typography.labelLarge)
+                        Text(stringResource(commonR.string.trail_button_pause), style = MaterialTheme.typography.labelLarge)
                     }
                     FilledTonalButton(
                         onClick = onStopClick,
@@ -72,7 +74,7 @@ fun TrailControlBar(
                             .weight(1f)
                             .padding(start = 6.dp)
                     ) {
-                        Text("Stop", style = MaterialTheme.typography.labelLarge)
+                        Text(stringResource(commonR.string.trail_button_stop), style = MaterialTheme.typography.labelLarge)
                     }
                 }
 
@@ -82,7 +84,7 @@ fun TrailControlBar(
                         contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
                         modifier = Modifier.weight(1f)
                     ) {
-                        Text("Resume", style = MaterialTheme.typography.labelLarge)
+                        Text(stringResource(commonR.string.trail_button_resume), style = MaterialTheme.typography.labelLarge)
                     }
                     FilledTonalButton(
                         onClick = onStopClick,
@@ -95,7 +97,7 @@ fun TrailControlBar(
                             .weight(1f)
                             .padding(start = 6.dp)
                     ) {
-                        Text("Stop", style = MaterialTheme.typography.labelLarge)
+                        Text(stringResource(commonR.string.trail_button_stop), style = MaterialTheme.typography.labelLarge)
                     }
                 }
 
@@ -105,7 +107,7 @@ fun TrailControlBar(
                         contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
                         modifier = Modifier.weight(1f)
                     ) {
-                        Text("Restart", style = MaterialTheme.typography.labelLarge)
+                        Text(stringResource(commonR.string.trail_button_restart), style = MaterialTheme.typography.labelLarge)
                     }
                 }
             }

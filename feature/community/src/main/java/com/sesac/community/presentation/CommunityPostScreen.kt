@@ -1,5 +1,7 @@
 package com.sesac.community.presentation
 
+import android.R
+import com.sesac.common.R as commonR
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -8,7 +10,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.DirectionsWalk
-
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Monitor
@@ -27,7 +28,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
-
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
@@ -35,6 +35,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
@@ -276,12 +277,12 @@ fun PostItemCard(post: PostItemData) {
                     horizontalArrangement = Arrangement.End
                 ) {
                     Text(
-                        text = "좋아요 ${post.likes}",
+                        text = "${stringResource(commonR.string.community_title_like)} ${post.likes}",
                         style = MaterialTheme.typography.bodySmall
                     )
                     Spacer(modifier = Modifier.width(12.dp))
                     Text(
-                        text = "댓글 ${post.comments}",
+                        text = "${stringResource(commonR.string.community_title_comment)} ${post.comments}",
                         style = MaterialTheme.typography.bodySmall
                     )
                 }
@@ -297,7 +298,7 @@ fun ImagePlaceholder(imageUrl: String?, modifier: Modifier = Modifier) {
         // Coil 라이브러리의 AsyncImage 사용
         AsyncImage(
             model = imageUrl,
-            contentDescription = "게시글 이미지",
+            contentDescription = stringResource(commonR.string.community_title_post_image),
             contentScale = ContentScale.Crop, // 꽉 차게 자르기
             modifier = modifier
         )
@@ -309,7 +310,7 @@ fun ImagePlaceholder(imageUrl: String?, modifier: Modifier = Modifier) {
             contentAlignment = Alignment.Center
         ) {
             Text(
-                text = "사진",
+                text = "사진", //텍스트로 굳이 필요없는 부분 추후 수정 필요
                 color = Color.DarkGray
             )
         }

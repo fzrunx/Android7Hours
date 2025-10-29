@@ -1,5 +1,6 @@
 package com.sesac.trail.presentation.ui
 
+import com.sesac.common.R as commonR
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -56,6 +57,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -93,9 +95,9 @@ fun TrailRecommendScreen(
 ) {
     // 상단 SegmentedMenu
     val menuItems = listOf(
-        SegmentedMenuItem("recommend", "추천"),
-        SegmentedMenuItem("follow", "따라가기"),
-        SegmentedMenuItem("record", "기록")
+        SegmentedMenuItem("recommend", stringResource(commonR.string.trail_button_recommend)),
+        SegmentedMenuItem("follow", stringResource(commonR.string.trail_button_follow)),
+        SegmentedMenuItem("record", stringResource(commonR.string.trail_button_record))
     )
 
 
@@ -265,7 +267,7 @@ fun WalkListBottomSheet(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                "주변 산책로",
+                stringResource(commonR.string.trail_title_nearby_trails),
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold
             )
@@ -295,7 +297,7 @@ fun WalkListBottomSheet(
                             colorScheme.onSurfaceVariant
                     )
                     Text(
-                        "필터",
+                        stringResource(commonR.string.trail_title_filter),
                         style = MaterialTheme.typography.labelLarge,
                         color = if (filterCount > 0)
                             colorScheme.onPrimaryContainer
@@ -388,7 +390,7 @@ fun FilterSheetContent(
                     )
                 }
                 Text(
-                    "필터 옵션",
+                    stringResource(commonR.string.trail_title_filter_option),
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold
                 )
@@ -397,7 +399,7 @@ fun FilterSheetContent(
             TextButton(onClick = {
                 onFilterChange(FilterState())
             }) {
-                Text("초기화")
+                Text(stringResource(commonR.string.trail_title_reset))
             }
         }
 
@@ -408,9 +410,12 @@ fun FilterSheetContent(
         ) {
             item {
                 FilterSection(
-                    title = "거리",
+                    title = stringResource(commonR.string.trail_title_distace),
                     icon = Icons.Default.Place,
-                    options = listOf("1km 이하", "1-3km", "3-5km", "5km 이상"),
+                    options = listOf(stringResource(commonR.string.trail_distance_under_1km),
+                        stringResource(commonR.string.trail_distance_1_to_3km),
+                        stringResource(commonR.string.trail_distance_3_to_5km),
+                        stringResource(commonR.string.trail_distance_over_5km)),
                     selected = filterState.distance,
                     onSelect = { onFilterChange(filterState.copy(distance = it)) }
                 )
@@ -418,9 +423,12 @@ fun FilterSheetContent(
 
             item {
                 FilterSection(
-                    title = "시간",
+                    title = stringResource(commonR.string.trail_title_hours),
                     icon = Icons.Default.Schedule,
-                    options = listOf("30분 이하", "30-60분", "1-2시간", "2시간 이상"),
+                    options = listOf(stringResource(commonR.string.trail_time_under_30min),
+                        stringResource(commonR.string.trail_time_30_to_60min),
+                        stringResource(commonR.string.trail_time_1_to_2_hours),
+                        stringResource(commonR.string.trail_time_over_2_hours)),
                     selected = filterState.time,
                     onSelect = { onFilterChange(filterState.copy(time = it)) }
                 )
@@ -428,9 +436,11 @@ fun FilterSheetContent(
 
             item {
                 FilterSection(
-                    title = "난이도",
+                    title = stringResource(commonR.string.trail_title_level),
                     icon = Icons.Default.TrendingUp,
-                    options = listOf("하", "중", "상"),
+                    options = listOf(stringResource(commonR.string.trail_level_low),
+                        stringResource(commonR.string.trail_level_medium),
+                        stringResource(commonR.string.trail_level_high)),
                     selected = filterState.difficulty,
                     onSelect = { onFilterChange(filterState.copy(difficulty = it)) }
                 )
@@ -438,9 +448,11 @@ fun FilterSheetContent(
 
             item {
                 FilterSection(
-                    title = "반려견 크기",
+                    title = stringResource(commonR.string.trail_title_dog_size),
                     icon = Icons.Default.Pets,
-                    options = listOf("소형", "중형", "대형"),
+                    options = listOf( stringResource(commonR.string.dog_size_small),
+                        stringResource(commonR.string.dog_size_medium),
+                        stringResource(commonR.string.dog_size_large)),
                     selected = filterState.dogSize,
                     onSelect = { onFilterChange(filterState.copy(dogSize = it)) }
                 )
@@ -454,7 +466,7 @@ fun FilterSheetContent(
                         .height(56.dp),
                     shape = RoundedCornerShape(12.dp)
                 ) {
-                    Text("적용하기", style = MaterialTheme.typography.titleMedium)
+                    Text(stringResource(commonR.string.trail_button_apply), style = MaterialTheme.typography.titleMedium)
                 }
             }
 
@@ -532,7 +544,7 @@ fun WalkRouteCard(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    "난이도: ${route.difficulty}",
+                    text = "${stringResource(commonR.string.trail_title_level)}: ${route.difficulty}",
                     style = MaterialTheme.typography.bodySmall,
                     color = Color.Gray
                 )

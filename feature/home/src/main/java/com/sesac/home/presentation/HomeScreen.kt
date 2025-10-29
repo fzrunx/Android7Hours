@@ -81,6 +81,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.ModifierLocalBeyondBoundsLayout
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.isTraversalGroup
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.traversalIndex
@@ -133,7 +134,11 @@ fun HomeScreen(
     val tabSpace = dimensionResource(commonR.dimen.tab_space)
 
     // 임시 data
-    val tabOptions = listOf("산책로", "여행지", "병원")
+    val tabOptions = listOf(
+        stringResource(commonR.string.home_tab_trail),
+        stringResource(commonR.string.home_tab_trip),
+        stringResource(commonR.string.home_tab_hospital)
+    )
     val unCheckedIcons =
         listOf(
             Icons.Outlined.LocationOn,
@@ -202,8 +207,8 @@ fun HomeScreen(
                 )
             }
 
-            CustomHomeCarousel(text = "산책로 추천", recommendImages =  pathRecommendImages,)
-            CustomHomeCarousel(text = "여행지 추천", recommendImages = tripRecommendImages,)
+            CustomHomeCarousel(text = stringResource(commonR.string.home_carousel_title_trail_recommendation), recommendImages =  pathRecommendImages)
+            CustomHomeCarousel(text =  stringResource(commonR.string.home_carousel_title_trip_recommendation), recommendImages = tripRecommendImages)
 
             CommonSegmentedButton(
                 tabOptions =  tabOptions,
@@ -253,7 +258,7 @@ fun ColumnScope.CustomHomeCarousel(
                         .weight(1f)
                         .padding(horizontal = textSpace, vertical = space),
                     color = Color(0xfff08130),
-                    text = "전체보기"
+                    text = stringResource(commonR.string.common_see_all)
                 )
             }
         }

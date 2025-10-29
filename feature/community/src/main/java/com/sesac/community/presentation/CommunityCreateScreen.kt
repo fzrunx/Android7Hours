@@ -1,5 +1,6 @@
 package com.sesac.community.presentation
 
+import com.sesac.common.R as commonR
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -12,10 +13,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.sesac.common.ui.theme.Android7HoursTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -39,7 +42,7 @@ fun CommunityCreateScreen() {
                 )
             ) {
                 Text(
-                    text = "등록하기",
+                    text = stringResource(commonR.string.community_button_register),
                     modifier = Modifier.padding(vertical = 12.dp),
                     fontSize = 16.sp
                 )
@@ -65,7 +68,7 @@ fun CommunityCreateScreen() {
                 modifier = Modifier.fillMaxWidth(),
                 placeholder = {
                     Text(
-                        "My Post",
+                        stringResource(commonR.string.community_placeholder_title),
                         style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Bold,
                         color = Color.LightGray
@@ -112,7 +115,7 @@ fun CommunityCreateScreen() {
                     .heightIn(min = 200.dp), // 최소 높이 지정
                 placeholder = {
                     Text(
-                        "게시글 내용",
+                        stringResource(commonR.string.community_placeholder_post_content),
                         style = MaterialTheme.typography.bodyLarge,
                         color = Color.LightGray
                     )
@@ -136,5 +139,7 @@ fun CommunityCreateScreen() {
 fun CommunityCreateScreenPreview() {
     // 앱의 테마로 감싸주면 더 정확한 미리보기가 가능합니다.
     // 예: YourAppTheme { CommunityCreateScreen() }
-    CommunityCreateScreen()
+    Android7HoursTheme {
+        CommunityCreateScreen()
+    }
 }

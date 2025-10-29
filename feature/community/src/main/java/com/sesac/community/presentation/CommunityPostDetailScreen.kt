@@ -1,5 +1,6 @@
 package com.sesac.community.presentation
 
+import com.sesac.common.R as commonR
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -15,12 +16,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import com.sesac.common.ui.theme.Android7HoursTheme
 
 // 댓글 데이터를 위한 data class
 data class Comment(
@@ -29,6 +32,7 @@ data class Comment(
     val date: String,
     val content: String
 )
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -76,7 +80,7 @@ fun CommunityDetailScreen() {
                         value = commentText,
                         onValueChange = { commentText = it },
                         modifier = Modifier.weight(1f),
-                        placeholder = { Text("댓글 작성해주세요.", fontSize = 14.sp) },
+                        placeholder = { Text(stringResource(commonR.string.community_placeholder_comment_write), fontSize = 14.sp) },
                         colors = TextFieldDefaults.colors(
                             focusedContainerColor = Color.Transparent,
                             unfocusedContainerColor = Color.Transparent,
@@ -92,7 +96,7 @@ fun CommunityDetailScreen() {
                         onClick = { /* TODO: 댓글 등록 */ },
                         shape = RectangleShape // 직각 모서리
                     ) {
-                        Text("등록하기")
+                        Text(stringResource(commonR.string.community_button_register))
                     }
                 }
             }
@@ -118,7 +122,7 @@ fun CommunityDetailScreen() {
                         verticalAlignment = Alignment.Top
                     ) {
                         Text(
-                            text = "1번 게시글",
+                            text = "1번 게시글", // 하드코딩 데이터로 추후 변경 필요
                             style = MaterialTheme.typography.headlineMedium,
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier.weight(1f) // 남는 공간 모두 차지
@@ -131,14 +135,14 @@ fun CommunityDetailScreen() {
                                 // 이미지의 아이콘과 유사한 'Reply' 아이콘 사용 (AutoMirrored)
                                 Icon(
                                     Icons.AutoMirrored.Filled.Reply,
-                                    contentDescription = "공유하기",
+                                    contentDescription = stringResource(commonR.string.community_title_share),
                                     modifier = Modifier.size(18.dp)
                                 )
                                 Spacer(modifier = Modifier.width(4.dp))
-                                Text("공유하기", fontSize = 14.sp)
+                                Text(stringResource(commonR.string.community_title_share), fontSize = 14.sp)
                             }
                             Text(
-                                "작성 날짜",
+                                text = stringResource(commonR.string.community_title_create_date),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = Color.Gray
                             )
@@ -147,7 +151,7 @@ fun CommunityDetailScreen() {
 
                     // 2. 작성자
                     Text(
-                        "작성자",
+                        text = stringResource(commonR.string.community_title_create_auth),
                         style = MaterialTheme.typography.bodyLarge,
                         color = Color.DarkGray
                     )
@@ -160,7 +164,7 @@ fun CommunityDetailScreen() {
                             .data("https://images.unsplash.com/photo-1517849845537-4d257902454a") // 예시 이미지 URL
                             .crossfade(true)
                             .build(),
-                        contentDescription = "게시글 이미지",
+                        contentDescription = stringResource(commonR.string.community_title_post_image),
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(250.dp)
@@ -175,13 +179,15 @@ fun CommunityDetailScreen() {
 
                     // 5. 좋아요 / 댓글 수
                     Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                        val likecount = 10 // 임시 데이터 추가  추후 아래 코드 변경 필요 데이터로 구조 변경하고나서는 postscreen에 있는거랑 동일하게
                         Text(
-                            "좋아요 4",
+                            text = stringResource(commonR.string.community_title_like, likecount),
                             style = MaterialTheme.typography.bodyMedium,
                             color = Color.Gray
                         )
+                        val commentcount = 3 // 임시 데이터 추가
                         Text(
-                            "댓글 3",
+                            text = stringResource(commonR.string.community_title_comment, commentcount),
                             style = MaterialTheme.typography.bodyMedium,
                             color = Color.Gray
                         )
@@ -206,7 +212,7 @@ fun CommunityDetailScreen() {
                     contentAlignment = Alignment.CenterEnd // 우측 정렬
                 ) {
                     TextButton(onClick = { /* TODO: 목록으로 가기 */ }) {
-                        Text("목록", fontSize = 16.sp)
+                        Text(stringResource(commonR.string.community_title_list), fontSize = 16.sp)
                     }
                 }
             }
@@ -255,5 +261,7 @@ fun CommentItem(comment: Comment) {
 fun CommunityDetailScreenPreview() {
     // MaterialTheme으로 감싸주면 실제 앱과 더 유사한 디자인을 볼 수 있습니다.
     // YourAppTheme { CommunityDetailScreen() }
-    CommunityDetailScreen()
+    Android7HoursTheme {
+        CommunityDetailScreen()
+    }
 }

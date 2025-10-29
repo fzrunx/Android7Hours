@@ -1,5 +1,6 @@
 package com.sesac.community.presentation
 
+import com.sesac.common.R as commonR
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -24,6 +25,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -118,7 +120,7 @@ fun TabSection() {
             modifier = Modifier.weight(1f),
             border = BorderStroke(1.dp, Color.Gray)
         ) {
-            Text("SNS", fontSize = 16.sp)
+            Text(stringResource(commonR.string.community_button_SNS), fontSize = 16.sp)
         }
 
         // 게시판 버튼
@@ -131,7 +133,7 @@ fun TabSection() {
             modifier = Modifier.weight(1f),
             border = BorderStroke(1.dp, Color.Gray)
         ) {
-            Text("게시판", fontSize = 16.sp)
+            Text(stringResource(commonR.string.community_button_post), fontSize = 16.sp)
         }
     }
 }

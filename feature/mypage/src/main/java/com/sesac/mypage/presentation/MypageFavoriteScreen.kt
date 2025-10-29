@@ -1,5 +1,7 @@
 package com.sesac.mypage.presentation
 
+import android.R
+import com.sesac.common.R as commonR
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -22,6 +24,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -45,7 +48,12 @@ fun MypageFavoriteScreen (modifier: Modifier = Modifier) {
                 verticalAlignment = Alignment.Top
             ) {
                 CustomButton(
-                    buttonLabels = listOf("관리", "즐겨찾기", "설정")
+                    buttonLabels = listOf(
+                        stringResource(commonR.string.mypage_button_myinfo),
+                        stringResource(commonR.string.mypage_button_management),
+                        stringResource(commonR.string.mypage_button_favorite),
+                        stringResource(commonR.string.mypage_button_setting)
+                    )
                 ) { label ->
                     when (label) {
                         "관리" -> { /* 관리 화면으로 이동 */
@@ -65,7 +73,10 @@ fun MypageFavoriteScreen (modifier: Modifier = Modifier) {
                 horizontalArrangement = Arrangement.Start,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                val categories = listOf("즐겨찾기", "좋아요", "작성목록")
+                val categories = listOf(
+                    stringResource(commonR.string.mypage_button_favorite),
+                    stringResource(commonR.string.mypage_button_like),
+                    stringResource(commonR.string.mypage_button_create_list))
                 categories.forEach { category ->
                     Box(
                         modifier = Modifier
