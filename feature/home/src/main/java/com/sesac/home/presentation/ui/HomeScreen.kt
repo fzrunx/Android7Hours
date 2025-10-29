@@ -80,6 +80,8 @@ fun HomeScreen(
     textFieldState: TextFieldState,
     onSearch: (String) -> Unit,
     searchResults: List<String>,
+    nav2CommunityMain: () -> Unit,
+    nav2TrailRecommend: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
 
@@ -131,13 +133,7 @@ fun HomeScreen(
         )
     }
     val sampleCoummunityItems = listOf(
-        CommonArticlePreviewListItem(
-            title = "title1",
-            sumnail = painterResource(R.drawable.dog_sample_banner_1),
-            content = "배고파".repeat(30),
-            icon = Icons.Outlined.AccountCircle,
-            author = "Hong"
-        ),
+        CommonArticlePreviewListItem(title = "title1", sumnail = painterResource(R.drawable.dog_sample_banner_1), content = "배고파".repeat(30), icon = Icons.Outlined.AccountCircle, author = "Hong"),
         CommonArticlePreviewListItem(title = "title2", content = "졸려".repeat(30), icon = Icons.Filled.AccountCircle, author = "Gil"),
         CommonArticlePreviewListItem(title = "title2", sumnail = painterResource(R.drawable.dog_sample_banner_3), content = "lol".repeat(30), icon = Icons.Default.AccountCircle, author = "Dong"),
     )
@@ -174,8 +170,16 @@ fun HomeScreen(
                 )
             }
 
-            HomeCarousel(text = stringResource(commonR.string.home_carousel_title_trail_recommendation), recommendImages =  pathRecommendImages)
-            HomeCarousel(text =  stringResource(commonR.string.home_carousel_title_community_recommendation), recommendImages = tripRecommendImages)
+            HomeCarousel(
+                text = stringResource(commonR.string.home_carousel_title_trail_recommendation),
+                recommendImages =  pathRecommendImages,
+                onSeeAllClick = nav2TrailRecommend,
+            )
+            HomeCarousel(
+                text =  stringResource(commonR.string.home_carousel_title_community_recommendation),
+                recommendImages = tripRecommendImages,
+                onSeeAllClick = nav2CommunityMain,
+            )
 
             CommonSegmentedButton(
                 tabOptions =  tabOptions,
@@ -195,8 +199,8 @@ fun HomeScreen(
             TextFieldState(),
             onSearch,
             searchResults,
-            searchResultsScrollState)
-
+            searchResultsScrollState
+        )
     }
 }
 
@@ -208,6 +212,8 @@ fun HomeScreenPreview() {
     HomeScreen(
         textFieldState = textFieldState,
         onSearch = {},
-        searchResults = listOf("cat", "dog", "bird")
+        searchResults = listOf("cat", "dog", "bird"),
+        nav2CommunityMain = {},
+        nav2TrailRecommend = {},
     )
 }

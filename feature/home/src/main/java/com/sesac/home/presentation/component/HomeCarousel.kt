@@ -1,6 +1,7 @@
 package com.sesac.home.presentation.component
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
@@ -33,6 +34,7 @@ fun ColumnScope.HomeCarousel(
     modifier: Modifier = Modifier,
     text: String?,
     recommendImages: List<CarouselItem>,
+    onSeeAllClick: () -> Unit = {},
     textSpace: Dp = dimensionResource(cR.dimen.text_top_bottom_space),
     space: Dp = dimensionResource(cR.dimen.default_space),
     imageWidth: Dp = dimensionResource(cR.dimen.carousel_image_width),
@@ -53,7 +55,8 @@ fun ColumnScope.HomeCarousel(
                     modifier = Modifier
                         .wrapContentSize(Alignment.CenterEnd)
                         .weight(1f)
-                        .padding(horizontal = textSpace, vertical = space),
+                        .padding(horizontal = textSpace, vertical = space)
+                        .clickable(true, onClick = onSeeAllClick),
                     color = Color(0xfff08130),
                     text = stringResource(cR.string.common_see_all)
                 )
