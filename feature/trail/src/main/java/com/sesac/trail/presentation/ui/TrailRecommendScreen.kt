@@ -276,11 +276,15 @@ fun WalkListBottomSheet(
         }
 
         CommonArticleList(
-            listState =  listState,
-            routes = routes,
-            selectedRoute = selectedRoute,
-            onRouteClick = onRouteClick
-        )
+            listState = listState,
+            items = routes,
+        ) { route ->
+            com.sesac.common.component.CommonArticle(
+                route = route,
+                isSelected = selectedRoute?.id == route.id,
+                onClick = { onRouteClick(route) }
+            )
+        }
 
     }
 }

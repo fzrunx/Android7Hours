@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
@@ -48,7 +49,8 @@ import androidx.compose.ui.semantics.isTraversalGroup
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.sesac.common.component.CommonArticlePreviewList
+import com.sesac.common.component.CommonArticleList
+import com.sesac.common.component.CommonArticlePreview
 import com.sesac.common.component.CommonArticlePreviewListItem
 import com.sesac.common.component.CommonSearchBar
 import com.sesac.common.component.CommonSegmentedButton
@@ -129,7 +131,13 @@ fun HomeScreen(
         )
     }
     val sampleCoummunityItems = listOf(
-        CommonArticlePreviewListItem(title = "title1", sumnail = painterResource(R.drawable.dog_sample_banner_1), content = "배고파".repeat(30), icon = Icons.Outlined.AccountCircle, author = "Hong"),
+        CommonArticlePreviewListItem(
+            title = "title1",
+            sumnail = painterResource(R.drawable.dog_sample_banner_1),
+            content = "배고파".repeat(30),
+            icon = Icons.Outlined.AccountCircle,
+            author = "Hong"
+        ),
         CommonArticlePreviewListItem(title = "title2", content = "졸려".repeat(30), icon = Icons.Filled.AccountCircle, author = "Gil"),
         CommonArticlePreviewListItem(title = "title2", sumnail = painterResource(R.drawable.dog_sample_banner_3), content = "lol".repeat(30), icon = Icons.Default.AccountCircle, author = "Dong"),
     )
@@ -138,6 +146,7 @@ fun HomeScreen(
     val bannerPagerState = rememberPagerState(initialPage = 0, pageCount = { bannerImages.size })
     val homeScreenScrollState = rememberScrollState()
     val searchResultsScrollState = rememberScrollState()
+    val lazyListState = rememberLazyListState()
 
     Box(modifier.fillMaxSize()) {
         Column(
@@ -175,7 +184,10 @@ fun HomeScreen(
                 unCheckedIcons = unCheckedIcons
             )
 
-            CommonArticlePreviewList(items = sampleCoummunityItems)
+            CommonArticleList(items = sampleCoummunityItems, articleHorrPadding = space) {
+                item ->
+                CommonArticlePreview(item = item)
+            }
         }
 
         CommonSearchBar(
