@@ -1,6 +1,6 @@
-package com.sesac.monitor.presentation
+package com.sesac.monitor.presentation.ui
 
-import com.sesac.common.R as commonR
+import com.sesac.common.R as cR
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -22,10 +22,14 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.sesac.monitor.presentation.componoent.MonitorTempTabButton
 
 
 @Composable
-fun MonitorGPSScreen (modifier: Modifier = Modifier) {
+fun MonitorGPSScreen (
+    modifier: Modifier = Modifier,
+    tabOptionsName: List<String> = listOf(stringResource(cR.string.monitor_button_webcam), stringResource(cR.string.monitor_button_GPS)),
+    ) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -37,17 +41,9 @@ fun MonitorGPSScreen (modifier: Modifier = Modifier) {
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.Top
         ) {
-            CustomButton(
-                buttonLabels = listOf(
-                    stringResource(commonR.string.monitor_button_webcam),
-                    stringResource(commonR.string.monitor_button_GPS)
-                )
-            ) { label ->
-                when (label) {
-                    "영상" -> { /* 영상 화면으로 이동 */ }
-                    "GPS" -> { /* GPS 화면으로 이동 */ }
-                }
-            }
+            MonitorTempTabButton(
+                buttonLabels = tabOptionsName
+            )
         }
         Spacer(Modifier.height(30.dp))
         Box(

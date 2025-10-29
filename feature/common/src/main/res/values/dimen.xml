@@ -5,4 +5,7 @@
     <dimen name="text_top_bottom_space">20dp</dimen>
     <dimen name="carousel_image_height">100dp</dimen>
     <dimen name="carousel_image_width">200dp</dimen>
+
+    <!--monitor-->
+    <dimen name="monitor_icon_button_size">70dp</dimen>
 </resources>
