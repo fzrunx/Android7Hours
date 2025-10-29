@@ -1,6 +1,6 @@
 package com.sesac.trail.presentation.ui
 
-import com.sesac.common.R as commonR
+import com.sesac.common.R as cR
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -57,24 +57,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.sesac.trail.presentation.component.SegmentedMenu
+import com.sesac.common.component.CommonArticleList
+import com.sesac.common.component.CommonSegmentedButton
+import com.sesac.common.component.PathInfo
+import com.sesac.trail.presentation.component.TrailControlIconList
 import com.sesac.trail.presentation.component.SegmentedMenuItem
-
-// 데이터 모델
-data class WalkRoute(
-    val id: Int,
-    val name: String,
-    val distance: String,
-    val duration: String,
-    val difficulty: String,
-    val dogSize: String,
-    val rating: Float,
-    val likes: Int
-)
+import com.sesac.trail.utils.FilterSheetContent
 
 data class FilterState(
     val distance: String? = null,
@@ -95,32 +88,38 @@ fun TrailRecommendScreen(
 ) {
     // 상단 SegmentedMenu
     val menuItems = listOf(
-        SegmentedMenuItem("recommend", stringResource(commonR.string.trail_button_recommend)),
-        SegmentedMenuItem("follow", stringResource(commonR.string.trail_button_follow)),
-        SegmentedMenuItem("record", stringResource(commonR.string.trail_button_record))
+        SegmentedMenuItem("recommend", stringResource(cR.string.trail_button_recommend)),
+        SegmentedMenuItem("follow", stringResource(cR.string.trail_button_follow)),
+        SegmentedMenuItem("record", stringResource(cR.string.trail_button_record))
     )
 
+    val sheetPeekHeight = dimensionResource(cR.dimen.trail_botton_sheet_peek_height)
+
+    val tabOptions = listOf(stringResource(cR.string.trail_button_recommend), stringResource(cR.string.trail_button_follow), stringResource(cR.string.trail_button_record))
+    val tabSelectedIndex = remember { mutableStateOf(0) }
+
+    val surfaceIconList = listOf(Icons.Default.MyLocation, Icons.Default.Layers)
 
     val sheetState = rememberBottomSheetScaffoldState()
 
-    var selectedRoute by remember { mutableStateOf<WalkRoute?>(null) }
+    var selectedRoute by remember { mutableStateOf<PathInfo?>(null) }
     var showFilterMode by remember { mutableStateOf(false) }
     var filterState by remember { mutableStateOf(FilterState()) }
     val listState = rememberLazyListState()
 
     val sampleRoutes = remember {
         listOf(
-            WalkRoute(1, "한강 산책로", "2.5km", "40분", "하", "전체", 4.8f, 234),
-            WalkRoute(2, "남산 둘레길", "4.2km", "80분", "중", "중형 이상", 4.6f, 189),
-            WalkRoute(3, "올림픽공원 코스", "3.8km", "60분", "하", "전체", 4.9f, 412),
-            WalkRoute(4, "북한산 입구", "1.8km", "35분", "중", "소형", 4.5f, 156),
-            WalkRoute(5, "양재천 산책로", "3.2km", "50분", "하", "전체", 4.7f, 298),
+            PathInfo(1, "한강 산책로", "2.5km", "40분", "하", "전체", 4.8f, 234),
+            PathInfo(2, "남산 둘레길", "4.2km", "80분", "중", "중형 이상", 4.6f, 189),
+            PathInfo(3, "올림픽공원 코스", "3.8km", "60분", "하", "전체", 4.9f, 412),
+            PathInfo(4, "북한산 입구", "1.8km", "35분", "중", "소형", 4.5f, 156),
+            PathInfo(5, "양재천 산책로", "3.2km", "50분", "하", "전체", 4.7f, 298),
         )
     }
 
     BottomSheetScaffold(
         scaffoldState = sheetState,
-        sheetPeekHeight = 160.dp,
+        sheetPeekHeight = sheetPeekHeight,
         sheetDragHandle = null,
         sheetContent = {
             // 모드에 따라 다른 컨텐츠 표시
@@ -155,15 +154,10 @@ fun TrailRecommendScreen(
                     .fillMaxSize()
                     .background(Color(0xFFE8F5E9))
             ) {
-                SegmentedMenu(
-                    items = menuItems,
-                    selectedItem = current,
-                    onItemSelected = onSelectMenu,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(5.dp)
+                CommonSegmentedButton(
+                    tabOptions =  tabOptions,
+                    tabSelectedIndex = tabSelectedIndex,
                 )
-
 
                 Column(
                     modifier = Modifier.align(Alignment.Center),
@@ -184,57 +178,19 @@ fun TrailRecommendScreen(
                 }
             }
 
-            // 오른쪽 하단 맵 컨트롤 (예시)
-            Column(
-                modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .padding(16.dp)
-                    .padding(bottom = 160.dp), // Bottom Sheet 높이만큼 여백
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                // 현재 위치 버튼
-                Surface(
-                    shape = RoundedCornerShape(12.dp),
-                    shadowElevation = 4.dp,
-                    color = Color.White,
-                    modifier = Modifier.size(48.dp)
-                ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Icon(
-                            Icons.Default.MyLocation,
-                            contentDescription = "현재 위치",
-                            tint = colorScheme.primary
-                        )
-                    }
-                }
+            TrailControlIconList(surfaceIconList)
 
-                // 맵 타입 변경 버튼
-                Surface(
-                    shape = RoundedCornerShape(12.dp),
-                    shadowElevation = 4.dp,
-                    color = Color.White,
-                    modifier = Modifier.size(48.dp)
-                ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Icon(
-                            Icons.Default.Layers,
-                            contentDescription = "맵 타입",
-                            tint = colorScheme.primary
-                        )
-                    }
-                }
-            }
         }
     }
 }
 
 @Composable
 fun WalkListBottomSheet(
-    routes: List<WalkRoute>,
-    selectedRoute: WalkRoute?,
+    routes: List<PathInfo>,
+    selectedRoute: PathInfo?,
     listState: LazyListState,
     filterCount: Int,
-    onRouteClick: (WalkRoute) -> Unit,
+    onRouteClick: (PathInfo) -> Unit,
     onFilterClick: () -> Unit
 ) {
     Column(
@@ -267,7 +223,7 @@ fun WalkListBottomSheet(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                stringResource(commonR.string.trail_title_nearby_trails),
+                stringResource(cR.string.trail_title_nearby_trails),
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold
             )
@@ -297,7 +253,7 @@ fun WalkListBottomSheet(
                             colorScheme.onSurfaceVariant
                     )
                     Text(
-                        stringResource(commonR.string.trail_title_filter),
+                        stringResource(cR.string.trail_title_filter),
                         style = MaterialTheme.typography.labelLarge,
                         color = if (filterCount > 0)
                             colorScheme.onPrimaryContainer
@@ -319,309 +275,13 @@ fun WalkListBottomSheet(
             }
         }
 
-        // 산책로 리스트
-        LazyColumn(
-            state = listState,
-            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            items(routes) { route ->
-                WalkRouteCard(
-                    route = route,
-                    isSelected = selectedRoute?.id == route.id,
-                    onClick = { onRouteClick(route) }
-                )
-            }
-        }
-    }
-}
-
-@Composable
-fun FilterSheetContent(
-    filterState: FilterState,
-    onFilterChange: (FilterState) -> Unit,
-    onBack: () -> Unit,
-    onApply: () -> Unit
-) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .heightIn(min = 160.dp)
-    ) {
-        // 드래그 핸들
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 12.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            Box(
-                modifier = Modifier
-                    .width(40.dp)
-                    .height(4.dp)
-                    .clip(RoundedCornerShape(2.dp))
-                    .background(Color.Gray.copy(alpha = 0.3f))
-            )
-        }
-
-        // 필터 헤더: 뒤로가기 + 제목 + 초기화
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 8.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Surface(
-                    onClick = onBack,
-                    shape = RoundedCornerShape(8.dp),
-                    color = Color.Transparent
-                ) {
-                    Icon(
-                        Icons.Default.ArrowBack,
-                        contentDescription = "뒤로가기",
-                        modifier = Modifier
-                            .padding(4.dp)
-                            .size(24.dp)
-                    )
-                }
-                Text(
-                    stringResource(commonR.string.trail_title_filter_option),
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-
-            TextButton(onClick = {
-                onFilterChange(FilterState())
-            }) {
-                Text(stringResource(commonR.string.trail_title_reset))
-            }
-        }
-
-        // 필터 내용을 스크롤 가능하게
-        LazyColumn(
-            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            item {
-                FilterSection(
-                    title = stringResource(commonR.string.trail_title_distace),
-                    icon = Icons.Default.Place,
-                    options = listOf(stringResource(commonR.string.trail_distance_under_1km),
-                        stringResource(commonR.string.trail_distance_1_to_3km),
-                        stringResource(commonR.string.trail_distance_3_to_5km),
-                        stringResource(commonR.string.trail_distance_over_5km)),
-                    selected = filterState.distance,
-                    onSelect = { onFilterChange(filterState.copy(distance = it)) }
-                )
-            }
-
-            item {
-                FilterSection(
-                    title = stringResource(commonR.string.trail_title_hours),
-                    icon = Icons.Default.Schedule,
-                    options = listOf(stringResource(commonR.string.trail_time_under_30min),
-                        stringResource(commonR.string.trail_time_30_to_60min),
-                        stringResource(commonR.string.trail_time_1_to_2_hours),
-                        stringResource(commonR.string.trail_time_over_2_hours)),
-                    selected = filterState.time,
-                    onSelect = { onFilterChange(filterState.copy(time = it)) }
-                )
-            }
-
-            item {
-                FilterSection(
-                    title = stringResource(commonR.string.trail_title_level),
-                    icon = Icons.Default.TrendingUp,
-                    options = listOf(stringResource(commonR.string.trail_level_low),
-                        stringResource(commonR.string.trail_level_medium),
-                        stringResource(commonR.string.trail_level_high)),
-                    selected = filterState.difficulty,
-                    onSelect = { onFilterChange(filterState.copy(difficulty = it)) }
-                )
-            }
-
-            item {
-                FilterSection(
-                    title = stringResource(commonR.string.trail_title_dog_size),
-                    icon = Icons.Default.Pets,
-                    options = listOf( stringResource(commonR.string.dog_size_small),
-                        stringResource(commonR.string.dog_size_medium),
-                        stringResource(commonR.string.dog_size_large)),
-                    selected = filterState.dogSize,
-                    onSelect = { onFilterChange(filterState.copy(dogSize = it)) }
-                )
-            }
-
-            item {
-                Button(
-                    onClick = onApply,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(56.dp),
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    Text(stringResource(commonR.string.trail_button_apply), style = MaterialTheme.typography.titleMedium)
-                }
-            }
-
-            // 하단 여백
-            item {
-                Spacer(modifier = Modifier.height(16.dp))
-            }
-        }
-    }
-}
-
-@Composable
-fun WalkRouteCard(
-    route: WalkRoute,
-    isSelected: Boolean,
-    onClick: () -> Unit
-) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick),
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = if (isSelected) 8.dp else 2.dp
-        ),
-        colors = CardDefaults.cardColors(
-            containerColor = if (isSelected)
-                colorScheme.primaryContainer
-            else
-                colorScheme.surface
-        ),
-        shape = RoundedCornerShape(16.dp)
-    ) {
-        Column(
-            modifier = Modifier.padding(16.dp)
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    route.name,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
-                )
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        Icons.Default.Star,
-                        contentDescription = null,
-                        tint = Color(0xFFFFC107),
-                        modifier = Modifier.size(16.dp)
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        route.rating.toString(),
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                InfoChip("📍 ${route.distance}")
-                InfoChip("⏱️ ${route.duration}")
-                InfoChip("🐕 ${route.dogSize}")
-            }
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    text = "${stringResource(commonR.string.trail_title_level)}: ${route.difficulty}",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = Color.Gray
-                )
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        Icons.Default.Favorite,
-                        contentDescription = null,
-                        tint = Color(0xFFE91E63),
-                        modifier = Modifier.size(14.dp)
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        route.likes.toString(),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = Color.Gray
-                    )
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun InfoChip(text: String) {
-    Surface(
-        shape = RoundedCornerShape(8.dp),
-        color = Color.Gray.copy(alpha = 0.1f)
-    ) {
-        Text(
-            text,
-            style = MaterialTheme.typography.bodySmall,
-            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+        CommonArticleList(
+            listState =  listState,
+            routes = routes,
+            selectedRoute = selectedRoute,
+            onRouteClick = onRouteClick
         )
+
     }
 }
 
-@Composable
-fun FilterSection(
-    title: String,
-    icon: ImageVector,
-    options: List<String>,
-    selected: String?,
-    onSelect: (String?) -> Unit
-) {
-    Column {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(bottom = 8.dp)
-        ) {
-            Icon(
-                icon,
-                contentDescription = null,
-                modifier = Modifier.size(20.dp),
-                tint = colorScheme.primary
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(
-                title,
-                style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.SemiBold
-            )
-        }
-
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            options.forEach { option ->
-                FilterChip(
-                    selected = selected == option,
-                    onClick = {
-                        onSelect(if (selected == option) null else option)
-                    },
-                    label = { Text(option) },
-                    modifier = Modifier.weight(1f)
-                )
-            }
-        }
-    }
-}
