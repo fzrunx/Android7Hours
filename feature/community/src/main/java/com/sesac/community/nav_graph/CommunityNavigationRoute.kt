@@ -5,5 +5,5 @@ import kotlinx.serialization.Serializable
 @Serializable
 sealed interface CommunityNavigationRoute {
     @Serializable
-    data object CommunityMain: CommunityNavigationRoute
+    data object CommunityMainTab: CommunityNavigationRoute
 }
