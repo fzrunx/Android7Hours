@@ -44,7 +44,7 @@ android {
 
 dependencies {
 
-    implementation(project(":feature"))
+    //implementation(project(":feature"))
     implementation(project(":feature:common"))
     implementation(project(":feature:home"))
     implementation(project(":feature:community"))
@@ -62,6 +62,7 @@ dependencies {
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.compose.material.icons.extended)
     implementation(libs.bundles.navigation)
+    implementation(libs.bundles.coil)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
@@ -70,7 +71,6 @@ dependencies {
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
-
 
     implementation("androidx.core:core-splashscreen:1.0.1")
 }

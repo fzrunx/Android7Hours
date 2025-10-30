@@ -36,12 +36,13 @@ android {
 //    kotlinOptions {
 //        jvmTarget = "11"
 //    }
-    kotlin{
-        jvmToolchain(21)
-    }
     buildFeatures {
         compose = true
     }
+}
+
+kotlin{
+    jvmToolchain(21)
 }
 
 dependencies {
@@ -61,6 +62,7 @@ dependencies {
     implementation(libs.androidx.compose.material.icons.extended)
     debugImplementation(libs.androidx.compose.ui.tooling)
     implementation(libs.kotlinx.serialization.json)
+    implementation(libs.bundles.navigation)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

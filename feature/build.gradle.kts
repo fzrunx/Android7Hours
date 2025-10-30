@@ -31,12 +31,13 @@ android {
 //    kotlinOptions {
 //        jvmTarget = "11"
 //    }
-    kotlin{
-        jvmToolchain(21)
-    }
     buildFeatures {
         compose = true
     }
+}
+
+kotlin{
+    jvmToolchain(21)
 }
 
 dependencies {

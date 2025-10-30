@@ -34,12 +34,13 @@ android {
 //    kotlinOptions {
 //        jvmTarget = "11"
 //    }
-    kotlin{
-        jvmToolchain(21)
-    }
     buildFeatures {
         compose = true
     }
+}
+
+kotlin{
+    jvmToolchain(21)
 }
 
 dependencies {
@@ -59,6 +60,7 @@ dependencies {
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.kotlinx.serialization.json)
+    implementation(libs.bundles.coil)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
