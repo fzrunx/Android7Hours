@@ -22,12 +22,16 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.sesac.monitor.presentation.componoent.MonitorTempTabButton
+import com.sesac.monitor.presentation.nav_graph.MonitorNavigationRoute
 
 
 @Composable
 fun MonitorGPSScreen (
     modifier: Modifier = Modifier,
+    navController: NavController,
     tabOptionsName: List<String> = listOf(stringResource(cR.string.monitor_button_webcam), stringResource(cR.string.monitor_button_GPS)),
     ) {
     Column(
@@ -42,7 +46,8 @@ fun MonitorGPSScreen (
             verticalAlignment = Alignment.Top
         ) {
             MonitorTempTabButton(
-                buttonLabels = tabOptionsName
+                buttonLabels = tabOptionsName,
+                onClickNav = { navController.navigate(MonitorNavigationRoute.CamTab) }
             )
         }
         Spacer(Modifier.height(30.dp))
@@ -68,5 +73,5 @@ fun MonitorGPSScreen (
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun MonitorGPSScreenPreview() {
-    MonitorGPSScreen()
+    MonitorGPSScreen(navController = rememberNavController())
 }

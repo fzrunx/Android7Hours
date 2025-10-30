@@ -5,5 +5,8 @@ import kotlinx.serialization.Serializable
 @Serializable
 sealed interface MonitorNavigationRoute {
     @Serializable
-    data object RecommendTab: MonitorNavigationRoute
+    data object CamTab: MonitorNavigationRoute
+
+    @Serializable
+    data object GPSTab: MonitorNavigationRoute
 }
