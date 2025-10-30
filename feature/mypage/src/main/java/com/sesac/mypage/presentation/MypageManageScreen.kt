@@ -24,7 +24,7 @@ import androidx.compose.ui.unit.sp
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MyPageScreen() {
+fun MyPageManageScreen() {
 
     // 텍스트 필드 상태
     var expenseText by remember { mutableStateOf("월 지출 내용") }
@@ -207,16 +207,16 @@ fun ExpenseSection(value: String, onValueChange: (String) -> Unit) {
                 )
             }
             // 버튼 위에 "승인" 칩 겹치기
-            SuggestionChip(
-                onClick = { /*TODO*/ },
-                label = { Text("승인") },
-                colors = SuggestionChipDefaults.suggestionChipColors(
-                    containerColor = Color(0xFFFFEB3B) // 노란색 배경
-                ),
-                modifier = Modifier
-                    .align(Alignment.CenterStart)
-                    .offset(x = 100.dp, y = (-8).dp) // 버튼 기준으로 위치 조절
-            )
+//            SuggestionChip(
+//                onClick = { /*TODO*/ },
+//                label = { Text("승인") },
+//                colors = SuggestionChipDefaults.suggestionChipColors(
+//                    containerColor = Color(0xFFFFEB3B) // 노란색 배경
+//                ),
+//                modifier = Modifier
+//                    .align(Alignment.CenterStart)
+//                    .offset(x = 100.dp, y = (-8).dp) // 버튼 기준으로 위치 조절
+//            )
         }
     }
 }
@@ -275,5 +275,5 @@ fun FooterInfoSection() {
 fun MyPageScreenPreview() {
     // 앱의 테마로 감싸주면 더 정확한 미리보기가 가능합니다.
     // 예: YourAppTheme { MyPageScreen() }
-    MyPageScreen()
+    MyPageManageScreen()
 }
