@@ -1,10 +1,19 @@
 package com.sesac.community.presentation
 
-import android.R
-import com.sesac.common.R as commonR
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.input.TextFieldState
@@ -21,25 +30,33 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.NavigationBarItemDefaults
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import coil.compose.AsyncImage
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
+import coil3.compose.AsyncImage
 import com.sesac.common.component.CommonSearchBar
+import com.sesac.domain.model.post.PostModel
+import com.sesac.domain.repository.PostRepository
+import com.sesac.domain.usecase.post.GetAllPostsUseCase
+import com.sesac.common.R as cR
 
 
 // --- 데이터 클래스 정의 ---
@@ -79,99 +96,14 @@ val samplePosts = listOf(
     PostItemData(4, "4번 게시글", "작성자", 1, 2, null)
 )
 
-// --- 메인 화면 Composable ---
-// ... (import 문들은 기존과 동일하게 유지)
-
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun CommunityScreen() {
-    // 하단 네비게이션의 현재 선택된 아이템 인덱스
-    // 3 = "커뮤니티" (0부터 시작)
-    var selectedBottomIndex by remember { mutableStateOf(3) }
-
-    Scaffold(
-        // 1. 상단 앱 바
-//        topBar = { CommunityTopAppBar() },
-
-        // 2. 하단 네비게이션 바
-//        bottomBar = {
-//            CommunityBottomNav(
-//                items = bottomNavItems,
-//                selectedIndex = selectedBottomIndex,
-//                onItemSelected = { selectedBottomIndex = it }
-//            )
-//        },
-        containerColor = Color.White // Scaffold 배경색을 흰색으로
-    ) { paddingValues ->
-        // 3. 메인 컨텐츠 (탭 + 게시글 목록)
-        CommunityContent(
-            modifier = Modifier
-                .padding(paddingValues)
-                .fillMaxSize()
-        )
-    }
-}
-
-// --- 1. 상단 앱 바 ---
-//@OptIn(ExperimentalMaterial3Api::class)
-//@Composable
-//fun CommunityTopAppBar() {
-//    TopAppBar(
-//        title = {
-//            Text(
-//                text = "Community",
-//                modifier = Modifier.fillMaxWidth(),
-//                textAlign = TextAlign.Center // 제목 중앙 정렬
-//            )
-//        },
-//        actions = {
-//            IconButton(onClick = { /* TODO: 검색 클릭 */ }) {
-//                Icon(Icons.Default.Search, contentDescription = "검색")
-//            }
-//        },
-//        // 이미지와 같이 흰색 배경, 검은색 아이콘
-//        colors = TopAppBarDefaults.topAppBarColors(
-//            containerColor = Color.White,
-//            titleContentColor = Color.Black,
-//            actionIconContentColor = Color.Black
-//        )
-//    )
-//}
-
-// --- 2. 하단 네비게이션 바 ---
-@Composable
-fun CommunityBottomNav(
-    items: List<BottomNavItem>,
-    selectedIndex: Int,
-    onItemSelected: (Int) -> Unit
-) {
-    NavigationBar(
-        containerColor = Color(0xFFE0F7FA) // 이미지의 연한 하늘색 배경
-    ) {
-        items.forEachIndexed { index, item ->
-            NavigationBarItem(
-                selected = selectedIndex == index,
-                onClick = { onItemSelected(index) },
-                icon = { Icon(item.icon, contentDescription = item.label) },
-                label = { Text(item.label) },
-                // 선택/비선택 시 색상 지정
-                colors = NavigationBarItemDefaults.colors(
-                    selectedIconColor = MaterialTheme.colorScheme.primary, // 선택 시 (파란색)
-                    selectedTextColor = MaterialTheme.colorScheme.primary,
-                    unselectedIconColor = Color.Black, // 비선택 시 (검은색)
-                    unselectedTextColor = Color.Black
-                )
-            )
-        }
-    }
-}
 
 // --- 3. 메인 컨텐츠 (탭 + 게시글 목록) ---
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CommunityContent(
-    modifier: Modifier = Modifier
+fun CommunityPostScreen(
+    modifier: Modifier = Modifier,
+    navController: NavController,
+    communityViewModel: CommunityViewModel = viewModel(),
 ) {
     // 탭의 현재 선택된 아이템 인덱스
     var selectedTabIndex by remember { mutableStateOf(0) }
@@ -180,6 +112,11 @@ fun CommunityContent(
     var expanded by rememberSaveable { mutableStateOf(false) }
     val onSearch = { s: String -> Unit }
     val searchResult = listOf("1", "22", "333")
+    val mockPostList by remember { mutableStateOf<List<PostModel>>(emptyList()) }
+
+    LaunchedEffect(mockPostList) {
+        communityViewModel.requestPostList()
+    }
 
     Column(modifier = modifier) {
         // --- 3-1. 탭 + 메뉴 아이콘 ---
@@ -221,7 +158,8 @@ fun CommunityContent(
             contentPadding = PaddingValues(10.dp), // 목록 전체의 패딩
             verticalArrangement = Arrangement.spacedBy(12.dp) // 아이템 사이의 간격
         ) {
-            items(samplePosts) { post ->
+//            items(samplePosts) { post ->
+            items(mockPostList) { post ->
                 PostItemCard(post = post)
             }
         }
@@ -230,7 +168,10 @@ fun CommunityContent(
 
 // --- 3-2-1. 개별 게시글 카드 ---
 @Composable
-fun PostItemCard(post: PostItemData) {
+fun PostItemCard(
+//    post: PostItemData
+    post: PostModel,
+) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         // 이미지와 같이 연한 회색 배경
@@ -244,11 +185,16 @@ fun PostItemCard(post: PostItemData) {
             modifier = Modifier.height(120.dp) // 아이템 높이 고정
         ) {
             // (1) 왼쪽: 이미지 또는 "사진" 텍스트
-            ImagePlaceholder(
-                imageUrl = post.imageUrl,
-                modifier = Modifier
-                    .width(100.dp)
-                    .fillMaxHeight()
+//            ImagePlaceholder(
+//                imageUrl = post.imageUrl,
+//                modifier = Modifier
+//                    .width(100.dp)
+//                    .fillMaxHeight()
+//            )
+
+            Image(
+                painter = painterResource(post.imageResList?.component1() ?: cR.drawable.icons8_dog_50),
+                contentDescription = "이미지"
             )
 
             // (2) 오른쪽: 텍스트 내용
@@ -263,7 +209,7 @@ fun PostItemCard(post: PostItemData) {
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = post.author,
+                    text = post.userName,
                     style = MaterialTheme.typography.bodySmall, // "작성자"
                     color = Color.Gray
                 )
@@ -277,12 +223,12 @@ fun PostItemCard(post: PostItemData) {
                     horizontalArrangement = Arrangement.End
                 ) {
                     Text(
-                        text = "${stringResource(commonR.string.community_title_like)} ${post.likes}",
+                        text = "${stringResource(cR.string.community_title_like)} ${post.likes}",
                         style = MaterialTheme.typography.bodySmall
                     )
                     Spacer(modifier = Modifier.width(12.dp))
                     Text(
-                        text = "${stringResource(commonR.string.community_title_comment)} ${post.comments}",
+                        text = "${stringResource(cR.string.community_title_comment)} ${post.comments}",
                         style = MaterialTheme.typography.bodySmall
                     )
                 }
@@ -298,7 +244,7 @@ fun ImagePlaceholder(imageUrl: String?, modifier: Modifier = Modifier) {
         // Coil 라이브러리의 AsyncImage 사용
         AsyncImage(
             model = imageUrl,
-            contentDescription = stringResource(commonR.string.community_title_post_image),
+            contentDescription = stringResource(cR.string.community_title_post_image),
             contentScale = ContentScale.Crop, // 꽉 차게 자르기
             modifier = modifier
         )
@@ -318,11 +264,11 @@ fun ImagePlaceholder(imageUrl: String?, modifier: Modifier = Modifier) {
 }
 
 // --- Preview (미리보기) ---
-@Preview(showBackground = true, widthDp = 360, heightDp = 640)
-@Composable
-fun CommunityScreenPreview() {
-    // 프리뷰가 Material3 테마를 사용하도록 감싸줍니다.
-    MaterialTheme {
-        CommunityScreen()
-    }
-}
+//@Preview(showBackground = true, widthDp = 360, heightDp = 640)
+//@Composable
+//fun CommunityScreenPreview() {
+//    // 프리뷰가 Material3 테마를 사용하도록 감싸줍니다.
+//    MaterialTheme {
+//        CommunityPostScreen()
+//    }
+//}

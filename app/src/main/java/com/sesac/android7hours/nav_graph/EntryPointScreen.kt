@@ -28,6 +28,7 @@ import com.sesac.android7hours.common.topBarAsRouteName
 import com.sesac.community.nav_graph.CommunityNavigationRoute
 import com.sesac.community.presentation.CommunityCreateScreen
 import com.sesac.community.presentation.CommunityMainScreen
+import com.sesac.community.presentation.CommunityPostScreen
 import com.sesac.home.nav_graph.HomeNavigationRoute
 import com.sesac.home.presentation.ui.HomeScreen
 import com.sesac.monitor.presentation.nav_graph.MonitorNavigationRoute
@@ -147,6 +148,11 @@ fun EntryPointScreen() {
             // Community
             composable<CommunityNavigationRoute.CommunityMainTab> {
                 CommunityMainScreen(
+                    navController = navController,
+                )
+            }
+            composable<CommunityNavigationRoute.CommunityPostTab> {
+                CommunityPostScreen(
                     navController = navController,
                 )
             }
