@@ -9,4 +9,7 @@ sealed interface CommunityNavigationRoute {
 
     @Serializable
     data object CommunityCreateTab: CommunityNavigationRoute
+
+    @Serializable
+    data object CommunityPostTab: CommunityNavigationRoute
 }
