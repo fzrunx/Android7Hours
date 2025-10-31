@@ -177,7 +177,7 @@ fun EntryPointScreen() {
             //Mypage
             composable<MypageNavigationRoute.MypageMainTab> {
                 MypageMainScreen(
-                    navController = navController,
+//                    navController = navController,
                 )
             }
 
