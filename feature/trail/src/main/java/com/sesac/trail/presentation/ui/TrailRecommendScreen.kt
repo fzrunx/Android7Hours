@@ -145,8 +145,6 @@ fun TrailRecommendScreen(
                         onFilterClick = { showFilterMode = true }
                     )
                 }
-            } else {
-                TrailControlButton()
             }
         }
     ) { padding ->
@@ -193,6 +191,10 @@ fun TrailRecommendScreen(
             }
 
             TrailControlIconList(surfaceIconList)
+
+            if(trailSelectedMenu.value != recommend) {
+                TrailControlButton()
+            }
 
         }
     }
