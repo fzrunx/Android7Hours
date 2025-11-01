@@ -19,7 +19,7 @@ import androidx.compose.ui.unit.sp
 fun MonitorTempTabButton(
     modifier: Modifier = Modifier,
     buttonLabels: List<String>,
-    onClick: (label: String) -> Unit = {}
+    onClickNav: () -> Unit = {},
 ) {
     Row(
         modifier = modifier
@@ -28,7 +28,7 @@ fun MonitorTempTabButton(
     ) {
         buttonLabels.forEach { label ->
             Button(
-                onClick = { onClick(label) },
+                onClick = onClickNav,
                 modifier = modifier
                     .weight(1f)
                     .height(60.dp),
