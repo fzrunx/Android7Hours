@@ -29,12 +29,17 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.sesac.common.component.CommonSegmentedButton
 
 import com.sesac.common.R as cR
 
 @Composable
-fun MypageMainScreen (modifier: Modifier = Modifier) {
+fun MypageMainScreen (
+    modifier: Modifier = Modifier,
+    navController: NavController,
+    ) {
     val tabselection = remember { mutableStateOf(0) }
     val space = dimensionResource(cR.dimen.default_space)
     Column(
@@ -237,5 +242,7 @@ fun CustomButton(buttonLabels: List<String>, modifier: Modifier = Modifier, onCl
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun MypageMainScreenPreview() {
-    MypageMainScreen()
+    MypageMainScreen(
+        navController = rememberNavController()
+    )
 }

@@ -7,17 +7,7 @@ import coil3.SingletonImageLoader
 import coil3.disk.DiskCache
 import coil3.disk.directory
 import coil3.memory.MemoryCache
-
-class A7HApplication(): Application() {
-    override fun onCreate() {
-        super.onCreate()
-        a7HApp = this
-    }
-    companion object{
-        private lateinit var a7HApp: A7HApplication
-        fun getA7HApplication() = a7HApp
-    }
-}
+import dagger.hilt.android.HiltAndroidApp
 
 //Default Memory Size = 0.15 ~ 0.2
 const val COIL_MEMORY_CACHE_SIZE_PERCENT = 0.3
@@ -27,25 +17,31 @@ const val COIL_MEMORY_CACHE_SIZE_PERCENT = 0.3
 const val COIL_DISK_CACHE_DIR_NAME = "coil_file_cache"
 const val COIL_DISK_CACHE_MAX_SIZE = 1024 * 1024 * 100
 
-class CoilUsingApplication : Application(), SingletonImageLoader.Factory {
+@HiltAndroidApp
+class A7HApplication(): Application(), SingletonImageLoader.Factory {
     override fun onCreate() {
         super.onCreate()
-        myApplication = this
+        a7HApp = this
     }
     companion object{
-        private lateinit var myApplication: CoilUsingApplication
-        fun getCoilUsingApplication() = myApplication
+        private lateinit var a7HApp: A7HApplication
+        fun getA7HApplication() = a7HApp
     }
+
+    // Coil 세팅
     override fun newImageLoader(context: PlatformContext): ImageLoader = ImageLoader.Builder(context)
+        // 메모리 세팅
         .memoryCache {
             MemoryCache.Builder()
                 .maxSizePercent(context, COIL_MEMORY_CACHE_SIZE_PERCENT)
                 .build()
         }
+        // 가상메모리 세팅
         .diskCache {
             DiskCache.Builder()
                 .directory(filesDir.resolve(COIL_DISK_CACHE_DIR_NAME))
                 .maximumMaxSizeBytes(COIL_DISK_CACHE_MAX_SIZE.toLong())
                 .build()
         }.build()
+
 }

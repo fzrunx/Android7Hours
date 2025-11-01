@@ -54,6 +54,7 @@ dependencies {
     implementation(project(":feature:trail"))
     implementation(project(":feature:monitor"))
     implementation(project(":feature:mypage"))
+    implementation(project(":data"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)

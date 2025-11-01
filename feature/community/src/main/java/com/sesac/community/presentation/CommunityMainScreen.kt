@@ -76,7 +76,7 @@ fun CommunityMainScreen(
                         }
                         launchSingleTop = true
                     }
-                          },
+                },
             ) {
                 Icon(
                     imageVector = Icons.Default.Add,
@@ -94,7 +94,9 @@ fun CommunityMainScreen(
                 .background(Color.White)
         ) {
             // "SNS" / "게시판" 탭 섹션
-            TabSection()
+            TabSection(
+                navController = navController
+            )
 
             // 게시물 피드 (스크롤 가능)
             PostFeed()
@@ -103,10 +105,32 @@ fun CommunityMainScreen(
 }
 
 /**
+ * 1. 상단 "Community" 타이틀 바
+ */
+//@Composable
+//fun CommunityTopBar() {
+//    Surface(
+//        modifier = Modifier.fillMaxWidth(),
+//        color = Color(0xFFF5F5F5), // 이미지와 유사한 연한 회색
+//        shadowElevation = 2.dp
+//    ) {
+//        Text(
+//            text = "Community",
+//            textAlign = TextAlign.Center,
+//            modifier = Modifier.padding(vertical = 16.dp),
+//            fontSize = 20.sp,
+//            fontWeight = FontWeight.Bold
+//        )
+//    }
+//}
+
+/**
  * 2. "SNS" / "게시판" 탭 버튼
  */
 @Composable
-fun TabSection() {
+fun TabSection(
+    navController: NavController,
+) {
     var selectedTab by remember { mutableStateOf(0) } // 0 = SNS, 1 = 게시판
 
     Row(
@@ -130,7 +154,10 @@ fun TabSection() {
 
         // 게시판 버튼
         Button(
-            onClick = { selectedTab = 1 },
+            onClick = {
+                selectedTab = 1
+                navController.navigate(CommunityNavigationRoute.CommunityPostTab)
+            },
             colors = ButtonDefaults.buttonColors(
                 containerColor = if (selectedTab == 1) Color.LightGray else Color(0xFFF0F0F0),
                 contentColor = Color.Black
@@ -235,6 +262,7 @@ fun PostItem(post: Post) { // <-- (1) post: Post 파라미터를 받도록 수�
         )
     }
 }
+
 
 // 이 프리뷰를 통해 Android Studio에서 디자인을 실시간으로 볼 수 있습니다.
 @Preview(showBackground = true)

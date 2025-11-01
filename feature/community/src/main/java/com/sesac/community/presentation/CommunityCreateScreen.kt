@@ -38,7 +38,7 @@ fun CommunityCreateScreen(
     var author by remember { mutableStateOf("") }
     var content by remember { mutableStateOf("") }
 
-        // 3. 메인 콘텐츠 (Content)
+    // 3. 메인 콘텐츠 (Content)
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -46,74 +46,74 @@ fun CommunityCreateScreen(
             .verticalScroll(rememberScrollState()) // 콘텐츠가 길어지면 스크롤
     ) {
 
-        Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-        // 'My Post' (제목) 입력 필드
-        TextField(
-            value = title,
-            onValueChange = { title = it },
-            modifier = Modifier.fillMaxWidth(),
-            placeholder = {
-                Text(
-                    stringResource(commonR.string.community_placeholder_title),
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.LightGray
-                )
-            },
+            // 'My Post' (제목) 입력 필드
+            TextField(
+                value = title,
+                onValueChange = { title = it },
+                modifier = Modifier.fillMaxWidth(),
+                placeholder = {
+                    Text(
+                        stringResource(commonR.string.community_placeholder_title),
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.LightGray
+                    )
+                },
 //                colors = TextFieldDefaults.textFieldColors(
 //                    containerColor = Color.Transparent, // 배경 투명
 //                    focusedIndicatorColor = Color.Gray, // 포커스 시 밑줄
 //                    unfocusedIndicatorColor = Color.LightGray // 비포커스 시 밑줄
 //                ),
-            singleLine = true,
-            textStyle = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold)
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        // '사진' 영역 (클릭 가능하도록)
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(220.dp)
-                .background(Color(0xFFEEEEEE), shape = RoundedCornerShape(4.dp))
-                .clickable { /* TODO: 사진 선택 로직 */ },
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = "사진",
-                style = MaterialTheme.typography.titleMedium,
-                color = Color.Gray
+                singleLine = true,
+                textStyle = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold)
             )
-        }
 
-        Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
-        // '게시글 내용' 입력 필드
-        TextField(
-            value = content,
-            onValueChange = { content = it },
-            modifier = Modifier
-                .fillMaxWidth()
-                .heightIn(min = 200.dp), // 최소 높이 지정
-            placeholder = {
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // '사진' 영역 (클릭 가능하도록)
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(220.dp)
+                    .background(Color(0xFFEEEEEE), shape = RoundedCornerShape(4.dp))
+                    .clickable { /* TODO: 사진 선택 로직 */ },
+                contentAlignment = Alignment.Center
+            ) {
                 Text(
-                    stringResource(commonR.string.community_placeholder_post_content),
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = Color.LightGray
+                    text = "사진",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = Color.Gray
                 )
-            },
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // '게시글 내용' 입력 필드
+            TextField(
+                value = content,
+                onValueChange = { content = it },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = 200.dp), // 최소 높이 지정
+                placeholder = {
+                    Text(
+                        stringResource(commonR.string.community_placeholder_post_content),
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = Color.LightGray
+                    )
+                },
 //                colors = TextFieldDefaults.textFieldColors(
 //                    containerColor = Color.Transparent,
 //                    focusedIndicatorColor = Color.Transparent, // 내용 필드는 밑줄 제거
 //                    unfocusedIndicatorColor = Color.Transparent
 //                ),
-            textStyle = MaterialTheme.typography.bodyLarge
-        )
+                textStyle = MaterialTheme.typography.bodyLarge
+            )
 
         Spacer(modifier = Modifier.weight(1f))
 
