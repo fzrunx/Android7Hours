@@ -2,9 +2,11 @@ plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+
+    alias(libs.plugins.ksp)
 }
 android {
-    namespace = "com.sesac.common"
+    namespace = "com.sesac.data"
     compileSdk = 36
 
     defaultConfig {
@@ -42,4 +44,9 @@ kotlin{
 dependencies {
     implementation(project(":domain"))
     implementation(project(":feature:common"))
+
+    implementation(libs.bundles.compose)
+    implementation(libs.kotilinx.coroutines.core)
+    implementation(libs.hilt.android)
+    ksp(libs.hilt.compiler)
 }

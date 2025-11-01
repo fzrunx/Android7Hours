@@ -5,6 +5,7 @@ plugins {
 
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.kotlin.parcelize)
+    alias(libs.plugins.ksp)
 }
 
 android {
@@ -63,6 +64,9 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.tooling)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.bundles.navigation)
+
+    implementation(libs.hilt.android)
+    ksp(libs.hilt.compiler)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
