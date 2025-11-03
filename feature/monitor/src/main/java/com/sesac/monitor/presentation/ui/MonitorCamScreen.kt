@@ -1,77 +1,92 @@
 package com.sesac.monitor.presentation.ui
 
-import com.sesac.common.R as cR
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
-import com.sesac.common.component.IconRowButtons
-import com.sesac.monitor.presentation.componoent.MonitorTempTabButton
-import com.sesac.monitor.presentation.nav_graph.MonitorNavigationRoute
+import androidx.compose.ui.unit.sp
 
 
 @Composable
-fun MonitorCamScreen(
-    modifier: Modifier = Modifier,
-    navController: NavController,
-    tabOptionsName: List<String> = listOf(stringResource(cR.string.monitor_button_webcam), stringResource(cR.string.monitor_button_GPS)),
-    ) {
-    val buttonLists = listOf(painterResource(cR.drawable.icons8_palay_button), painterResource(cR.drawable.icons8_stop_button))
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.Top,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        MonitorTempTabButton(
-            buttonLabels = tabOptionsName,
-//            onClickNav = { navController.navigate(MonitorNavigationRoute.GPSTab) },
-        )
-
+fun MonitorCamScreen() {
+    var isRecording by remember { mutableStateOf(false) }
+    Column(modifier = Modifier.fillMaxSize()) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 24.dp)
-                .aspectRatio(1 / 1f)
-                .background(Color.Gray, shape = RoundedCornerShape(8.dp)),
+                .weight(1f)
+                .padding(horizontal = 16.dp, vertical = 8.dp)
+                .clip(RoundedCornerShape(24.dp))
+                .background(Color(0xFFE5E7EB)),
             contentAlignment = Alignment.Center
-
-        ){
-            Text(
-                text = "영상 영역",
-                color = Color.White,
-                fontWeight = FontWeight.Bold
-            )
-
+        ) {
+            Text("영상 화면", color = Color.Gray, fontSize = 20.sp)
         }
-
-        IconRowButtons(modifier = Modifier, buttonLists = buttonLists)
-
+        // Control Buttons (영상 탭일 때만)
+        CamControlButtons(isRecording) { isRecording = it }
     }
 }
 
-@Preview(showBackground = true, showSystemUi = true)
 @Composable
-fun MonitorCamScreenPreview() {
-        MonitorCamScreen(navController = rememberNavController())
+fun CamControlButtons(isRecording: Boolean, onRecordToggle: (Boolean) -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(bottom = 48.dp)
+            .background(Color.White),
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        IconButton(
+            onClick = { /* TODO: Play video */ },
+            modifier = Modifier
+                .size(80.dp)
+                .clip(CircleShape)
+                .background(Color(0xFF86EFAC))
+                .padding(10.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Default.PlayArrow,
+                contentDescription = "Play",
+                tint = Color(0xFF1F2937),
+                modifier = Modifier.size(48.dp)
+            )
+        }
+        Spacer(modifier = Modifier.width(48.dp))
+        val recordColor by animateColorAsState(
+            if (isRecording) Color(0xFFEF4444) else Color(0xFFFCA5A5)
+        )
+        IconButton(
+            onClick = { onRecordToggle(!isRecording) },
+            modifier = Modifier
+                .size(80.dp)
+                .clip(CircleShape)
+                .background(recordColor)
+                .padding(10.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Default.Circle,
+                contentDescription = "Record",
+                tint = Color(0xFF1F2937),
+                modifier = Modifier.size(48.dp)
+            )
+        }
+    }
 }
 
+
+//@Preview(showBackground = true, showSystemUi = true)
+//@Composable
+//fun MonitorCamScreenPreview() {
+//    MonitorCamScreen (onNavigateToHome = {})
+//}
