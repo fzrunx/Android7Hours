@@ -17,18 +17,19 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import com.sesac.common.ui.theme.Android7HoursTheme
 import com.sesac.common.ui.theme.paddingLarge
 import com.sesac.common.ui.theme.paddingMedium
-import com.sesac.common.ui.theme.cardRound
+import com.sesac.common.R as cR
 
 @Composable
 fun CommonSearchBarContent(
     isSearchOpen: Boolean,
     query: String,
     onQueryChange: (String) -> Unit,
-    placeholderText: String = "검색",
+    placeholderText: String = stringResource(cR.string.common_searchbar_text_default),
 ) {
     AnimatedVisibility(isSearchOpen) {
         Surface(

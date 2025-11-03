@@ -67,6 +67,8 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.bundles.navigation)
 
+    implementation(libs.bundles.coil)
+
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
 
@@ -78,11 +80,4 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
 
-    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.6.3")
-// 최신 버전 확인
-    implementation("androidx.activity:activity-compose:1.9.0")
-// Compose Activity
-    implementation("androidx.compose.ui:ui:1.6.0")
-    implementation("androidx.navigation:navigation-compose:2.7.3")
-// 최신 버전 확인
 }

@@ -44,7 +44,7 @@ fun MonitorCamScreen(
     ) {
         MonitorTempTabButton(
             buttonLabels = tabOptionsName,
-            onClickNav = { navController.navigate(MonitorNavigationRoute.GPSTab) },
+//            onClickNav = { navController.navigate(MonitorNavigationRoute.GPSTab) },
         )
 
         Box(

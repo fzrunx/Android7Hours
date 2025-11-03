@@ -3,7 +3,7 @@ package com.sesac.common.data.model.post
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.PrimaryKey
-import com.sesac.common.data.model.User.UserEntity
+import com.sesac.common.data.model.user.UserEntity
 import java.util.Date
 
 
@@ -25,5 +25,6 @@ data class PostEntity(
     val title: String,
     val content: String,
     val create_at: Date,
-    val status: String // "private" or "public"
+    val status: String, // "private" or "public"
+    val category: String,
 )

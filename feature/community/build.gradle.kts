@@ -63,7 +63,7 @@ dependencies {
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
-    implementation(libs.coil.compose)
+    implementation(libs.bundles.coil)
     implementation(libs.androidx.compose.material.icons.extended)
     implementation(libs.bundles.navigation)
     implementation(libs.kotlinx.serialization.json)
@@ -79,10 +79,10 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
 
-    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.6.3")
+//    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.6.3")
 // 최신 버전 확인
-    implementation("androidx.activity:activity-compose:1.9.0")
+//    implementation("androidx.activity:activity-compose:1.9.0")
 // Compose Activity
-    implementation("androidx.compose.ui:ui:1.6.0")
+//    implementation("androidx.compose.ui:ui:1.6.0")
 // Compose Core
 }

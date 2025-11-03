@@ -80,6 +80,7 @@
 
     <!-- ========= Common ========= -->
     <string name="common_see_all">전체보기</string>
+    <string name="common_searchbar_text_default">검색</string>
 
 </resources>
 

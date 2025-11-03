@@ -6,9 +6,9 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.navigation.NavBackStackEntry
-
 data class TopBarData(
     var title: String = "",
+//    var titleIcon: ImageVector = AutoMirrored.Filled.ArrowBack
     var titleIcon: ImageVector = AutoMirrored.Filled.ArrowBack
 )
 
@@ -39,3 +39,4 @@ val NavBackStackEntry.topBarAsRouteName: TopBarData
             else -> throw IllegalArgumentException("내가 선언하지 않은 Route Screen")
         }
     }
+

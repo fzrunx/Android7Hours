@@ -1,47 +1,47 @@
 package com.sesac.mypage.presentation.ui
 
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Help
 import androidx.compose.material.icons.automirrored.filled.Logout
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
+import androidx.compose.material.icons.filled.CalendarToday
+import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Schedule
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Shield
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import coil3.compose.AsyncImage
-import com.sesac.common.R// ⚠️ 본인의 R 패키지 경로로 수정하세요.
-import com.sesac.common.ui.theme.AccentGreen
 import com.sesac.common.ui.theme.Android7HoursTheme
-import com.sesac.common.ui.theme.Gray400
 import com.sesac.common.ui.theme.StatBlue
 import com.sesac.common.ui.theme.StatGreen
 import com.sesac.common.ui.theme.StatPurple
-import com.sesac.common.ui.theme.avatarSizeLarge
-import com.sesac.common.ui.theme.cardIconSize
 import com.sesac.common.ui.theme.elevationSmall
-import com.sesac.common.ui.theme.iconSizeLarge
 import com.sesac.common.ui.theme.iconSizeMedium
 import com.sesac.common.ui.theme.paddingLarge
-import com.sesac.common.ui.theme.paddingMedium
-import com.sesac.common.ui.theme.paddingMicro
 import com.sesac.common.ui.theme.paddingSmall
 import com.sesac.mypage.presentation.component.MenuItemRow
 import com.sesac.mypage.presentation.component.ProfileHeader
@@ -69,9 +69,8 @@ object MyPageDataSource {
  * React 코드의 'main' 상태 UI
  */
 @Composable
-fun MyPageMainScreen(
+fun MypageMainScreen(
     navController: NavController,
-    onNavigateToHome: () -> Unit
 ) {
 
     LazyColumn(
@@ -164,9 +163,8 @@ fun LogoutButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
 @Composable
 fun MyPageMainScreenPreview() {
     Android7HoursTheme {
-        MyPageMainScreen(
+        MypageMainScreen(
             navController = rememberNavController(), // preview에서는 navigate 호출 금지
-            onNavigateToHome = {}
         )
 
     }
