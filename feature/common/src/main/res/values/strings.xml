@@ -8,14 +8,20 @@
     <string name="home_tab_trail">산책로</string>
     <string name="home_tab_trip">여행지</string>
     <string name="home_tab_hospital">병원</string>
+    <string name="home_community_banner_text">반려견 친구들과 소통해요</string>
 
     <!-- ========= Community ========== -->
+    <string name="community">커뮤니티</string>
     <string name="community_button_SNS">SNS</string>
     <string name="community_button_post">게시판</string>
     <string name="community_button_register">등록하기</string>
     <string name="community_placeholder_title">My Post</string>
     <string name="community_placeholder_post_content">게시글 내용</string>
     <string name="community_placeholder_comment_write">댓글을 작성해주세요</string>
+    <string name="community_placeholder_post_empty">게시물이 없습니다.</string>
+    <string name="community_snackbar_post_create">게시글이 작성되었습니다.</string>
+    <string name="community_snackbar_post_delecte">게시글이 삭제되었습니다.</string>
+    <string name="community_snackbar_post_update">게시글이 수정되었습니다.</string>
     <string name="community_title_like">좋아요</string>
     <string name="community_title_comment">댓글</string>
     <string name="community_title_list">목록</string>
@@ -37,6 +43,7 @@
     <string name="trail_button_recommend">추천</string>
     <string name="trail_button_follow">따라가기</string>
     <string name="trail_button_record">기록</string>
+    <string name="trail_button_now_record">기록 중</string>
     <string name="trail_title_nearby_trails">주변 산책로</string>
     <string name="trail_title_filter">필터</string>
     <string name="trail_title_filter_option">필터 옵션</string>
@@ -69,6 +76,7 @@
     <string name="mypage_button_myinfo">내 정보</string>
     <string name="mypage_button_like">좋아요</string>
     <string name="mypage_button_create_list">작성목록</string>
+    <string name="mypage_stats_title">내 산책 기록</string>
 
     <!-- ========= Common ========= -->
     <string name="common_see_all">전체보기</string>
