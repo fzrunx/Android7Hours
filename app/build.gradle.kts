@@ -12,7 +12,8 @@ android {
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.sesac.android7hours"
+//        applicationId = "com.sesac.android7hours"
+        applicationId = "com.naver.maps.map.demo" // 여기 부분이 네이버 등록된 패키지명이 같아야 함
         minSdk = 24
         targetSdk = 36
         versionCode = 1
@@ -78,4 +79,6 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.test.manifest)
 
     implementation("androidx.core:core-splashscreen:1.0.1")
+    implementation("com.naver.maps:map-sdk:3.23.0")  // 해당 부분 넣어야됨
+    implementation("com.google.android.gms:play-services-location:21.3.0")
 }

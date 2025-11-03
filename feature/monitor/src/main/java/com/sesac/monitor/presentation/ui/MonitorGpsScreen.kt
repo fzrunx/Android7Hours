@@ -10,7 +10,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import com.naver.maps.geometry.LatLng
 import com.naver.maps.map.NaverMap
 import com.naver.maps.map.overlay.Marker
-import com.sesac.monitor.presentation.MapViewLifecycleHelper
+import com.sesac.monitor.utils.MapViewLifecycleHelper
 
 
 @Composable

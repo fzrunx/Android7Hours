@@ -33,7 +33,7 @@ data class BottomBarItem(
             BottomBarItem(
                 tabName = "Monitor",
                 icon = Icons.Filled.Videocam,
-                destination = MonitorNavigationRoute.CamTab
+                destination = MonitorNavigationRoute.MainTab
             ),
             BottomBarItem(
                 tabName = "Community",
