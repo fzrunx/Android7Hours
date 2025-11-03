@@ -44,7 +44,7 @@ android {
 
 dependencies {
 
-    implementation(project(":feature"))
+    implementation(project(":feature:home"))
     implementation(project(":feature:community"))
     implementation(project(":feature:common"))
 
