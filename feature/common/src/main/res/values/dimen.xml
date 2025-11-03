@@ -5,4 +5,17 @@
     <dimen name="text_top_bottom_space">20dp</dimen>
     <dimen name="carousel_image_height">100dp</dimen>
     <dimen name="carousel_image_width">200dp</dimen>
+    <dimen name="surface_elevation">4dp</dimen>
+    <dimen name="surface_corner_round">12dp</dimen>
+    <dimen name="article_horr_padding">16dp</dimen>
+    <dimen name="article_ver_arrangement">12dp</dimen>
+
+    <!--monitor-->
+    <dimen name="monitor_icon_button_size">70dp</dimen>
+
+    <!--trail-->
+    <dimen name="trail_surface_icon_size">48dp</dimen>
+    <dimen name="trail_botton_sheet_peek_height">160dp</dimen>
+    <dimen name="tail_chip_text_horr_padding">8dp</dimen>
+
 </resources>

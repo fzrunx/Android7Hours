@@ -33,6 +33,7 @@ import com.sesac.common.R
 fun CommonSegmentedButton(
     tabOptions: List<String>,
     tabSelectedIndex: MutableState<Int>,
+    selectedMenuState: MutableState<String>? = null,
     verticalAlignment: Arrangement.Vertical = Arrangement.Center,
     horizontalArrangement: Arrangement.Horizontal = Arrangement.Absolute.Center,
     checkedIcons: List<ImageVector> = emptyList<ImageVector>(),
@@ -65,7 +66,10 @@ fun CommonSegmentedButton(
                             )
                         }
                     },
-                    onClick = { tabSelectedIndex.value = index },
+                    onClick = {
+                        tabSelectedIndex.value = index
+                        selectedMenuState?.value = tabOptions[index]
+                    },
                     selected = index == tabSelectedIndex.value,
                     label = { Text(string) }
                 )

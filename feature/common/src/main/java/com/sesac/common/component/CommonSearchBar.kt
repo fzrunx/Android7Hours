@@ -39,16 +39,19 @@ fun ColumnScope.CommonSearchBar(
     textFieldState: TextFieldState,
     onSearch: (String) -> Unit,
     searchResults: List<String>,
-    searchResultsScrollState: ScrollState = rememberScrollState(),
+    searchResultsScrollState: ScrollState? = null,
     space: Dp = dimensionResource(R.dimen.default_space),
 ) {
     var expanded by rememberSaveable { mutableStateOf(false) }
+    val columnModifier = searchResultsScrollState
+        ?.let { Modifier.verticalScroll(searchResultsScrollState) }
+        ?: Modifier
 
     SearchBar(
         modifier = Modifier
             .align(alignment)
             .fillMaxWidth()
-            .padding(space)
+            .padding(horizontal = space)
             .semantics { traversalIndex = -1f },
         colors = SearchBarDefaults.colors(inputFieldColors = TextFieldDefaults.colors(Color.Black)),
         inputField = {
@@ -68,7 +71,9 @@ fun ColumnScope.CommonSearchBar(
         onExpandedChange = { expanded = it }
     ) {
         // Display search results in a scrollable column
-        Column(Modifier.verticalScroll(searchResultsScrollState)) {
+        Column(
+            columnModifier
+        ) {
             searchResults.forEach { result ->
                 ListItem(
                     headlineContent = { Text(result) },
