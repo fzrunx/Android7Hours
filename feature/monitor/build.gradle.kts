@@ -62,4 +62,6 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
+    implementation("com.naver.maps:map-sdk:3.23.0")  // 해당 부분 넣어야됨
+    implementation("com.google.android.gms:play-services-location:21.3.0")
 }
