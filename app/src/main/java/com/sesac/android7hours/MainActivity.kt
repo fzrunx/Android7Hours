@@ -4,19 +4,15 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.tooling.preview.Preview
 import com.naver.maps.map.MapView
 import com.sesac.common.ui.theme.Android7HoursTheme
-import com.sesac.monitor.presentation.MonitorCamScreen
 import com.sesac.monitor.presentation.MapViewLifecycleHelper
+import com.sesac.monitor.presentation.ui.MonitorScreen
 
 
 class MainActivity : ComponentActivity() {
@@ -30,7 +26,7 @@ class MainActivity : ComponentActivity() {
                     val mapView = MapView(context)
                     val lifecycleHelper = remember { MapViewLifecycleHelper(mapView) }
 
-                    MonitorCamScreen(
+                    MonitorScreen(
                         onNavigateToHome = { /* 뒤로가기 */ },
                         lifecycleHelper = lifecycleHelper,
                         modifier = Modifier.padding(innerPadding)
