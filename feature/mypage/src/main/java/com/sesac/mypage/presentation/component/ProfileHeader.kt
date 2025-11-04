@@ -26,6 +26,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import com.sesac.common.R
@@ -88,4 +89,15 @@ fun ProfileHeader(
             }
         }
     }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun ProfileHeaderPreview() {
+    ProfileHeader(
+        name = "홍길동",
+        email = "hong@example.com",
+        imageUrl = "", // 혹은 "https://example.com/profile.jpg"
+        onNavigateToProfile = { /* 미리보기용 클릭 동작 */ }
+    )
 }

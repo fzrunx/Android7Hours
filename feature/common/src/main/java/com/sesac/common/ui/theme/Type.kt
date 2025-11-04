@@ -74,3 +74,7 @@ val Shapes = Shapes(
     medium = RoundedCornerShape(12.dp),
     large = RoundedCornerShape(16.dp)
 )
+val shapeCard = RoundedCornerShape(16.dp) // rounded-2xl
+val shapeIcon = RoundedCornerShape(12.dp) // rounded-xl
+val shapeImage = RoundedCornerShape(12.dp) // rounded-xl
+val shapeTab = RoundedCornerShape(12.dp)

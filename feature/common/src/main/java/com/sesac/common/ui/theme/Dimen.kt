@@ -7,6 +7,9 @@ val paddingLarge = 16.dp
 val paddingMedium = 12.dp
 val paddingSmall = 8.dp
 val paddingMicro = 4.dp
+val headerHeight = 64.dp
+val iconBoxSize = 56.dp // w-14 h-14
+val iconSize = 28.dp // w-7 h-7
 
 // round
 val cardRound = 12.dp
@@ -30,3 +33,6 @@ val circularButtonSize = 80.dp
 val elevationSmall = 2.dp
 val elevationMedium = 4.dp
 val elevationLarge = 8.dp
+val cardImageSize = 96.dp
+val avatarSize = 40.dp // w-10 h-10
+val postImageHeight = 192.dp // h-48

@@ -42,52 +42,59 @@ fun CommonFilterTabs(
     filterOptions: List<String>,
     selectedFilter: String?,
     onFilterSelected: (String) -> Unit,
-    horizontalArrangement: Arrangement.Horizontal = Arrangement.spacedBy(paddingSmall),
+    horizontalArrangement: Arrangement.Horizontal = Arrangement.Center,
     fiterIcons: List<ImageVector>? = null,
-    surfaceColor: Color? = Color.Unspecified,
+    surfaceColor: Color = Color.Unspecified,
 ) {
-    val lazyRow = LazyRow(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = paddingMedium),
-        contentPadding = PaddingValues(horizontal = paddingLarge),
-        horizontalArrangement = horizontalArrangement,
-    ) {
-        itemsIndexed(filterOptions) { index, filter ->
-            FilterChip(
-                modifier = modifier
-                    .width(120.dp)// 균등 너비 분배
-                    .height(40.dp), // 높이 고정
-
-                selected = selectedFilter == filter,
-                onClick = { onFilterSelected(filter) },
-                label = {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.Center
-                    ){
-                        Text(filter)
-                    }
-                },
-                leadingIcon = {
-                    fiterIcons?.getOrNull(index)?.let { icon ->
-                        Icon(imageVector = icon, contentDescription = filter)
-                    }
-                },
-                colors = FilterChipDefaults.filterChipColors(
-                    containerColor = ButtonSecondary,
-                    labelColor = OnButtonSecondary,
-                    selectedContainerColor = MaterialTheme.colorScheme.primary,
-                    selectedLabelColor = Color.White
-                ),
-                border = null
-            )
+    val content: @Composable () -> Unit = {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = paddingMedium),
+            horizontalArrangement = horizontalArrangement,
+        ) {
+            filterOptions.forEachIndexed { index, filter ->
+                FilterChip(
+                    modifier = modifier
+                        .width(120.dp)
+                        .height(40.dp),
+                    selected = selectedFilter == filter,
+                    onClick = { onFilterSelected(filter) },
+                    label = {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            Text(filter)
+                        }
+                    },
+                    leadingIcon = {
+                        fiterIcons?.getOrNull(index)?.let { icon ->
+                            Icon(imageVector = icon, contentDescription = filter)
+                        }
+                    },
+                    colors = FilterChipDefaults.filterChipColors(
+                        containerColor = ButtonSecondary,
+                        labelColor = OnButtonSecondary,
+                        selectedContainerColor = MaterialTheme.colorScheme.primary,
+                        selectedLabelColor = Color.White
+                    ),
+                    border = null
+                )
+            }
         }
     }
 
-    surfaceColor?.let { Surface(color = surfaceColor, shadowElevation = elevationSmall) { lazyRow } } ?: lazyRow
-
+    if (surfaceColor != Color.Unspecified) {
+        Surface(color = surfaceColor, shadowElevation = elevationSmall) {
+            content()
+        }
+    } else {
+        content()
+    }
 }
+
+
 
 @Preview
 @OptIn(ExperimentalMaterial3Api::class)

@@ -8,6 +8,7 @@ import coil3.disk.DiskCache
 import coil3.disk.directory
 import coil3.memory.MemoryCache
 import dagger.hilt.android.HiltAndroidApp
+import com.jakewharton.threetenabp.AndroidThreeTen
 
 //Default Memory Size = 0.15 ~ 0.2
 const val COIL_MEMORY_CACHE_SIZE_PERCENT = 0.3
@@ -21,6 +22,10 @@ const val COIL_DISK_CACHE_MAX_SIZE = 1024 * 1024 * 100
 class A7HApplication(): Application(), SingletonImageLoader.Factory {
     override fun onCreate() {
         super.onCreate()
+        // ✅ ThreeTenABP 초기화 (LocalDate 등 사용 가능하게 함)
+        AndroidThreeTen.init(this)
+
+        // ✅ 기존 전역 참조 유지
         a7HApp = this
     }
     companion object{
