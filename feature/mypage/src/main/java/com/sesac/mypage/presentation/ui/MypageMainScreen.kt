@@ -28,6 +28,7 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import coil3.compose.AsyncImage
 import com.sesac.common.R// ⚠️ 본인의 R 패키지 경로로 수정하세요.
+import com.sesac.common.navigation.CommonHeader
 import com.sesac.common.ui.theme.AccentGreen
 import com.sesac.common.ui.theme.Android7HoursTheme
 import com.sesac.common.ui.theme.Gray400
@@ -73,9 +74,18 @@ fun MyPageMainScreen(
     navController: NavController,
     onNavigateToHome: () -> Unit
 ) {
-
+    Scaffold(
+        topBar = {
+            CommonHeader(
+                title = "마이페이지",
+                onNavigateToHome = { /* 홈 이동 */ }
+            )
+        },
+        containerColor =  MaterialTheme.colorScheme.background
+    ) { paddingValues ->
     LazyColumn(
         modifier = Modifier
+            .padding(paddingValues)
             .fillMaxSize(),
         contentPadding = PaddingValues(bottom = paddingLarge)
     ) {
@@ -124,7 +134,7 @@ fun MyPageMainScreen(
             )
         }
     }
-
+}
 }
 
 @Composable

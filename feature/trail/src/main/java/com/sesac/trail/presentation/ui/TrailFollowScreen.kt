@@ -104,7 +104,7 @@ fun TrailFollowScreen(
                 filterOptions[1] -> viewModel.onModeChange(WalkMode.FOLLOW)
                 filterOptions[2] -> viewModel.onModeChange(WalkMode.RECORD)
             } },
-            surfaceColor = null
+//            surfaceColor = null
         )
 
         // 3. 기록 모드 UI

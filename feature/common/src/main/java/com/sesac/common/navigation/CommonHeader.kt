@@ -26,7 +26,9 @@ import androidx.compose.ui.unit.sp
 import com.sesac.common.R
 import com.sesac.common.ui.theme.Android7HoursTheme
 import androidx.compose.foundation.layout.statusBarsPadding
-
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.Icon
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -35,6 +37,7 @@ fun CommonHeader(
     modifier: Modifier = Modifier,
     title: String,
     onNavigateToHome: (() -> Unit)? = null, // 홈 버튼이 없는 화면도 가능
+    onBack: (() -> Unit)? = null,           // 뒤로가기 버튼
     logoResId: Int? = R.drawable.image7hours,
     backgroundColor: Color = Color(0xFFDBE8CC),
     contentColor: Color = Color(0xFF1F2937),
@@ -54,16 +57,28 @@ fun CommonHeader(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            if (logoResId != null && onNavigateToHome != null) {
-                IconButton(onClick = onNavigateToHome) {
-                    Image(
-                        painter = painterResource(id = logoResId),
-                        contentDescription = "Home Logo",
-                        modifier = Modifier.size(40.dp)
-                    )
+            when {
+                logoResId != null && onNavigateToHome != null -> {
+                    IconButton(onClick = onNavigateToHome) {
+                        Image(
+                            painter = painterResource(id = logoResId),
+                            contentDescription = "Home Logo",
+                            modifier = Modifier.size(40.dp)
+                        )
+                    }
                 }
-            } else {
-                Spacer(modifier = Modifier.width(40.dp))
+                onBack != null -> {
+                    IconButton(onClick = onBack) {
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "뒤로가기",
+                            tint = contentColor
+                        )
+                    }
+                }
+                else -> {
+                    Spacer(modifier = Modifier.width(40.dp))
+                }
             }
 
             Text(

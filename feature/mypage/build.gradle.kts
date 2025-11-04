@@ -44,6 +44,7 @@ android {
 dependencies {
     implementation(project(":domain"))
     implementation(project(":feature:common"))
+    implementation(project(":feature:community"))
 
 
     implementation(libs.androidx.core.ktx)
@@ -76,4 +77,7 @@ dependencies {
     implementation("androidx.compose.ui:ui:1.6.0")
     implementation("androidx.navigation:navigation-compose:2.7.3")
 // 최신 버전 확인
+    implementation("androidx.compose.material3:material3:1.3.0")
+    implementation("com.jakewharton.threetenabp:threetenabp:1.4.6") // localDate 사용하려면 sdk 26 이하에서는 이렇게 써야됨
+
 }

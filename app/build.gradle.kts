@@ -70,4 +70,5 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     implementation("com.naver.maps:map-sdk:3.23.0")  // 해당 부분 넣어야됨
     implementation("com.google.android.gms:play-services-location:21.3.0")
+    implementation("com.jakewharton.threetenabp:threetenabp:1.4.6") // localDate 사용하려면 sdk 26 이하에서는 이렇게 써야됨
 }
