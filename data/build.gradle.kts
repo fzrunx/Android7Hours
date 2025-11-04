@@ -3,6 +3,8 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
 
+    alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.kotlin.parcelize)
     alias(libs.plugins.ksp)
 }
 android {
@@ -48,5 +50,8 @@ dependencies {
     implementation(libs.bundles.compose)
     implementation(libs.kotilinx.coroutines.core)
     implementation(libs.hilt.android)
+    implementation(libs.androidx.room.runtime)
+
+    ksp(libs.androidx.room.compiler)
     ksp(libs.hilt.compiler)
 }

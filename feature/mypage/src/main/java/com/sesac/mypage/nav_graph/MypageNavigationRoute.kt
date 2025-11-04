@@ -5,5 +5,12 @@ import kotlinx.serialization.Serializable
 @Serializable
 sealed interface MypageNavigationRoute {
     @Serializable
-    data object MypageMainTab: MypageNavigationRoute
+    data object MainTab: MypageNavigationRoute
+    @Serializable
+    data object ManageTab: MypageNavigationRoute
+    @Serializable
+    data object FavoriteTab: MypageNavigationRoute
+    @Serializable
+    data object SettingTab: MypageNavigationRoute
+
 }

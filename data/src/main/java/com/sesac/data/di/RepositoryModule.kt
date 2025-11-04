@@ -1,7 +1,7 @@
 package com.sesac.data.di
 
-import com.sesac.data.repository.post.PostRepositoryImpl
-import com.sesac.domain.repository.PostRepository
+import com.sesac.data.repository.CommunityRepositoryImpl
+import com.sesac.domain.repository.CommunityRepository
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -14,7 +14,7 @@ abstract class RepositoryModule {
 
     @Binds
     @Singleton
-    abstract fun bindPostRepository(
-        postRepositoryImpl: PostRepositoryImpl
-    ): PostRepository
+    abstract fun bindCommunityRepository(
+        communityRepositoryImpl: CommunityRepositoryImpl
+    ): CommunityRepository
 }

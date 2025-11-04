@@ -3,6 +3,7 @@ package com.sesac.android7hours.nav_graph
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -15,6 +16,9 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -24,37 +28,31 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.currentBackStackEntryAsState
-import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.naver.maps.map.MapView
 import com.sesac.android7hours.common.TopBarData
 import com.sesac.android7hours.common.topBarAsRouteName
-import com.sesac.common.ui.theme.Android7HoursTheme
-import com.sesac.community.nav_graph.CommunityNavigationRoute
-import com.sesac.community.presentation.ui.CommunityMainScreen
-import com.sesac.home.nav_graph.HomeNavigationRoute
-import com.sesac.home.presentation.ui.HomeScreen
+import com.sesac.community.nav_graph.CommunitySection
+import com.sesac.home.nav_graph.HomeSection
+import com.sesac.monitor.nav_graph.MonitorSection
 import com.sesac.monitor.utils.MapViewLifecycleHelper
-import com.sesac.monitor.presentation.nav_graph.MonitorNavigationRoute
-import com.sesac.monitor.presentation.ui.MonitorCamScreen
-import com.sesac.monitor.presentation.ui.MonitorGpsScreen
-import com.sesac.monitor.presentation.ui.MonitorMainScreen
-import com.sesac.mypage.nav_graph.MypageNavigationRoute
-import com.sesac.mypage.presentation.ui.MypageMainScreen
-import com.sesac.trail.nav_graph.TrailNavigationRoute
-import com.sesac.trail.presentation.ui.TrailRecommendScreen
+import com.sesac.mypage.nav_graph.MypageSection
+import com.sesac.trail.nav_graph.TrailSection
 import com.sesac.common.R as cR
+
+val LocalIsSearchOpen = compositionLocalOf { mutableStateOf(false) }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun EntryPointScreen() {
+fun EntryPointScreen(
+    startDestination: Any,
+    scaffoldActionCases: List<String>,
+    navBackOptions: List<String>,
+) {
     // Static 변수
-    val recommend = stringResource(cR.string.trail_button_recommend)
-    val webCam = stringResource(cR.string.monitor_button_webcam)
-    val GPS = stringResource(cR.string.monitor_button_GPS)
+    val recommend = stringResource(cR.string.trail_button_recommend)    // 수정 예정
     val context = LocalContext.current
     val mapView = MapView(context)
 
@@ -63,133 +61,118 @@ fun EntryPointScreen() {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val topBarData = navBackStackEntry?.topBarAsRouteName ?: TopBarData()
     val bottomBarItems = remember { BottomBarItem.fetchBottomBarItems() }
-    val trailSelectedMenu = remember { mutableStateOf(recommend) }
+    val trailSelectedMenu = remember { mutableStateOf(recommend) }  // 수정 예정
     val lifecycleHelper = remember { MapViewLifecycleHelper(mapView) }
+    val isSearchOpen = remember { mutableStateOf(false) }
+    val topBarTitle = topBarData.title
+    val isScaffoldAction = scaffoldActionCases.contains(topBarTitle)
 
-    Scaffold(
-        modifier = Modifier.fillMaxSize(),
-        topBar = {
-            CenterAlignedTopAppBar(
-                title = {
-                    Text(
-                        text = topBarData.title,
-                        fontWeight = FontWeight.Bold
-                    )
-                },
-                colors = TopAppBarDefaults.topAppBarColors(MaterialTheme.colorScheme.primaryContainer),
-                navigationIcon = {
-                    IconButton(
-                        onClick = { navController.navigate(HomeNavigationRoute.HomeTab) }
-                        ) {
-                        Icon(
-                            painterResource(cR.drawable.image7hours),
-                            contentDescription = "Home Icon",
-                            tint = Color.Unspecified,
+    LaunchedEffect(isScaffoldAction) {
+        if (!isScaffoldAction) {
+            isSearchOpen.value = false
+        }
+    }
+
+    CompositionLocalProvider(LocalIsSearchOpen provides isSearchOpen) {
+        Scaffold(
+            modifier = Modifier.fillMaxSize(),
+            topBar = {
+                CenterAlignedTopAppBar(
+                    title = {
+                        Text(
+                            text = topBarData.title,
+                            fontWeight = FontWeight.Bold
                         )
-                    }
-                },
-                actions = {
-                    if (topBarData.title.contains("Community")){
-                        IconButton(
-                            onClick = {
-//                                TODO()
-                            },
-                        ) {
-                            Icon(
-                                imageVector = Icons.Filled.Search,
-                                contentDescription = "search",
-                                tint = Color.Unspecified,
-                            )
-                        }
-                    }
-                }
-
-            )
-        },
-
-        bottomBar = {
-            NavigationBar {
-                bottomBarItems.forEach { bottomBarItem ->
-                    NavigationBarItem(
-                        selected = bottomBarItem.tabName == topBarData.title,
-                        label = {
-                            Text(text = bottomBarItem.tabName, color = Color.Unspecified)
-                        },
-                        icon = {
-                            Icon(
-                                imageVector = bottomBarItem.icon,
-                                contentDescription = bottomBarItem.tabName,
-                                tint = Color.Unspecified,
-                            )
-                        },
-                        onClick = {
-                            navController.navigate(route = bottomBarItem.destination) {
-                                popUpTo(route = bottomBarItem.destination) {
-//                                    inclusive = true
-                                    saveState = true
-                                }
-                                launchSingleTop = true
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(MaterialTheme.colorScheme.primaryContainer),
+                    navigationIcon = {
+                        if (topBarData.title in navBackOptions) {
+                            IconButton(onClick = { navController.popBackStack() }) {
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                    contentDescription = "Back"
+                                )
+                            }
+                        } else {
+                            IconButton(
+                                onClick = { navController.navigate(startDestination) }
+                            ) {
+                                Icon(
+                                    painterResource(cR.drawable.image7hours),
+                                    contentDescription = "Home Icon",
+                                    tint = Color.Unspecified,
+                                )
                             }
                         }
-                    )
+                    },
+                    actions = {
+                        if (isScaffoldAction) {
+                            IconButton(
+                                onClick = { isSearchOpen.value = !isSearchOpen.value },
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Filled.Search,
+                                    contentDescription = "search",
+                                    tint = Color.Unspecified,
+                                )
+                            }
+                        }
+                    }
+
+                )
+            },
+
+            bottomBar = {
+                NavigationBar {
+                    bottomBarItems.forEach { bottomBarItem ->
+                        NavigationBarItem(
+                            selected = bottomBarItem.tabName == topBarData.title,
+                            label = {
+                                Text(text = bottomBarItem.tabName, color = Color.Unspecified)
+                            },
+                            icon = {
+                                Icon(
+                                    imageVector = bottomBarItem.icon,
+                                    contentDescription = bottomBarItem.tabName,
+                                    tint = Color.Unspecified,
+                                )
+                            },
+                            onClick = {
+                                navController.navigate(route = bottomBarItem.destination) {
+                                    popUpTo(route = bottomBarItem.destination) {
+//                                    inclusive = true
+                                        saveState = true
+                                    }
+                                    launchSingleTop = true
+                                }
+                            }
+                        )
+                    }
                 }
-            }
-        },
-    ) { paddingValues ->
-        NavHost(
-            navController = navController,
-            startDestination = HomeNavigationRoute.HomeTab,
-            modifier = Modifier.padding(paddingValues = paddingValues),
-        ) {
-
-            // Home
-            composable<HomeNavigationRoute.HomeTab> {
-                HomeScreen(
-                    onNavigateToWalkPath = {},
-                    onNavigateToCommunity = {},
-                )
-            }
-
-            // Trail
-            composable<TrailNavigationRoute.TrailRecommendTab> {
-                TrailRecommendScreen(trailSelectedMenu = trailSelectedMenu)
-            }
-
-            // Community
-            composable<CommunityNavigationRoute.CommunityMainTab> {
-                CommunityMainScreen(
-                )
-            }
-
-            // Monitor
-            composable<MonitorNavigationRoute.MainTab> {
-                MonitorMainScreen(
+            },
+        ) { paddingValues ->
+            NavHost(
+                navController = navController,
+                startDestination = startDestination,
+                modifier = Modifier.padding(paddingValues = paddingValues),
+            ) {
+                HomeSection()
+                TrailSection(trailSelectedMenu = trailSelectedMenu)
+                CommunitySection(isSearchOpen = isSearchOpen,)
+                MonitorSection(
                     navController = navController,
-                    lifecycleHelper = lifecycleHelper
-                )
-            }
-            composable<MonitorNavigationRoute.GpsTab> {
-                MonitorGpsScreen(
                     lifecycleHelper = lifecycleHelper,
-                    onMapReady = null,
                 )
+                MypageSection(navController = navController,)
             }
-
-            //Mypage
-            composable<MypageNavigationRoute.MypageMainTab> {
-                MypageMainScreen(
-                    navController = navController,
-                )
-            }
-
         }
     }
 }
 
-@Preview
-@Composable
-fun EntryPointScreenPreview() {
-    Android7HoursTheme {
-        EntryPointScreen()
-    }
-}
+//@Preview
+//@Composable
+//fun EntryPointScreenPreview() {
+//    Android7HoursTheme {
+//        EntryPointScreen(HomeNavigationRoute.HomeTab)
+//    }
+//}

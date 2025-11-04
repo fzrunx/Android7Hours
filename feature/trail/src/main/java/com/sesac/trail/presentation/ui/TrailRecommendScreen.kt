@@ -66,7 +66,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.sesac.common.component.CommonArticle
 import com.sesac.common.component.CommonArticleList
-import com.sesac.common.component.CommonSegmentedButton
 import com.sesac.common.component.PathInfo
 import com.sesac.trail.presentation.component.TrailControlIconList
 import com.sesac.trail.presentation.component.SegmentedMenuItem
@@ -163,11 +162,11 @@ fun TrailRecommendScreen(
 
                 Log.d("TagTrailRecommend", trailSelectedMenu.value)
                 if(trailSelectedMenu.value == recommend) {
-                    CommonSegmentedButton(
-                        tabOptions =  tabOptions,
-                        tabSelectedIndex = tabSelectedIndex,
-                        selectedMenuState = trailSelectedMenu,
-                    )
+//                    CommonSegmentedButton(
+//                        tabOptions =  tabOptions,
+//                        tabSelectedIndex = tabSelectedIndex,
+//                        selectedMenuState = trailSelectedMenu,
+//                    )
                 }
 
                 Column(

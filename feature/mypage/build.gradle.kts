@@ -49,6 +49,7 @@ kotlin{
 dependencies {
     implementation(project(":domain"))
     implementation(project(":feature:common"))
+//    implementation(project(":feature:community"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
@@ -79,5 +80,7 @@ dependencies {
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
+
+    implementation("com.jakewharton.threetenabp:threetenabp:1.4.6") // localDate 사용하려면 sdk 26 이하에서는 이렇게 써야됨
 
 }

@@ -1,45 +1,71 @@
 package com.sesac.mypage.presentation.ui
 
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Switch
-import androidx.compose.material3.Text
-import androidx.compose.runtime.remember
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.layout.*
-import androidx.compose.material.icons.Icons
-import androidx.compose.material3.*
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import com.sesac.common.navigation.CommonHeader
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.sesac.common.ui.theme.Border
+import com.sesac.common.ui.theme.NoteBox
+import com.sesac.common.ui.theme.Primary
+import com.sesac.common.ui.theme.Surface
+import com.sesac.common.ui.theme.TextPrimary
+import com.sesac.common.ui.theme.TextSecondary
+import com.sesac.common.ui.theme.badgeEnabledBg
+import com.sesac.common.ui.theme.badgeEnabledText
+import com.sesac.common.ui.theme.brushBlue
+import com.sesac.common.ui.theme.brushGreen
+import com.sesac.common.ui.theme.brushPurple
+import com.sesac.common.ui.theme.iconBoxSize
+import com.sesac.common.ui.theme.iconSize
+import com.sesac.common.ui.theme.infoBoxBg
+import com.sesac.common.ui.theme.infoBoxBorder
+import com.sesac.common.ui.theme.infoBoxText
+import com.sesac.common.ui.theme.infoBoxTitle
 import com.sesac.common.ui.theme.paddingLarge
-import com.sesac.common.ui.theme.*
+import com.sesac.common.ui.theme.paddingMedium
+import com.sesac.common.ui.theme.paddingSmall
+import com.sesac.common.ui.theme.permEnabledBg
+import com.sesac.common.ui.theme.permEnabledBorder
+import com.sesac.common.ui.theme.shapeCard
+import com.sesac.common.ui.theme.shapeIcon
 
 
 // 1. 권한 키를 위한 Enum (타입 안정성)
@@ -58,8 +84,7 @@ data class PermissionItem(
 
 
 @Composable
-fun MypageSettingScreen (  onBack: () -> Unit,
-) {
+fun MypageSettingScreen () {
     // 임시 데이터
     val permissionItems = listOf(
         PermissionItem(PermissionKey.CAMERA, Icons.Default.CameraAlt, "카메라", "산책 중 사진 및 영상 촬영", brushPurple),
@@ -69,80 +94,69 @@ fun MypageSettingScreen (  onBack: () -> Unit,
     val cameraEnabled = remember { mutableStateOf(true) }
     val gpsEnabled = remember { mutableStateOf(true) }
     val notificationEnabled = remember { mutableStateOf(true) }
-    Scaffold(
-        topBar = {
-            CommonHeader(
-                title = "설정",
-                onBack = { /* 뒤로가기 */ }
-            )
-        },
-        containerColor =  MaterialTheme.colorScheme.background
-    ) { paddingValues ->
-        LazyColumn(
-            modifier = Modifier
-                .padding(paddingValues)
-                .fillMaxSize(),
-            contentPadding = PaddingValues(bottom = paddingLarge)
-        ) {
-            // --- 1. 권한 설정 섹션 ---
-            item {
-                Surface(color = MaterialTheme.colorScheme.surface) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(paddingLarge)
-                    ) {
-                        Text(
-                            text = "권한 설정",
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = TextPrimary
-                        )
-                        Spacer(modifier = Modifier.height(paddingSmall))
-                        Text(
-                            text = "앱 기능 사용을 위한 권한을 관리합니다",
-                            fontSize = 14.sp,
-                            color = TextSecondary
-                        )
-                        Spacer(modifier = Modifier.height(paddingLarge))
+    LazyColumn(
+        modifier = Modifier
+            .fillMaxSize(),
+        contentPadding = PaddingValues(bottom = paddingLarge)
+    ) {
+        // --- 1. 권한 설정 섹션 ---
+        item {
+            Surface(color = MaterialTheme.colorScheme.surface) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(paddingLarge)
+                ) {
+                    Text(
+                        text = "권한 설정",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = TextPrimary
+                    )
+                    Spacer(modifier = Modifier.height(paddingSmall))
+                    Text(
+                        text = "앱 기능 사용을 위한 권한을 관리합니다",
+                        fontSize = 14.sp,
+                        color = TextSecondary
+                    )
+                    Spacer(modifier = Modifier.height(paddingLarge))
 
-                        // 권한 카드 리스트
-                        permissionItems.forEach { item ->
-                        PermissionCard(
-                            item = item,
-                            isEnabled = when(item.key) {
-                                PermissionKey.CAMERA -> cameraEnabled.value
-                                PermissionKey.GPS -> gpsEnabled.value
-                                PermissionKey.NOTIFICATION -> notificationEnabled.value
-                            },
-                            onToggle = {
-                                when(item.key) {
-                                    PermissionKey.CAMERA -> cameraEnabled.value = !cameraEnabled.value
-                                    PermissionKey.GPS -> gpsEnabled.value = !gpsEnabled.value
-                                    PermissionKey.NOTIFICATION -> notificationEnabled.value = !notificationEnabled.value
-                                }
+                    // 권한 카드 리스트
+                    permissionItems.forEach { item ->
+                    PermissionCard(
+                        item = item,
+                        isEnabled = when(item.key) {
+                            PermissionKey.CAMERA -> cameraEnabled.value
+                            PermissionKey.GPS -> gpsEnabled.value
+                            PermissionKey.NOTIFICATION -> notificationEnabled.value
+                        },
+                        onToggle = {
+                            when(item.key) {
+                                PermissionKey.CAMERA -> cameraEnabled.value = !cameraEnabled.value
+                                PermissionKey.GPS -> gpsEnabled.value = !gpsEnabled.value
+                                PermissionKey.NOTIFICATION -> notificationEnabled.value = !notificationEnabled.value
                             }
-                        )
-                            Spacer(modifier = Modifier.height(paddingMedium))
                         }
+                    )
+                        Spacer(modifier = Modifier.height(paddingMedium))
                     }
                 }
             }
-            // --- 2. 권한 안내 섹션 ---
-            item {
-                InfoBox(
-                    modifier = Modifier.padding(
-                        horizontal = paddingLarge,
-                        vertical = paddingMedium
-                    )
+        }
+        // --- 2. 권한 안내 섹션 ---
+        item {
+            InfoBox(
+                modifier = Modifier.padding(
+                    horizontal = paddingLarge,
+                    vertical = paddingMedium
                 )
-            }
-            // --- 3. 개인정보 고지 ---
-            item {
-                PrivacyNote(
-                    modifier = Modifier.padding(horizontal = paddingLarge)
-                )
-            }
+            )
+        }
+        // --- 3. 개인정보 고지 ---
+        item {
+            PrivacyNote(
+                modifier = Modifier.padding(horizontal = paddingLarge)
+            )
         }
     }
 }
@@ -301,7 +315,5 @@ fun PrivacyNote(modifier: Modifier = Modifier) {
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun MypageSettingScreenPreview() {
-    MypageSettingScreen(
-        onBack = {}
-    )
+    MypageSettingScreen()
 }

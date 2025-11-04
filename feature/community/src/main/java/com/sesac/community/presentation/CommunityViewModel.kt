@@ -1,11 +1,10 @@
 package com.sesac.community.presentation
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.sesac.community.utils.calculateTimeAgo
-import com.sesac.domain.model.post.PostModel
-import com.sesac.domain.usecase.post.GetAllPostsUseCase
+import com.sesac.domain.model.Community
+import com.sesac.domain.usecase.GetAllCommunityUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -36,7 +35,7 @@ data class Post(
 
 @HiltViewModel
 class CommunityViewModel @Inject constructor(
-    private val getAllPostsUseCase: GetAllPostsUseCase,
+    private val getAllPostsUseCase: GetAllCommunityUseCase,
 ) : ViewModel() {
 
     private val _posts = MutableStateFlow<List<Post>>(emptyList())
@@ -151,7 +150,7 @@ class CommunityViewModel @Inject constructor(
         }
     }
 
-    private fun PostModel.toPresentation(id: Long): Post = Post(
+    private fun Community.toPresentation(id: Long): Post = Post(
         id = id,
         author = this.userName,
         authorImage = "https://picsum.photos/seed/${this.userName}/200",

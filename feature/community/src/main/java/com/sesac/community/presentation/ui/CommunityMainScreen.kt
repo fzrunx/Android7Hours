@@ -8,6 +8,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -27,11 +28,9 @@ import com.sesac.common.ui.theme.Android7HoursTheme
 import com.sesac.common.ui.theme.Gray400
 import com.sesac.community.presentation.CommunityViewModel
 import com.sesac.community.presentation.Post
-import com.sesac.community.presentation.component.PostCard
-import com.sesac.community.presentation.component.PostEditorDialog
-import com.sesac.domain.model.post.PostModel
-import com.sesac.domain.repository.PostRepository
-import com.sesac.domain.usecase.post.GetAllPostsUseCase
+import com.sesac.domain.model.Community
+import com.sesac.domain.repository.CommunityRepository
+import com.sesac.domain.usecase.GetAllCommunityUseCase
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
@@ -41,7 +40,8 @@ import com.sesac.common.R as cR
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CommunityMainScreen(
-    viewModel: CommunityViewModel = hiltViewModel()
+    isSearchOpen:  MutableState<Boolean>,
+    viewModel: CommunityViewModel = hiltViewModel(),
 ) {
     // static
     val postDeleteMessage = stringResource(cR.string.community_snackbar_post_delecte)
@@ -55,7 +55,7 @@ fun CommunityMainScreen(
     val activeFilter by viewModel.activeFilter.collectAsState()
 
     // UI 상태
-    var isSearchOpen by remember { mutableStateOf(false) }
+//    val isSearchOpen by LocalIsSearchOpen.current
     var isCreateDialogOpen by remember { mutableStateOf(false) }
     var editingPost by remember { mutableStateOf<Post?>(null) } // 수정할 게시물
     val isEditDialogOpen by remember { derivedStateOf { editingPost != null } }
@@ -67,10 +67,11 @@ fun CommunityMainScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
+
     ) {
         // --- 검색 바 ---
         CommonSearchBarContent(
-            isSearchOpen = isSearchOpen,
+            isSearchOpen = isSearchOpen.value,
             query = searchQuery,
             onQueryChange = viewModel::onSearchQueryChange,
         )
@@ -88,15 +89,18 @@ fun CommunityMainScreen(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
             ) {
-                Text(stringResource(cR.string.community_placeholder_post_empty), color = Gray400)
+                Text(
+                    stringResource(cR.string.community_placeholder_post_empty),
+                    color = Gray400
+                )
             }
         } else {
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
-//                    contentPadding = PaddingValues(bottom = 80.dp) // FAB에 가려지지 않게
+                //                    contentPadding = PaddingValues(bottom = 80.dp) // FAB에 가려지지 않게
             ) {
                 items(items = filteredPosts, key = { it.id }) { post ->
-                    PostCard(
+                    PostCardView(
                         post = post,
                         isMyPost = post.author == "나",
                         onLikeToggle = { viewModel.onLikeToggle(post.id) },
@@ -116,7 +120,7 @@ fun CommunityMainScreen(
 
     // --- 새 게시글 작성 다이얼로그 ---
     if (isCreateDialogOpen) {
-        PostEditorDialog(
+        PostEditorDialogView(
             categories = postEditorCategories,
             onDismiss = { isCreateDialogOpen = false },
             onSave = { content, image, category ->
@@ -131,7 +135,7 @@ fun CommunityMainScreen(
 
     // --- 게시글 수정 다이얼로그 ---
     if (isEditDialogOpen) {
-        PostEditorDialog(
+        PostEditorDialogView(
             categories = postEditorCategories,
             initialPost = editingPost,
             onDismiss = { editingPost = null },
@@ -158,17 +162,17 @@ fun CommunityMainScreen(
 @Composable
 fun CommunityMainScreePreview() {
     // Preview를 위한 가짜(Fake) 데이터 및 ViewModel 생성
-    class FakePostRepository : PostRepository {
-        override fun getAllPosts(): Flow<List<PostModel>> = flowOf(
+    class FakePostRepository : CommunityRepository {
+        override suspend fun getAllPosts(): Flow<List<Community>> = flowOf(
             listOf(
-                PostModel(
+                Community(
                     postId = 0,
                     title = "주말 산책",
                     userName = "멍멍이집사",
                     content = "부산 근처 산에 다녀왔어요. 자연과 함께한 힐링 타임 🌿",
                     create_at = Date(System.currentTimeMillis() - 1000 * 60 * 60 * 2) // 2 hours ago
                 ),
-                PostModel(
+                Community(
                     postId = 1,
                     title = "팀원들과 점심",
                     userName = "강아지사랑",
@@ -178,13 +182,15 @@ fun CommunityMainScreePreview() {
                 )
             )
         )
-        override fun getPostDetail(postId: Int): Flow<PostModel?> = flowOf(null)
-        override fun getSearchPosts(query: String): Flow<List<PostModel>> = flowOf(emptyList())
+        override suspend fun getPostDetail(postId: Int): Flow<Community?> = flowOf(null)
+        override suspend fun getSearchPosts(query: String): Flow<List<Community>> = flowOf(emptyList())
     }
 
-    val fakeViewModel = CommunityViewModel(GetAllPostsUseCase(FakePostRepository()))
+    val fakeViewModel = CommunityViewModel(GetAllCommunityUseCase(FakePostRepository()))
 
     Android7HoursTheme {
-        CommunityMainScreen(viewModel = fakeViewModel)
+        CommunityMainScreen(
+            isSearchOpen = remember { mutableStateOf(false) },
+            viewModel = fakeViewModel)
     }
 }

@@ -71,11 +71,12 @@
 
     <!-- ========= Mypage ========= -->
     <string name="mypage_button_management">관리</string>
-    <string name="mypage_button_favorite">즐겨찾기</string>
-    <string name="mypage_button_setting">설정</string>
-    <string name="mypage_button_myinfo">내 정보</string>
-    <string name="mypage_button_like">좋아요</string>
-    <string name="mypage_button_create_list">작성목록</string>
+    <string name="mypage_management">일정관리</string>
+    <string name="mypage_favorite">즐겨찾기</string>
+    <string name="mypage_setting">설정</string>
+    <string name="mypage_myinfo">내 정보</string>
+    <string name="mypage_like">좋아요</string>
+    <string name="mypage_create_list">작성목록</string>
     <string name="mypage_stats_title">내 산책 기록</string>
 
     <!-- ========= Common ========= -->

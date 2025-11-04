@@ -1,28 +1,19 @@
 package com.sesac.home.presentation.ui
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.pager.HorizontalPager
-import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
@@ -34,9 +25,6 @@ import com.sesac.common.component.CommonLazyRow
 import com.sesac.common.ui.theme.Android7HoursTheme
 import com.sesac.common.ui.theme.paddingLarge
 import com.sesac.common.ui.theme.paddingMedium
-import com.sesac.common.ui.theme.paddingMicro
-import com.sesac.home.presentation.component.BannerSection
-import com.sesac.home.presentation.component.ContentCard
 import com.sesac.home.presentation.model.BannerData
 import com.sesac.home.presentation.model.DogCafe
 import com.sesac.home.presentation.model.TravelDestination
@@ -100,8 +88,8 @@ object DataSource {
 @Composable
 fun HomeScreen(
     modifier: Modifier = Modifier,
-    onNavigateToWalkPath: () -> Unit,
-    onNavigateToCommunity: () -> Unit
+    onNavigateToWalkPath: () -> Unit = {},
+    onNavigateToCommunity: () -> Unit = {},
 ) {
     Column(
         modifier = Modifier
@@ -109,20 +97,20 @@ fun HomeScreen(
             .background(MaterialTheme.colorScheme.background)
     ) {
         LazyColumn(modifier = Modifier.fillMaxSize()) {
-            item { BannerSection(banners = DataSource.banners, modifier = Modifier.padding(top = paddingMedium)) }
+            item { BannerSectionView(banners = DataSource.banners, modifier = Modifier.padding(top = paddingMedium)) }
             item { CommonLazyRow(
                 title = "산책로 추천",
                 items = DataSource.walkPaths,
-            ) { item -> ContentCard(item, onNavigateToWalkPath, Modifier.width(cardWidth)) }
+            ) { item -> ContentCardView(item, onNavigateToWalkPath, Modifier.width(cardWidth)) }
             }
             item { CommonLazyRow(
                 title = "여행지 추천",
                 items = DataSource.travelDestinations,
-            ) { item -> ContentCard(item, {}, Modifier.width(cardWidth)) } }
+            ) { item -> ContentCardView(item, {}, Modifier.width(cardWidth)) } }
             item { CommonLazyRow(
                 title = "애견 카페",
                 items = DataSource.dogCafes,
-            ) { item -> ContentCard(item, {}, Modifier.width(cardWidth)) } }
+            ) { item -> ContentCardView(item, {}, Modifier.width(cardWidth)) } }
             item { CommunityCard(image = DataSource.communityImage, onClick = onNavigateToCommunity, modifier = Modifier.padding(horizontal = paddingLarge, vertical = paddingMedium)) }
             item { Spacer(modifier = Modifier.height(headerHeight)) }
         }

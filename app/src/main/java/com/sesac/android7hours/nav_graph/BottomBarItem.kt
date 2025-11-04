@@ -9,7 +9,7 @@ import androidx.compose.material.icons.filled.Videocam
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.sesac.community.nav_graph.CommunityNavigationRoute
 import com.sesac.home.nav_graph.HomeNavigationRoute
-import com.sesac.monitor.presentation.nav_graph.MonitorNavigationRoute
+import com.sesac.monitor.nav_graph.MonitorNavigationRoute
 import com.sesac.mypage.nav_graph.MypageNavigationRoute
 import com.sesac.trail.nav_graph.TrailNavigationRoute
 
@@ -38,12 +38,12 @@ data class BottomBarItem(
             BottomBarItem(
                 tabName = "Community",
                 icon = Icons.Filled.People,
-                destination = CommunityNavigationRoute.CommunityMainTab
+                destination = CommunityNavigationRoute.MainTab
             ),
             BottomBarItem(
                 tabName = "Mypage",
                 icon = Icons.Filled.Person,
-                destination = MypageNavigationRoute.MypageMainTab
+                destination = MypageNavigationRoute.MainTab
             ),
         )
     }
