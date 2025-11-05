@@ -12,6 +12,8 @@ local.properties
 # Log/OS Files
 *.log
 
+secret.properties
+
 # Android Studio generated files and folders
 captures/
 .externalNativeBuild/
@@ -165,3 +167,4 @@ fabric.properties
 !/gradle/wrapper/gradle-wrapper.jar
 
 # End of https://www.toptal.com/developers/gitignore/api/androidstudio,android
+
