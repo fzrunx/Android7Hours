@@ -86,9 +86,9 @@ data class FilterState(
 @Composable
 fun TrailRecommendScreen(
     current: String = "recommend",                         // 현재 선택된 메뉴 id (임시 초기값
-    trailSelectedMenu: MutableState<String>,       // 메뉴 선택 이벤트 콜백
 ) {
     val recommend = stringResource(cR.string.trail_button_recommend)
+    val trailSelectedMenu = remember { mutableStateOf(recommend) }
     // 상단 SegmentedMenu
     val menuItems = listOf(
         SegmentedMenuItem("recommend", stringResource(cR.string.trail_button_recommend)),
@@ -307,8 +307,6 @@ fun WalkListBottomSheet(
 @Preview(showBackground = true)
 @Composable
 fun TrailRecommendScreenPreview() {
-    val recommend = stringResource(cR.string.trail_button_recommend)
     TrailRecommendScreen(
-        trailSelectedMenu = remember { mutableStateOf(recommend) }
     )
 }

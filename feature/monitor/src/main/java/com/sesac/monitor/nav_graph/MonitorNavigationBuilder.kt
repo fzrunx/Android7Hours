@@ -10,7 +10,7 @@ import androidx.navigation.compose.rememberNavController
 import com.naver.maps.map.MapView
 import com.sesac.monitor.presentation.ui.MonitorGpsScreen
 import com.sesac.monitor.presentation.ui.MonitorMainScreen
-import com.sesac.monitor.utils.MapViewLifecycleHelper
+import com.sesac.common.utils.MapViewLifecycleHelper
 
 fun NavGraphBuilder.MonitorSection(
     navController: NavController,

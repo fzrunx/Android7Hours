@@ -18,7 +18,7 @@ import androidx.navigation.NavController
 import com.naver.maps.map.NaverMap
 import com.sesac.common.component.CommonFilterTabs
 import com.sesac.common.ui.theme.paddingMedium
-import com.sesac.monitor.utils.MapViewLifecycleHelper
+import com.sesac.common.utils.MapViewLifecycleHelper
 import com.sesac.common.R as cR
 
 @Composable

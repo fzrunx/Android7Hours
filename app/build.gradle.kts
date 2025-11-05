@@ -56,6 +56,7 @@ dependencies {
     implementation(project(":feature:monitor"))
     implementation(project(":feature:mypage"))
     implementation(project(":data"))
+    implementation(project(":domain"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
@@ -81,8 +82,8 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
 
-    implementation("androidx.core:core-splashscreen:1.0.1")
-    implementation("com.naver.maps:map-sdk:3.23.0")  // 해당 부분 넣어야됨
-    implementation("com.google.android.gms:play-services-location:21.3.0")
-    implementation("com.jakewharton.threetenabp:threetenabp:1.4.6") // localDate 사용하려면 sdk 26 이하에서는 이렇게 써야됨
+    implementation(libs.androidx.core.splashscreen)
+    implementation(libs.map.sdk)  // 해당 부분 넣어야됨
+    implementation(libs.play.services.location)
+    implementation(libs.threetenabp) // localDate 사용하려면 sdk 26 이하에서는 이렇게 써야됨
 }

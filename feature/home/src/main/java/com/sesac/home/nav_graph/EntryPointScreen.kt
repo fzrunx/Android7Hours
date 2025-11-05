@@ -1,7 +1,7 @@
-package com.sesac.android7hours.nav_graph
+package com.sesac.home.nav_graph
 
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Search
@@ -18,53 +18,29 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.compositionLocalOf
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.ProvidableCompositionLocal
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.currentBackStackEntryAsState
-import androidx.navigation.compose.rememberNavController
-import com.naver.maps.map.MapView
-import com.sesac.android7hours.common.TopBarData
-import com.sesac.android7hours.common.topBarAsRouteName
-import com.sesac.community.nav_graph.CommunitySection
-import com.sesac.home.nav_graph.HomeSection
-import com.sesac.monitor.nav_graph.MonitorSection
-import com.sesac.monitor.utils.MapViewLifecycleHelper
-import com.sesac.mypage.nav_graph.MypageSection
-import com.sesac.trail.nav_graph.TrailSection
+import androidx.navigation.NavHostController
 import com.sesac.common.R as cR
-
-val LocalIsSearchOpen = compositionLocalOf { mutableStateOf(false) }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EntryPointScreen(
     startDestination: Any,
+    navController: NavHostController,
     scaffoldActionCases: List<String>,
     navBackOptions: List<String>,
+    appTopBarData: TopBarData,
+    appBottomBarItem: List<BottomBarItem>,
+    isSearchOpen:  MutableState<Boolean>,
+    localIsSearchOpen: ProvidableCompositionLocal<MutableState<Boolean>>,
+    navHost: @Composable (PaddingValues) -> Unit,
 ) {
-    // Static 변수
-    val recommend = stringResource(cR.string.trail_button_recommend)    // 수정 예정
-    val context = LocalContext.current
-    val mapView = MapView(context)
-
-    // State 변수
-    val navController = rememberNavController()
-    val navBackStackEntry by navController.currentBackStackEntryAsState()
-    val topBarData = navBackStackEntry?.topBarAsRouteName ?: TopBarData()
-    val bottomBarItems = remember { BottomBarItem.fetchBottomBarItems() }
-    val trailSelectedMenu = remember { mutableStateOf(recommend) }  // 수정 예정
-    val lifecycleHelper = remember { MapViewLifecycleHelper(mapView) }
-    val isSearchOpen = remember { mutableStateOf(false) }
-    val topBarTitle = topBarData.title
+    val topBarTitle = appTopBarData.title
     val isScaffoldAction = scaffoldActionCases.contains(topBarTitle)
 
     LaunchedEffect(isScaffoldAction) {
@@ -73,20 +49,20 @@ fun EntryPointScreen(
         }
     }
 
-    CompositionLocalProvider(LocalIsSearchOpen provides isSearchOpen) {
+    CompositionLocalProvider(localIsSearchOpen provides isSearchOpen) {
         Scaffold(
             modifier = Modifier.fillMaxSize(),
             topBar = {
                 CenterAlignedTopAppBar(
                     title = {
                         Text(
-                            text = topBarData.title,
+                            text = appTopBarData.title,
                             fontWeight = FontWeight.Bold
                         )
                     },
                     colors = TopAppBarDefaults.topAppBarColors(MaterialTheme.colorScheme.primaryContainer),
                     navigationIcon = {
-                        if (topBarData.title in navBackOptions) {
+                        if (appTopBarData.title in navBackOptions) {
                             IconButton(onClick = { navController.popBackStack() }) {
                                 Icon(
                                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
@@ -124,9 +100,9 @@ fun EntryPointScreen(
 
             bottomBar = {
                 NavigationBar {
-                    bottomBarItems.forEach { bottomBarItem ->
+                    appBottomBarItem.forEach { bottomBarItem ->
                         NavigationBarItem(
-                            selected = bottomBarItem.tabName == topBarData.title,
+                            selected = bottomBarItem.tabName == appTopBarData.title,
                             label = {
                                 Text(text = bottomBarItem.tabName, color = Color.Unspecified)
                             },
@@ -138,8 +114,8 @@ fun EntryPointScreen(
                                 )
                             },
                             onClick = {
-                                navController.navigate(route = bottomBarItem.destination) {
-                                    popUpTo(route = bottomBarItem.destination) {
+                                navController.navigate(route = bottomBarItem.destination ?: startDestination) {
+                                    popUpTo(route = bottomBarItem.destination ?: startDestination) {
 //                                    inclusive = true
                                         saveState = true
                                     }
@@ -151,20 +127,7 @@ fun EntryPointScreen(
                 }
             },
         ) { paddingValues ->
-            NavHost(
-                navController = navController,
-                startDestination = startDestination,
-                modifier = Modifier.padding(paddingValues = paddingValues),
-            ) {
-                HomeSection()
-                TrailSection(trailSelectedMenu = trailSelectedMenu)
-                CommunitySection(isSearchOpen = isSearchOpen,)
-                MonitorSection(
-                    navController = navController,
-                    lifecycleHelper = lifecycleHelper,
-                )
-                MypageSection(navController = navController,)
-            }
+            navHost(paddingValues)
         }
     }
 }

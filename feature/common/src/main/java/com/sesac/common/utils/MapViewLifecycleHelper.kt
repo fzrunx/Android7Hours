@@ -1,4 +1,4 @@
-package com.sesac.monitor.utils
+package com.sesac.common.utils
 
 import android.os.Bundle
 import com.naver.maps.map.MapView

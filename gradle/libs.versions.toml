@@ -1,5 +1,6 @@
 [versions]
 agp = "8.13.0"
+coreSplashscreen = "1.0.1"
 kotlin = "2.2.21"
 coreKtx = "1.17.0"
 junit = "4.13.2"
@@ -12,7 +13,9 @@ jetbrainsKotlinJvm = "2.2.21"
 coilCompose = "3.3.0"
 coilNetworkOkhttp = "3.3.0"
 appcompat = "1.7.1"
+mapSdk = "3.23.0"
 material = "1.13.0"
+playServicesLocation = "21.3.0"
 runtime = "1.9.4"
 material3 = "1.4.0"
 materialIconsExtended = "1.7.8"
@@ -27,9 +30,11 @@ constraintlayout = "2.2.1"
 # Hilt
 hiltVersion = "2.57.2"
 hiltNavigationCompose = "1.3.0"
+threetenabp = "1.4.9"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
+androidx-core-splashscreen = { module = "androidx.core:core-splashscreen", version.ref = "coreSplashscreen" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
@@ -45,6 +50,7 @@ androidx-compose-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-te
 androidx-compose-material3 = { group = "androidx.compose.material3", name = "material3", version.ref = "material3" }
 androidx-compose-material-icons-extended = { group = "androidx.compose.material", name = "material-icons-extended-android", version.ref = "materialIconsExtended" }
 androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
+map-sdk = { module = "com.naver.maps:map-sdk", version.ref = "mapSdk" }
 material = { group = "com.google.android.material", name = "material", version.ref = "material" }
 coil-compose = { group = "io.coil-kt.coil3", name = "coil-compose", version.ref = "coilCompose" }
 coil-network-okttp = { group = "io.coil-kt.coil3", name = "coil-network-okhttp", version.ref = "coilNetworkOkhttp" }
@@ -61,6 +67,8 @@ hilt-android = { group = "com.google.dagger", name = "hilt-android", version.ref
 hilt-core = { group= "com.google.dagger", name = "hilt-core", version.ref = "hiltVersion" }
 androidx-hilt-navigation-compose = { group = "androidx.hilt", name = "hilt-navigation-compose", version.ref = "hiltNavigationCompose" }
 androidx-constraintlayout = { group = "androidx.constraintlayout", name = "constraintlayout", version.ref = "constraintlayout" }
+play-services-location = { module = "com.google.android.gms:play-services-location", version.ref = "playServicesLocation" }
+threetenabp = { module = "com.jakewharton.threetenabp:threetenabp", version.ref = "threetenabp" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
