@@ -27,11 +27,11 @@ import coil3.size.Scale
 import com.sesac.common.ui.theme.cardHeight
 import com.sesac.common.ui.theme.cardRound
 import com.sesac.common.ui.theme.paddingMedium
-import com.sesac.home.presentation.model.HomeCardData
+import com.sesac.domain.model.HomeCardData
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ContentCardView(data: HomeCardData, onClick: () -> Unit, modifier: Modifier = Modifier) {
+fun ContentCardView(data: HomeCardData?, onClick: () -> Unit, modifier: Modifier = Modifier) {
     val context = LocalContext.current
     Card(
         onClick = onClick,
@@ -41,11 +41,11 @@ fun ContentCardView(data: HomeCardData, onClick: () -> Unit, modifier: Modifier 
         Box(modifier = Modifier.fillMaxSize()) {
             AsyncImage(
                 model = ImageRequest.Builder(context)
-                    .data(data.image)
+                    .data(data?.image)
                     .crossfade(true)
                     .scale(Scale.FILL)
                     .build(),
-                contentDescription = data.name,
+                contentDescription = data?.name,
                 modifier = Modifier.fillMaxSize(),
                 contentScale = ContentScale.Crop,
             )
@@ -66,7 +66,7 @@ fun ContentCardView(data: HomeCardData, onClick: () -> Unit, modifier: Modifier 
                 verticalArrangement = Arrangement.Bottom
             ) {
                 Text(
-                    text = data.name,
+                    text = data?.name ?: "정보 없음",
                     color = MaterialTheme.colorScheme.onPrimary,
                     style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold),
                     maxLines = 1,

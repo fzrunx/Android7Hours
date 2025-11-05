@@ -42,10 +42,10 @@ import com.sesac.common.ui.theme.buttonRound
 import com.sesac.common.ui.theme.paddingLarge
 import com.sesac.common.ui.theme.paddingMedium
 import com.sesac.common.ui.theme.paddingMicro
-import com.sesac.home.presentation.model.BannerData
+import com.sesac.domain.model.BannerData
 
 @Composable
-fun BannerSectionView(banners: List<BannerData>, modifier: Modifier = Modifier) {
+fun BannerSectionView(banners: List<BannerData?>, modifier: Modifier = Modifier) {
     val pagerState = rememberPagerState(pageCount = { banners.size })
     Column(modifier = modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
         HorizontalPager(
@@ -90,11 +90,11 @@ fun PageIndicator(isSelected: Boolean) {
 
 
 @Composable
-fun BannerCardContent(banner: BannerData) {
+fun BannerCardContent(banner: BannerData?) {
     val context = LocalContext.current
 
     Box(modifier = Modifier.fillMaxSize()) {
-        if (banner.image == "drawable_banner_image") {
+        if (banner?.image == "drawable_banner_image") {
             Image(
                 painter = painterResource(id = R.drawable.icons8_dog_50),
                 contentDescription = banner.title,
@@ -104,11 +104,11 @@ fun BannerCardContent(banner: BannerData) {
         } else {
             AsyncImage(
                 model = ImageRequest.Builder(context)
-                    .data(banner.image)
+                    .data(banner?.image)
                     .crossfade(true)
                     .scale(Scale.FILL)
                     .build(),
-                contentDescription = banner.title,
+                contentDescription = banner?.title,
                 modifier = Modifier.fillMaxSize(),
                 contentScale = ContentScale.Crop,
             )
@@ -132,14 +132,14 @@ fun BannerCardContent(banner: BannerData) {
             verticalArrangement = Arrangement.Bottom
         ) {
             Text(
-                text = banner.title,
+                text = banner?.title ?: "배너 없음",
                 color = MaterialTheme.colorScheme.onPrimary,
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold
             )
             Spacer(modifier = Modifier.height(paddingMicro))
             Text(
-                text = banner.subtitle,
+                text = banner?.subtitle ?: "배너 없음",
                 color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f),
                 style = MaterialTheme.typography.bodySmall,
                 overflow = TextOverflow.Ellipsis
