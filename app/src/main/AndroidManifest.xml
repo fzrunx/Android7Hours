@@ -36,7 +36,7 @@
         <!--여기 meta-data 부분 인증 정보 집어넣어야 함 -->
         <meta-data
             android:name="com.naver.maps.map.NCP_KEY_ID"
-            android:value="l9rv1pftio" />
+            android:value="${NAVER_MAPS_API_KEY}" />
 
     </application>
 

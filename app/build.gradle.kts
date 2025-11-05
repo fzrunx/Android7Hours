@@ -5,6 +5,7 @@ plugins {
 
     alias(libs.plugins.ksp)
     alias(libs.plugins.hilt)
+    alias(libs.plugins.secrets.gradle.plugin)  // secret 설정 시 해당 내용 추가
 }
 
 android {
@@ -44,7 +45,19 @@ android {
     buildFeatures {
         compose = true
         viewBinding = true
+        buildConfig = true // secret 설정 시 해당 내용 추가
     }
+}
+secrets {
+    // 사용할 프로퍼티 파일이름을 선언(선언하지 않으면기본"local.properties")
+    propertiesFileName = "secret.properties"
+    // CI/CD 환경을 위한 기본 프로퍼티 파일을 지정
+// 이 파일은 버전 관리에 포함될 수 있음
+//defaultPropertiesFileName = "secrets.defaults.properties"
+
+// Secrets Plug-In이 무시할 키의 목록을 정규 표현식으로 지정가능
+// "sdk.dir"은 기본적으로 무시
+//ignoreList.add("debug.*")  : "debug"로 시작하는 모든 키 무시
 }
 
 dependencies {
