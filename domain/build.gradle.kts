@@ -16,4 +16,5 @@ dependencies {
     implementation(libs.kotilinx.coroutines.core)
     implementation(libs.hilt.core)
     ksp(libs.hilt.compiler)
+    implementation(libs.threetenabp)
 }

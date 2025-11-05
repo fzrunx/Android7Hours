@@ -60,6 +60,7 @@ fun MonitorMainScreen (
         when(activeTab) {
             webCam -> MonitorCamScreen()
             GPS -> MonitorGpsScreen(
+                viewModel = viewModel,
                 lifecycleHelper = lifecycleHelper,
                 onMapReady = null,
             )

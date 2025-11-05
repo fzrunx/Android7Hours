@@ -1,5 +1,6 @@
 package com.sesac.mypage.nav_graph
 
+import androidx.compose.runtime.snapshots.SnapshotStateMap
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
@@ -8,7 +9,10 @@ import com.sesac.mypage.presentation.ui.MypageMainScreen
 import com.sesac.mypage.presentation.ui.MypageManageScreen
 import com.sesac.mypage.presentation.ui.MypageSettingScreen
 
-fun NavGraphBuilder.MypageSection(navController: NavController) {
+fun NavGraphBuilder.mypageRoute(
+    navController: NavController,
+    permissionState: SnapshotStateMap<String, Boolean>,
+    ) {
     composable<MypageNavigationRoute.MainTab> {
         MypageMainScreen(navController = navController,)
     }
@@ -19,6 +23,6 @@ fun NavGraphBuilder.MypageSection(navController: NavController) {
         MypageFavoriteScreen()
     }
     composable<MypageNavigationRoute.SettingTab> {
-        MypageSettingScreen()
+        MypageSettingScreen(permissionStates = permissionState)
     }
 }

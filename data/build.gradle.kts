@@ -51,6 +51,7 @@ dependencies {
     implementation(libs.kotilinx.coroutines.core)
     implementation(libs.hilt.android)
     implementation(libs.androidx.room.runtime)
+    implementation(libs.threetenabp)
 
     ksp(libs.androidx.room.compiler)
     ksp(libs.hilt.compiler)

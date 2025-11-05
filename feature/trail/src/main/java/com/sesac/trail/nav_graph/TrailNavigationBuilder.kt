@@ -4,7 +4,7 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import com.sesac.trail.presentation.ui.TrailRecommendScreen
 
-fun NavGraphBuilder.TrailSection() {
+fun NavGraphBuilder.trailRoute() {
     composable<TrailNavigationRoute.TrailRecommendTab> {
         TrailRecommendScreen(
         )

@@ -11,6 +11,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
@@ -45,6 +46,7 @@ class MainActivity : ComponentActivity() {
             val lifecycleHelper = remember { MapViewLifecycleHelper(mapView) }
             val isSearchOpen = remember { mutableStateOf(false) }
             val LocalIsSearchOpen = compositionLocalOf { mutableStateOf(false) }
+            val permissionStates = remember { mutableStateMapOf<String, Boolean>() }
 
             Android7HoursTheme {
                 EntryPointScreen(
@@ -61,7 +63,7 @@ class MainActivity : ComponentActivity() {
                     appTopBarData = appTopBarData,
                     appBottomBarItem = appBottomBarItem,
                     isSearchOpen = isSearchOpen,
-                    localIsSearchOpen = LocalIsSearchOpen,
+                    LocalIsSearchOpen = LocalIsSearchOpen,
                     navHost = { paddingValues ->
                         AppNavHost(
                             paddingValues = paddingValues,
@@ -69,6 +71,7 @@ class MainActivity : ComponentActivity() {
                             startDestination = startDestination,
                             isSearchOpen = isSearchOpen,
                             lifecycleHelper = lifecycleHelper,
+                            permissionState = permissionStates
                         )
                     }
                 )

@@ -37,7 +37,7 @@ fun EntryPointScreen(
     appTopBarData: TopBarData,
     appBottomBarItem: List<BottomBarItem>,
     isSearchOpen:  MutableState<Boolean>,
-    localIsSearchOpen: ProvidableCompositionLocal<MutableState<Boolean>>,
+    LocalIsSearchOpen: ProvidableCompositionLocal<MutableState<Boolean>>,
     navHost: @Composable (PaddingValues) -> Unit,
 ) {
     val topBarTitle = appTopBarData.title
@@ -49,7 +49,7 @@ fun EntryPointScreen(
         }
     }
 
-    CompositionLocalProvider(localIsSearchOpen provides isSearchOpen) {
+    CompositionLocalProvider(LocalIsSearchOpen provides isSearchOpen) {
         Scaffold(
             modifier = Modifier.fillMaxSize(),
             topBar = {

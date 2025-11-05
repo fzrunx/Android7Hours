@@ -42,8 +42,8 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -56,58 +56,34 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.sesac.common.ui.theme.PrimaryPurple
 import com.sesac.common.ui.theme.PrimaryPurpleLight
 import com.sesac.common.ui.theme.Red500
 import com.sesac.common.ui.theme.paddingLarge
 import com.sesac.common.ui.theme.paddingMedium
 import com.sesac.common.ui.theme.paddingSmall
+import com.sesac.domain.model.MypageSchedule
+import com.sesac.mypage.presentation.MypageViewModel
 import org.threeten.bp.Instant
 import org.threeten.bp.LocalDate
 import org.threeten.bp.ZoneId
 import org.threeten.bp.format.DateTimeFormatter
 
-// --- 데이터 클래스 ---
-data class ScheduleItem(
-    val id: Long,
-    val date: LocalDate,
-    val title: String,
-    val memo: String
-)
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MypageManageScreen() {
-    // --- 상태 관리 ---
+fun MypageManageScreen(viewModel: MypageViewModel = hiltViewModel()) {
     val context = LocalContext.current
-
-    // 1. 선택된 날짜 (LocalDate 사용)
     var selectedDate by rememberSaveable { mutableStateOf(LocalDate.now()) }
-    // 2. 일정 추가 다이얼로그
     var isAddDialogOpen by remember { mutableStateOf(false) }
-    // 3. 다이얼로그 내 입력 값
     var scheduleTitle by remember { mutableStateOf("") }
     var scheduleMemo by remember { mutableStateOf("") }
-    // 4. 전체 일정 목록 (샘플 데이터 포함)
-    val schedules = remember {
-        mutableStateListOf(
-            ScheduleItem(
-                id = 1L,
-                date = LocalDate.now(),
-                title = "초코 백신접종",
-                memo = "종합 백신 접종 - 오전 10시 동물병원"
-            ),
-            ScheduleItem(
-                id = 2L,
-                date = LocalDate.now(),
-                title = "복순이 건강검진",
-                memo = "정기 건강검진 및 심장사상충 예방약 처방 - 오후 2시"
-            )
-        )
-    }
-    // 5. 선택된 날짜의 일정 목록 (Derived State)
-    val todaySchedules = remember(selectedDate, schedules.size) {
-        schedules.filter { it.date == selectedDate }
+
+    val schedules by viewModel.schedules.collectAsStateWithLifecycle()
+
+    LaunchedEffect(selectedDate) {
+        viewModel.getSchedules(selectedDate)
     }
 
     Scaffold(
@@ -120,19 +96,19 @@ fun MypageManageScreen() {
                 Icon(Icons.Default.Add, contentDescription = "일정 추가")
             }
         },
-        containerColor = Color(0xFFF9FAFB) // bg-gray-50
+        containerColor = Color(0xFFF9FAFB)
     ) { paddingValues ->
 
         ScheduleContent(
             modifier = Modifier.padding(paddingValues),
             selectedDate = selectedDate,
-            schedules = todaySchedules,
+            schedules = schedules,
             onDateSelected = { newDate -> selectedDate = newDate },
             onAddClick = { isAddDialogOpen = true },
-            onDeleteClick = { id -> schedules.removeAll { it.id == id } }
+            onDeleteClick = { schedule -> viewModel.deleteSchedule(schedule) }
         )
     }
-    // --- 다이얼로그 ---
+
     if (isAddDialogOpen) {
         AddScheduleDialog(
             selectedDate = selectedDate,
@@ -143,8 +119,8 @@ fun MypageManageScreen() {
             onDismiss = { isAddDialogOpen = false },
             onConfirm = {
                 if (scheduleTitle.isNotBlank()) {
-                    schedules.add(
-                        ScheduleItem(
+                    viewModel.addSchedule(
+                        MypageSchedule(
                             id = System.currentTimeMillis(),
                             date = selectedDate,
                             title = scheduleTitle,
@@ -166,18 +142,17 @@ fun MypageManageScreen() {
 private fun ScheduleContent(
     modifier: Modifier = Modifier,
     selectedDate: LocalDate,
-    schedules: List<ScheduleItem>,
+    schedules: List<MypageSchedule>,
     onDateSelected: (LocalDate) -> Unit,
     onAddClick: () -> Unit,
-    onDeleteClick: (Long) -> Unit
+    onDeleteClick: (MypageSchedule) -> Unit
 ) {
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
             .padding(horizontal = paddingMedium),
-        contentPadding = PaddingValues(bottom = 80.dp) // FAB와 겹치지 않도록
+        contentPadding = PaddingValues(bottom = 80.dp)
     ) {
-        // 캘린더
         item {
             ScheduleCalendar(
                 selectedDate = selectedDate,
@@ -186,7 +161,6 @@ private fun ScheduleContent(
             Spacer(Modifier.height(paddingLarge))
         }
 
-        // 일정 헤더 + EmptyState 통합 섹션
         item {
             ScheduleListSection(
                 selectedDate = selectedDate,
@@ -196,12 +170,11 @@ private fun ScheduleContent(
             Spacer(Modifier.height(paddingMedium))
         }
 
-        // 일정 카드 리스트
         if (schedules.isNotEmpty()) {
             items(schedules, key = { it.id }) { schedule ->
                 ScheduleItemCard(
                     schedule = schedule,
-                    onDeleteClick = { onDeleteClick(schedule.id) }
+                    onDeleteClick = { onDeleteClick(schedule) }
                 )
                 Spacer(Modifier.height(paddingSmall))
             }
@@ -215,7 +188,6 @@ private fun ScheduleCalendar(
     selectedDate: LocalDate,
     onDateSelected: (LocalDate) -> Unit
 ) {
-    // Material 3 DatePicker 상태 관리
     val datePickerState = rememberDatePickerState(
         initialSelectedDateMillis = selectedDate
             .atStartOfDay(ZoneId.systemDefault())
@@ -223,7 +195,6 @@ private fun ScheduleCalendar(
             .toEpochMilli()
     )
 
-    // DatePicker의 선택이 변경되면, 상위 Composable의 selectedDate 상태를 업데이트
     LaunchedEffect(datePickerState.selectedDateMillis) {
         datePickerState.selectedDateMillis?.let { millis ->
             val newDate = Instant.ofEpochMilli(millis)
@@ -254,13 +225,12 @@ private fun ScheduleCalendar(
 @Composable
 private fun ScheduleListSection(
     selectedDate: LocalDate,
-    schedules: List<ScheduleItem>,
+    schedules: List<MypageSchedule>,
     onAddClick: () -> Unit
 ) {
     val formatter = remember { DateTimeFormatter.ofPattern("M월 d일") }
 
     if (schedules.isEmpty()) {
-        // --- 일정이 없을 때 ---
         Surface(
             modifier = Modifier
                 .fillMaxWidth()
@@ -288,7 +258,6 @@ private fun ScheduleListSection(
             }
         }
     } else {
-        // --- 일정이 있을 때 ---
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -318,7 +287,7 @@ private fun ScheduleListSection(
 
 @Composable
 private fun ScheduleItemCard(
-    schedule: ScheduleItem,
+    schedule: MypageSchedule,
     onDeleteClick: () -> Unit
 ) {
     Card(
@@ -344,7 +313,7 @@ private fun ScheduleItemCard(
                 )
                 IconButton(
                     onClick = onDeleteClick,
-                    modifier = Modifier.size(24.dp) // 터치 영역 확보
+                    modifier = Modifier.size(24.dp)
                 ) {
                     Icon(
                         Icons.Default.Delete,
@@ -390,7 +359,6 @@ private fun AddScheduleDialog(
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(paddingMedium)) {
                 Text("선택한 날짜에 새로운 일정을 추가하세요.")
-                // 날짜 표시
                 Text(
                     text = selectedDate.format(formatter),
                     style = MaterialTheme.typography.bodyLarge,
@@ -401,7 +369,6 @@ private fun AddScheduleDialog(
                         .background(PrimaryPurpleLight, RoundedCornerShape(paddingSmall))
                         .padding(paddingMedium)
                 )
-                // 일정 제목
                 OutlinedTextField(
                     value = title,
                     onValueChange = onTitleChange,
@@ -410,7 +377,6 @@ private fun AddScheduleDialog(
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true
                 )
-                // 메모
                 OutlinedTextField(
                     value = memo,
                     onValueChange = onMemoChange,

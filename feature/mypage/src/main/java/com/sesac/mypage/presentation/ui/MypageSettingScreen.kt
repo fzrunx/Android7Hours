@@ -1,6 +1,5 @@
 package com.sesac.mypage.presentation.ui
 
-
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -29,19 +28,23 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.snapshots.SnapshotStateList
+import androidx.compose.runtime.snapshots.SnapshotStateMap
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.sesac.common.ui.theme.Border
 import com.sesac.common.ui.theme.NoteBox
 import com.sesac.common.ui.theme.Primary
@@ -66,40 +69,36 @@ import com.sesac.common.ui.theme.permEnabledBg
 import com.sesac.common.ui.theme.permEnabledBorder
 import com.sesac.common.ui.theme.shapeCard
 import com.sesac.common.ui.theme.shapeIcon
+import com.sesac.domain.model.MypagePermission
+import com.sesac.mypage.presentation.MypageViewModel
 
-
-// 1. 권한 키를 위한 Enum (타입 안정성)
-enum class PermissionKey {
-    CAMERA, GPS, NOTIFICATION
-}
-
-// 2. 권한 아이템 데이터 클래스
-data class PermissionItem(
-    val key: PermissionKey,
-    val icon: ImageVector,
-    val label: String,
-    val description: String,
-    val brush: Brush
+val permissions = listOf(
+    MypagePermission("CAMERA", "CameraAlt", "카메라", "산책 중 사진 및 영상 촬영", "Purple"),
+    MypagePermission("GPS", "LocationOn", "GPS", "위치 기반 산책로 추천 및 기록", "Blue"),
+    MypagePermission("NOTIFICATION", "Notifications", "알림", "산책 알림 및 커뮤니티 소식", "Green")
 )
 
-
 @Composable
-fun MypageSettingScreen () {
-    // 임시 데이터
-    val permissionItems = listOf(
-        PermissionItem(PermissionKey.CAMERA, Icons.Default.CameraAlt, "카메라", "산책 중 사진 및 영상 촬영", brushPurple),
-        PermissionItem(PermissionKey.GPS, Icons.Default.LocationOn, "GPS", "위치 기반 산책로 추천 및 기록", brushBlue),
-        PermissionItem(PermissionKey.NOTIFICATION, Icons.Default.Notifications, "알림", "산책 알림 및 커뮤니티 소식", brushGreen)
-    )
-    val cameraEnabled = remember { mutableStateOf(true) }
-    val gpsEnabled = remember { mutableStateOf(true) }
-    val notificationEnabled = remember { mutableStateOf(true) }
+fun MypageSettingScreen(
+    viewModel: MypageViewModel = hiltViewModel(),
+    permissionStates: SnapshotStateMap<String, Boolean> = remember { mutableStateMapOf<String, Boolean>() },
+) {
+//    val permissions by viewModel.permissions.collectAsState(initial = emptyList())
+//    val permissionStates = remember { mutableStateMapOf<String, Boolean>() }
+
+    // Initialize states from the collected permissions
+    LaunchedEffect(permissions) {
+        permissions.forEach { permission ->
+            if (!permissionStates.containsKey(permission.key)) {
+                permissionStates[permission.key] = true
+            }
+        }
+    }
+
     LazyColumn(
-        modifier = Modifier
-            .fillMaxSize(),
+        modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(bottom = paddingLarge)
     ) {
-        // --- 1. 권한 설정 섹션 ---
         item {
             Surface(color = MaterialTheme.colorScheme.surface) {
                 Column(
@@ -121,29 +120,21 @@ fun MypageSettingScreen () {
                     )
                     Spacer(modifier = Modifier.height(paddingLarge))
 
-                    // 권한 카드 리스트
-                    permissionItems.forEach { item ->
-                    PermissionCard(
-                        item = item,
-                        isEnabled = when(item.key) {
-                            PermissionKey.CAMERA -> cameraEnabled.value
-                            PermissionKey.GPS -> gpsEnabled.value
-                            PermissionKey.NOTIFICATION -> notificationEnabled.value
-                        },
-                        onToggle = {
-                            when(item.key) {
-                                PermissionKey.CAMERA -> cameraEnabled.value = !cameraEnabled.value
-                                PermissionKey.GPS -> gpsEnabled.value = !gpsEnabled.value
-                                PermissionKey.NOTIFICATION -> notificationEnabled.value = !notificationEnabled.value
+                    permissions.forEach { item ->
+                        PermissionCard(
+                            item = item,
+                            isEnabled = permissionStates[item.key] ?: false,
+                            onToggle = {
+                                val newState = !(permissionStates[item.key] ?: false)
+                                permissionStates[item.key] = newState
+                                viewModel.updatePermission(item.key, newState)
                             }
-                        }
-                    )
+                        )
                         Spacer(modifier = Modifier.height(paddingMedium))
                     }
                 }
             }
         }
-        // --- 2. 권한 안내 섹션 ---
         item {
             InfoBox(
                 modifier = Modifier.padding(
@@ -152,7 +143,6 @@ fun MypageSettingScreen () {
                 )
             )
         }
-        // --- 3. 개인정보 고지 ---
         item {
             PrivacyNote(
                 modifier = Modifier.padding(horizontal = paddingLarge)
@@ -161,13 +151,25 @@ fun MypageSettingScreen () {
     }
 }
 
-
 @Composable
 fun PermissionCard(
-    item: PermissionItem,
+    item: MypagePermission,
     isEnabled: Boolean,
     onToggle: () -> Unit
 ) {
+    val icon = when (item.iconName) {
+        "CameraAlt" -> Icons.Default.CameraAlt
+        "LocationOn" -> Icons.Default.LocationOn
+        "Notifications" -> Icons.Default.Notifications
+        else -> Icons.Default.CameraAlt
+    }
+    val brush = when (item.colorName) {
+        "Purple" -> brushPurple
+        "Blue" -> brushBlue
+        "Green" -> brushGreen
+        else -> brushPurple
+    }
+
     val borderColor = if (isEnabled) permEnabledBorder else Border
     val backgroundColor = if (isEnabled) permEnabledBg else Surface
 
@@ -182,16 +184,15 @@ fun PermissionCard(
                 .padding(paddingMedium),
             verticalAlignment = Alignment.Top
         ) {
-            // --- 그라데이션 아이콘  ---
             Box(
                 modifier = Modifier
                     .size(iconBoxSize)
                     .clip(shapeIcon)
-                    .background(item.brush),
+                    .background(brush),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
-                    imageVector = item.icon,
+                    imageVector = icon,
                     contentDescription = item.label,
                     tint = Color.White,
                     modifier = Modifier.size(iconSize)

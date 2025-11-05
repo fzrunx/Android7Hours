@@ -9,7 +9,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Help
+import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Shield
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -29,10 +34,20 @@ import com.sesac.common.ui.theme.paddingLarge
 import com.sesac.common.ui.theme.paddingMedium
 import com.sesac.common.ui.theme.paddingMicro
 import com.sesac.common.ui.theme.paddingSmall
+import com.sesac.domain.model.MypageMenuItem
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MenuItemView(item: MenuItem, onClick: () -> Unit) {
+fun MenuItemView(item: MypageMenuItem, onClick: () -> Unit) {
+    val icon = when (item.iconName) {
+        "CalendarToday" -> Icons.Default.CalendarToday
+        "Star" -> Icons.Default.Star
+        "Settings" -> Icons.Default.Settings
+        "Help" -> Icons.AutoMirrored.Filled.Help
+        "Shield" -> Icons.Default.Shield
+        else -> Icons.Default.CalendarToday
+    }
+
     Surface(
         onClick = onClick,
         modifier = Modifier.padding(horizontal = paddingLarge, vertical = paddingMicro/2)
@@ -64,7 +79,7 @@ fun MenuItemView(item: MenuItem, onClick: () -> Unit) {
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
-                        imageVector = item.icon,
+                        imageVector = icon,
                         contentDescription = item.label,
                         tint = MaterialTheme.colorScheme.onPrimaryContainer,
                         modifier = Modifier.size(iconSizeMedium)
