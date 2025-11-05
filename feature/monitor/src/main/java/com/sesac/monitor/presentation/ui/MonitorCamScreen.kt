@@ -15,6 +15,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.sesac.common.ui.theme.circularButtonSize
+import com.sesac.common.ui.theme.iconSizeLarge
+import com.sesac.common.ui.theme.paddingLarge
+import com.sesac.common.ui.theme.paddingMedium
+import com.sesac.common.ui.theme.paddingSmall
 
 
 @Composable
@@ -25,8 +30,8 @@ fun MonitorCamScreen() {
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(1f)
-                .padding(horizontal = 16.dp, vertical = 8.dp)
-                .clip(RoundedCornerShape(24.dp))
+                .padding(horizontal = paddingLarge, vertical = paddingSmall)
+                .clip(MaterialTheme.shapes.extraLarge)
                 .background(Color(0xFFE5E7EB)),
             contentAlignment = Alignment.Center
         ) {
@@ -42,7 +47,7 @@ fun CamControlButtons(isRecording: Boolean, onRecordToggle: (Boolean) -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(bottom = 48.dp)
+            .padding(bottom = paddingMedium*4)
             .background(Color.White),
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically
@@ -50,35 +55,35 @@ fun CamControlButtons(isRecording: Boolean, onRecordToggle: (Boolean) -> Unit) {
         IconButton(
             onClick = { /* TODO: Play video */ },
             modifier = Modifier
-                .size(80.dp)
+                .size(circularButtonSize)
                 .clip(CircleShape)
                 .background(Color(0xFF86EFAC))
-                .padding(10.dp)
+                .padding(paddingMedium)
         ) {
             Icon(
                 imageVector = Icons.Default.PlayArrow,
                 contentDescription = "Play",
                 tint = Color(0xFF1F2937),
-                modifier = Modifier.size(48.dp)
+                modifier = Modifier.size(iconSizeLarge)
             )
         }
-        Spacer(modifier = Modifier.width(48.dp))
+        Spacer(modifier = Modifier.width(iconSizeLarge))
         val recordColor by animateColorAsState(
             if (isRecording) Color(0xFFEF4444) else Color(0xFFFCA5A5)
         )
         IconButton(
             onClick = { onRecordToggle(!isRecording) },
             modifier = Modifier
-                .size(80.dp)
+                .size(circularButtonSize)
                 .clip(CircleShape)
                 .background(recordColor)
-                .padding(10.dp)
+                .padding(paddingMedium)
         ) {
             Icon(
                 imageVector = Icons.Default.Circle,
                 contentDescription = "Record",
                 tint = Color(0xFF1F2937),
-                modifier = Modifier.size(48.dp)
+                modifier = Modifier.size(iconSizeLarge)
             )
         }
     }

@@ -72,7 +72,8 @@ val Typography = Typography(
 val Shapes = Shapes(
     small = RoundedCornerShape(8.dp),
     medium = RoundedCornerShape(12.dp),
-    large = RoundedCornerShape(16.dp)
+    large = RoundedCornerShape(16.dp),
+    extraLarge = RoundedCornerShape(24.dp),
 )
 val shapeCard = RoundedCornerShape(16.dp) // rounded-2xl
 val shapeIcon = RoundedCornerShape(12.dp) // rounded-xl
