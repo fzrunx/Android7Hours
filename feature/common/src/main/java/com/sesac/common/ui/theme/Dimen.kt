@@ -3,10 +3,12 @@ package com.sesac.common.ui.theme
 import androidx.compose.ui.unit.dp
 
 // padding
-val paddingLarge = 16.dp
-val paddingMedium = 12.dp
-val paddingSmall = 8.dp
+val paddingNone = 0.dp
 val paddingMicro = 4.dp
+val paddingSmall = 8.dp
+val paddingMedium = 12.dp
+val paddingLarge = 16.dp
+val paddingExtraLarge = 48.dp
 val headerHeight = 64.dp
 val iconBoxSize = 56.dp // w-14 h-14
 val iconSize = 28.dp // w-7 h-7

@@ -1,26 +1,53 @@
 package com.sesac.monitor.presentation.ui
 
+import android.util.Log
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.naver.maps.geometry.LatLng
 import com.naver.maps.map.NaverMap
 import com.naver.maps.map.overlay.Marker
+import com.sesac.common.ui.theme.paddingExtraLarge
+import com.sesac.common.ui.theme.paddingLarge
+import com.sesac.common.ui.theme.paddingNone
 import com.sesac.common.utils.MapViewLifecycleHelper
+import com.sesac.monitor.presentation.MonitorViewModel
+import com.sesac.monitor.presentation.utils.LatLngPoint2LatLng
+import kotlinx.coroutines.launch
 
 
 @Composable
-fun MonitorGpsScreen (modifier: Modifier = Modifier,
-                      lifecycleHelper: MapViewLifecycleHelper, // 라이프 사이클 따로 관리하려고 만듬
-                      onMapReady: ((NaverMap) -> Unit)? = null) { // Context와 LifecycleOwner를 가져옵니다. (지도의 생명주기 관리에 필수)
+fun MonitorGpsScreen (
+    modifier: Modifier = Modifier,
+    viewModel: MonitorViewModel = hiltViewModel(),
+    lifecycleHelper: MapViewLifecycleHelper, // 라이프 사이클 따로 관리하려고 만듬
+    onMapReady: ((NaverMap) -> Unit)? = null
+) { // Context와 LifecycleOwner를 가져옵니다. (지도의 생명주기 관리에 필수)
+    val coroutineScope = rememberCoroutineScope()
+    val latLngPointRandom by viewModel.latLngRandom.collectAsStateWithLifecycle()
+
+
+    LaunchedEffect(latLngPointRandom, Unit) {
+        coroutineScope.launch {
+            viewModel.getLatLngRandom()
+            Log.d("Tag-MonitorGpsScreen", "${latLngPointRandom}")
+        }
+    }
+
     Box(
         modifier = Modifier
-            .padding(start = 16.dp, top = 0.dp, end = 16.dp, bottom = 48.dp)
-            .clip(RoundedCornerShape(24.dp))
+            .padding(start = paddingLarge, top = paddingNone, end = paddingLarge, bottom = paddingExtraLarge)
+            .clip(MaterialTheme.shapes.extraLarge)
     ) {
         AndroidView(
             modifier = modifier.fillMaxSize(),
@@ -30,7 +57,8 @@ fun MonitorGpsScreen (modifier: Modifier = Modifier,
                     getMapAsync { naverMap ->
                         //✅ 지도 준비 완료 시 마커 생성
                         val marker = Marker().apply {
-                            position = LatLng(37.5670135, 126.9783740)
+                            Log.d("Tag-MonitorGpsScreen", "변환 -> ${LatLngPoint2LatLng(latLngPointRandom)}")
+                            position = LatLngPoint2LatLng(latLngPointRandom)
                             map = naverMap
                         }
 
