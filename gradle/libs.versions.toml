@@ -84,6 +84,6 @@ hilt = { id = "com.google.dagger.hilt.android", version.ref = "hiltVersion" }
 secrets-gradle-plugin = { id = "com.google.android.libraries.mapsplatform.secrets-gradle-plugin",  version.ref = "secretsGradlePlugin" }    # secret 설정 시 해당 내용 추가
 
 [bundles]
-compose = ["androidx-compose-bom", "androidx-activity-compose", "androidx-compose-runtime", "androidx-compose-ui", "androidx-compose-ui-graphics"]
+compose = [ "androidx-activity-compose", "androidx-compose-runtime", "androidx-compose-ui", "androidx-compose-ui-graphics", "androidx-compose-material3"]
 navigation = ["androidx-navigation-compose", "androidx-navigation-fragment-ktx", "androidx-navigation-ui-ktx"]
 coil = ["coil-compose", "coil-network-okttp"]

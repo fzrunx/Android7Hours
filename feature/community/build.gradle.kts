@@ -58,15 +58,14 @@ dependencies {
     implementation(libs.material)
     implementation(libs.androidx.activity.compose)
     implementation(platform(libs.androidx.compose.bom))
-    implementation(libs.androidx.compose.runtime)
-    implementation(libs.androidx.compose.ui)
-    implementation(libs.androidx.compose.ui.graphics)
-    implementation(libs.androidx.compose.ui.tooling.preview)
-    implementation(libs.androidx.compose.material3)
+    implementation(libs.bundles.compose)
+
     implementation(libs.bundles.coil)
     implementation(libs.androidx.compose.material.icons.extended)
+
     implementation(libs.bundles.navigation)
     implementation(libs.kotlinx.serialization.json)
+
     implementation(libs.hilt.android)
     implementation(libs.androidx.hilt.navigation.compose)
     ksp(libs.hilt.compiler)
@@ -79,10 +78,4 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
 
-//    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.6.3")
-// 최신 버전 확인
-//    implementation("androidx.activity:activity-compose:1.9.0")
-// Compose Activity
-//    implementation("androidx.compose.ui:ui:1.6.0")
-// Compose Core
 }

@@ -36,17 +36,15 @@ android {
         sourceCompatibility = JavaVersion.VERSION_21
         targetCompatibility = JavaVersion.VERSION_21
     }
-//    kotlinOptions {
-//        jvmTarget = "11"
-//    }
-    kotlin{
-        jvmToolchain(21)
-    }
+
     buildFeatures {
         compose = true
         viewBinding = true
         buildConfig = true // secret 설정 시 해당 내용 추가
     }
+}
+kotlin{
+    jvmToolchain(21)
 }
 secrets {
     // 사용할 프로퍼티 파일이름을 선언(선언하지 않으면기본"local.properties")
