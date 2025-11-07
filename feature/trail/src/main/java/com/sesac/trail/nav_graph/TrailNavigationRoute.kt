@@ -5,9 +5,9 @@ import kotlinx.serialization.Serializable
 @Serializable
 sealed interface TrailNavigationRoute {
     @Serializable
-    data object TrailRecommendTab: TrailNavigationRoute
+    data object TrailMainTab: TrailNavigationRoute
     @Serializable
-    data object TrailFollowTab: TrailNavigationRoute
+    data object TrailDetailTab: TrailNavigationRoute
     @Serializable
-    data object TrailRecordTab: TrailNavigationRoute
+    data object TrailCreateTab: TrailNavigationRoute
 }

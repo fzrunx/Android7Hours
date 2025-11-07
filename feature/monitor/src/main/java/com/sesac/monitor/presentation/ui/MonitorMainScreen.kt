@@ -21,7 +21,7 @@ import androidx.navigation.NavController
 import com.naver.maps.map.NaverMap
 import com.sesac.common.component.CommonFilterTabs
 import com.sesac.common.ui.theme.paddingMedium
-import com.sesac.common.utils.MapViewLifecycleHelper
+import com.sesac.monitor.presentation.MonitorMapViewLifecycleHelper
 import com.sesac.monitor.presentation.MonitorViewModel
 import com.sesac.common.R as cR
 
@@ -30,7 +30,7 @@ fun MonitorMainScreen (
     modifier: Modifier = Modifier,
     navController: NavController,
     viewModel: MonitorViewModel = hiltViewModel(),
-    lifecycleHelper: MapViewLifecycleHelper, // 라이프 사이클 따로 관리하려고 만듬
+    monitorLifecycleHelper: MonitorMapViewLifecycleHelper, // 라이프 사이클 따로 관리하려고 만듬
     onMapReady: ((NaverMap) -> Unit)? = null,
     content: @Composable () -> Unit = {},
     ) {
@@ -60,8 +60,7 @@ fun MonitorMainScreen (
         when(activeTab) {
             webCam -> MonitorCamScreen()
             GPS -> MonitorGpsScreen(
-                viewModel = viewModel,
-                lifecycleHelper = lifecycleHelper,
+                monitorLifecycleHelper = monitorLifecycleHelper,
                 onMapReady = null,
             )
         }

@@ -19,6 +19,9 @@ val Background = Color(0xFFF9FAFB)
 val Surface = Color.White
 val Header = Color(0xFFDBE8CC)
 val Primary = Color(0xFF8B5CF6)  // purple-600
+val PrimaryGreenLight = Color(0xFFDBE8CC)
+val PrimaryGreenMedium = Color(0xFFB8D4A8)
+val PrimaryGreenDark = Color(0xFF2C4A6E)
 val TextPrimary = Color(0xFF1F2937) // text-gray-900
 val TextSecondary = Color(0xFF6B7280)   // text-gray-500
 val TextDisabled = Color(0xFF9CA3AF) // text-gray-400
@@ -42,6 +45,13 @@ val star = Color(0xFFF59E0B) // text-yellow-500
 val PrimaryPurple = Color(0xFF7C3AED) // purple-600
 val PrimaryPurpleLight = Color(0xFFF5F3FF) // purple-100
 val Red500 = Color(0xFFEF4444)
+val Purple500 = Color(0xFF6200EE)
+val Purple600 = Color(0xFF5D3E8C)
+val Purple100 = Color(0xFFEDE9FE) // bg-purple-100
+val Purple700 = Color(0xFF6B21A8)
+val Yellow400 = Color(0xFFFACC15)
+
+val GrayTabText = Color(0xFF4B5563)
 
 // --- 브러시 / 그라데이션 ---
 val brushPurple = Brush.verticalGradient(listOf(Color(0xFFA855F7), Color(0xFF8B5CF6)))
@@ -66,4 +76,3 @@ val infoBoxText = Color(0xFF1D4ED8) // text-blue-700
 
 val OnPrimaryContainer = Color(0xFF6D28D9) // text-purple-700
 val primaryContainer = Color(0xFFEDE9FE) // bg-purple-100
-val Purple100 = Color(0xFFEDE9FE) // bg-purple-100
