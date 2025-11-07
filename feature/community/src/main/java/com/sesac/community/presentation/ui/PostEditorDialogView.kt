@@ -32,16 +32,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import com.sesac.common.ui.theme.paddingLarge
 import com.sesac.common.ui.theme.paddingSmall
 import com.sesac.community.presentation.Post
 
-/**
- * [리팩토링]
- * 생성/수정 다이얼로그를 하나로 통합
- */
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PostEditorDialogView(

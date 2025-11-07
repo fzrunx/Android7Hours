@@ -1,5 +1,6 @@
 package com.sesac.common.ui.theme
 
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.unit.dp
 
 // padding
@@ -41,3 +42,6 @@ val elevationLarge = 8.dp
 val cardImageSize = 96.dp
 val avatarSize = 40.dp // w-10 h-10
 val postImageHeight = 192.dp // h-48
+
+val cardShape = RoundedCornerShape(12.dp)
+val buttonShape = RoundedCornerShape(8.dp)

@@ -1,5 +1,8 @@
 package com.sesac.community.presentation
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.sesac.community.utils.calculateTimeAgo
@@ -32,6 +35,14 @@ data class Post(
     val category: String,
     val createdAt: Date = Date(System.currentTimeMillis())
 )
+data class Comment(
+    val id: Long,
+    val postId: Int,
+    val author: String,
+    val content: String,
+    val timeAgo: String,
+    val authorImage: String
+)
 
 @HiltViewModel
 class CommunityViewModel @Inject constructor(
@@ -43,6 +54,20 @@ class CommunityViewModel @Inject constructor(
     val searchQuery get() = _searchQuery.asStateFlow()
     private val _activeFilter = MutableStateFlow("전체")
     val activeFilter get() = _activeFilter.asStateFlow()
+    // 댓글 상태
+    private val _comments = MutableStateFlow<List<Comment>>(emptyList())
+    val comments: StateFlow<List<Comment>> get() = _comments.asStateFlow()
+
+    // 선택된 게시물
+    var selectedPostForComments by mutableStateOf<Post?>(null)
+        private set
+
+    // 댓글 시트 열림 여부
+    var isCommentsOpen by mutableStateOf(false)
+        private set
+
+    // 새 댓글 내용
+    var newCommentContent by mutableStateOf("")
 
     init {
         observePosts()
@@ -163,5 +188,42 @@ class CommunityViewModel @Inject constructor(
         category = this.category,
         createdAt = this.create_at
     )
+    fun handleOpenComments(post: Post) {
+        selectedPostForComments = post
+        isCommentsOpen = true
+    }
+
+    fun handleCloseComments() {
+        isCommentsOpen = false
+        selectedPostForComments = null
+    }
+
+    fun handleAddComment(): Boolean {
+        val post = selectedPostForComments ?: return false
+        if (newCommentContent.isBlank()) return false
+
+        val newComment = Comment(
+            id = System.currentTimeMillis(),
+            postId = post.id.toInt(),
+            author = "나",
+            authorImage = "https://picsum.photos/seed/me/200",
+            timeAgo = "방금 전",
+            content = newCommentContent
+        )
+
+        // 댓글 리스트 업데이트
+        _comments.update { it + newComment }
+
+        // 해당 게시물 댓글 수 증가
+        _posts.update { posts ->
+            posts.map { p ->
+                if (p.id == post.id) p.copy(comments = p.comments + 1)
+                else p
+            }
+        }
+
+        newCommentContent = ""
+        return true
+    }
 
 }

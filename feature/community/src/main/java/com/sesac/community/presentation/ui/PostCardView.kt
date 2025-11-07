@@ -16,6 +16,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import coil3.compose.AsyncImage
 import com.sesac.common.ui.theme.Gray400
 import com.sesac.common.ui.theme.TextSecondary
@@ -34,7 +35,8 @@ fun PostCardView(
     isMyPost: Boolean,
     onLikeToggle: () -> Unit,
     onEdit: () -> Unit,
-    onDelete: () -> Unit
+    onDelete: () -> Unit,
+    onCommentClick: () -> Unit
 ) {
     Surface(
         color = MaterialTheme.colorScheme.surface,
@@ -86,7 +88,8 @@ fun PostCardView(
                 likes = post.likes,
                 comments = post.comments,
                 isLiked = post.isLiked,
-                onLikeToggle = onLikeToggle
+                onLikeToggle = onLikeToggle,
+                onCommentClick = onCommentClick
             )
         }
     }
@@ -192,7 +195,8 @@ fun PostActions(
     likes: Int,
     comments: Int,
     isLiked: Boolean,
-    onLikeToggle: () -> Unit
+    onLikeToggle: () -> Unit,
+    onCommentClick: () -> Unit
 ) {
     Row(
         modifier = Modifier
@@ -221,7 +225,7 @@ fun PostActions(
         }
         // 댓글 버튼
         Row(
-            modifier = Modifier.clickable { /* TODO: 댓글 화면 이동 */ },
+            modifier = Modifier.clickable(onClick = onCommentClick),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
