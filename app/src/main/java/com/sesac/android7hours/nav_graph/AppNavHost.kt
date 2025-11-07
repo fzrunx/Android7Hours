@@ -9,12 +9,13 @@ import androidx.compose.runtime.snapshots.SnapshotStateMap
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
-import com.sesac.common.utils.MapViewLifecycleHelper
 import com.sesac.community.nav_graph.communityRoute
 import com.sesac.home.nav_graph.homeRoute
 import com.sesac.monitor.nav_graph.monitorRoute
+import com.sesac.monitor.presentation.MonitorMapViewLifecycleHelper
 import com.sesac.mypage.nav_graph.mypageRoute
 import com.sesac.trail.nav_graph.trailRoute
+import com.sesac.trail.presentation.TrailMapViewLifecycleHelper
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -23,7 +24,8 @@ fun AppNavHost(
     navController: NavHostController,
     startDestination: Any,
     isSearchOpen: MutableState<Boolean>,
-    lifecycleHelper: MapViewLifecycleHelper,
+    monitorLifecycleHelper: MonitorMapViewLifecycleHelper,
+    trailLifecycleHelper: TrailMapViewLifecycleHelper,
     permissionState: SnapshotStateMap<String, Boolean>,
     ) {
     NavHost(
@@ -40,11 +42,14 @@ fun AppNavHost(
 //        sizeTransform = ,
     ) {
         homeRoute()
-        trailRoute()
+        trailRoute(
+            navController = navController,
+            trailLifecycleHelper = trailLifecycleHelper,
+            )
         communityRoute(isSearchOpen = isSearchOpen,)
         monitorRoute(
             navController = navController,
-            lifecycleHelper = lifecycleHelper,
+            monitorLifecycleHelper = monitorLifecycleHelper,
         )
         mypageRoute(
             navController = navController,

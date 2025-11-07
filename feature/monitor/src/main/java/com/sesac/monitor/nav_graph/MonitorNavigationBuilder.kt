@@ -5,21 +5,21 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import com.sesac.monitor.presentation.ui.MonitorGpsScreen
 import com.sesac.monitor.presentation.ui.MonitorMainScreen
-import com.sesac.common.utils.MapViewLifecycleHelper
+import com.sesac.monitor.presentation.MonitorMapViewLifecycleHelper
 
 fun NavGraphBuilder.monitorRoute(
     navController: NavController,
-    lifecycleHelper: MapViewLifecycleHelper,
+    monitorLifecycleHelper: MonitorMapViewLifecycleHelper,
 ) {
     composable<MonitorNavigationRoute.MainTab> {
         MonitorMainScreen(
             navController = navController,
-            lifecycleHelper = lifecycleHelper,
+            monitorLifecycleHelper = monitorLifecycleHelper,
         )
     }
     composable<MonitorNavigationRoute.GpsTab> {
         MonitorGpsScreen(
-            lifecycleHelper = lifecycleHelper
+            monitorLifecycleHelper = monitorLifecycleHelper
         )
     }
 }

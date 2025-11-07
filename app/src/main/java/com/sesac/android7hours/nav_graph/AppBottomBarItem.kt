@@ -28,7 +28,7 @@ data class AppBottomBarItem(
         AppBottomBarItem(
             tabName = "Trail",
             icon = Icons.Filled.Explore,
-            destination = TrailNavigationRoute.TrailRecommendTab
+            destination = TrailNavigationRoute.TrailMainTab
         ),
         AppBottomBarItem(
             tabName = "Monitor",
