@@ -24,8 +24,9 @@ import com.sesac.android7hours.nav_graph.AppBottomBarItem
 import com.sesac.android7hours.nav_graph.AppNavHost
 import com.sesac.home.nav_graph.EntryPointScreen
 import com.sesac.common.ui.theme.Android7HoursTheme
-import com.sesac.common.utils.MapViewLifecycleHelper
 import com.sesac.home.nav_graph.HomeNavigationRoute
+import com.sesac.monitor.presentation.MonitorMapViewLifecycleHelper
+import com.sesac.trail.presentation.TrailMapViewLifecycleHelper
 import dagger.hilt.android.AndroidEntryPoint
 import com.sesac.common.R as cR
 
@@ -36,13 +37,15 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             val context = LocalContext.current
-            val mapView = MapView(context)
+            val trailMapView = MapView(context)
+            val monitorMapView = MapView(context)
             val navController = rememberNavController()
             val startDestination = HomeNavigationRoute.HomeTab
             val navBackStackEntry by navController.currentBackStackEntryAsState()
             val appTopBarData = navBackStackEntry?.topBarAsRouteName ?: AppTopBarData()
             val appBottomBarItem = remember { AppBottomBarItem().fetch() }
-            val lifecycleHelper = remember { MapViewLifecycleHelper(mapView) }
+            val trailLifecycleHelper = remember { TrailMapViewLifecycleHelper(trailMapView) }
+            val monitorLifecycleHelper = remember { MonitorMapViewLifecycleHelper(monitorMapView) }
             val isSearchOpen = remember { mutableStateOf(false) }
             val LocalIsSearchOpen = compositionLocalOf { mutableStateOf(false) }
 
@@ -68,7 +71,8 @@ class MainActivity : ComponentActivity() {
                             navController = navController,
                             startDestination = startDestination,
                             isSearchOpen = isSearchOpen,
-                            lifecycleHelper = lifecycleHelper,
+                            trailLifecycleHelper = trailLifecycleHelper,
+                            monitorLifecycleHelper = monitorLifecycleHelper,
                         )
                     }
                 )

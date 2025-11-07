@@ -47,41 +47,46 @@ dependencies {
     implementation(project(":domain"))
     implementation(project(":feature:common"))
 
-    implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
 
-    // compose
-    implementation(libs.material)
-    implementation(libs.androidx.activity.compose)
+    // --- Compose BOM 기반 ---
     implementation(platform(libs.androidx.compose.bom))
-    implementation(libs.androidx.compose.runtime)
-    implementation(libs.androidx.compose.ui)
-    implementation(libs.androidx.compose.ui.graphics)
-    implementation(libs.androidx.compose.ui.tooling.preview)
-    implementation(libs.androidx.compose.material3)
-    implementation(libs.androidx.compose.material.icons.extended)
-    implementation(libs.bundles.navigation)
-    implementation(libs.kotlinx.serialization.json)
+    implementation(libs.androidx.activity.compose)            // Activity Compose
+    implementation(libs.androidx.compose.runtime)             // Compose Runtime
+    implementation(libs.androidx.compose.ui)                  // Compose UI
+    implementation(libs.androidx.compose.ui.graphics)         // Compose UI Graphics
+    implementation(libs.androidx.compose.ui.tooling.preview)  // Preview
+    implementation(libs.androidx.compose.material3)           // Material3
+    implementation(libs.androidx.compose.material.icons.extended) // Icons
 
+    // --- Navigation ---
+    implementation(libs.bundles.navigation)
+
+    // --- Coil ---
+    implementation(libs.bundles.coil)
+
+    // --- Hilt ---
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
 
-    implementation(libs.androidx.core.ktx)
-    implementation(libs.androidx.appcompat)
-    implementation(libs.material)
+    // --- Serialization ---
+    implementation(libs.kotlinx.serialization.json)
+
+    // --- Map SDK ---
+    implementation(libs.map.sdk)
+
+    // --- Lifecycle & ViewModel Compose ---
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.6.3")
+
+    // --- Test ---
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
+
+    // --- Debug ---
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
-
-    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.6.3")
-// 최신 버전 확인
-    implementation("androidx.activity:activity-compose:1.9.0")
-// Compose Activity
-    implementation("androidx.compose.ui:ui:1.6.0")
-    implementation("androidx.navigation:navigation-compose:2.7.3")
 }
