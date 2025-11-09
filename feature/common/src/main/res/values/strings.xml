@@ -35,6 +35,9 @@
     <string name="monitor_button_GPS">GPS</string>
 
     <!-- ========= Trail ========== -->
+    <string name="trail_create_page">산책로 생성</string>
+    <string name="trail_detail_page">산책로 상세</string>
+
     <string name="trail_button_start">Start</string>
     <string name="trail_button_pause">Pause</string>
     <string name="trail_button_stop">Stop</string>
@@ -82,6 +85,8 @@
     <!-- ========= Common ========= -->
     <string name="common_see_all">전체보기</string>
     <string name="common_searchbar_text_default">검색</string>
+    <string name="common_detail">상세</string>
+    <string name="common_create">생성</string>
 
 </resources>
 

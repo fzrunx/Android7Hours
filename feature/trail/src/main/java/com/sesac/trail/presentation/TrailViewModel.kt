@@ -1,60 +1,126 @@
-//package com.sesac.trail.presentation
-//
-//import androidx.lifecycle.ViewModel
-//import com.sesac.trail.presentation.ui.WalkMode
-//import com.sesac.trail.presentation.ui.WalkPathUiState
-//import kotlinx.coroutines.flow.MutableStateFlow
-//import kotlinx.coroutines.flow.asStateFlow
-//import kotlinx.coroutines.flow.update
-//
-//// 2. ViewModel
-//class TrailViewModel : ViewModel() {
-//
-//    private val _uiState = MutableStateFlow(WalkPathUiState())
-//    val uiState = _uiState.asStateFlow()
-//
-//    // React의 모드 변경 로직
-//    fun onModeChange(newMode: WalkMode) {
-//        _uiState.update { currentState ->
-//            val nextMode = if (currentState.activeMode == newMode) {
-//                WalkMode.NONE // 같은 버튼을 다시 누르면 모드 해제
-//            } else {
-//                newMode
-//            }
-//
-//            // 모드 변경 시 녹화 중이면 중지
-//            if (nextMode != WalkMode.RECORD && currentState.isRecording) {
-//                currentState.copy(
-//                    activeMode = nextMode,
-//                    isRecording = false,
-//                    recordingTime = 0
-//                )
-//            } else {
-//                currentState.copy(activeMode = nextMode)
-//            }
-//        }
-//    }
-//
-//    // React의 녹화 토글 로직
-//    fun onToggleRecording() {
-//        _uiState.update {
-//            if (it.isRecording) {
-//                // TODO: 타이머 중지 로직
-//                it.copy(isRecording = false, recordingTime = 0)
-//            } else {
-//                // TODO: 타이머 시작 로직
-//                it.copy(isRecording = true)
-//            }
-//        }
-//    }
-//
-//    // '따라가기' 시작
-//    fun startFollowingPath() {
-//        _uiState.update {
-//            it.copy(
-//                isFollowingPath = true,
-//                activeMode = WalkMode.FOLLOW
-//            )
-//        }
-//    }
-//}
+package com.sesac.trail.presentation
+
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.sesac.domain.model.MyRecord
+import com.sesac.domain.model.UserPath
+import com.sesac.domain.usecase.GetAllMyRecordUseCase
+import com.sesac.domain.usecase.GetAllRecommendedPathsUseCase
+import com.sesac.domain.usecase.AddMyRecordUseCase
+import com.sesac.trail.presentation.ui.WalkPathTab
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
+import javax.inject.Inject
+
+
+@HiltViewModel
+class TrailViewModel @Inject constructor(
+    private val getAllRecommendedPathsUseCase: GetAllRecommendedPathsUseCase,
+    private val getAllMyRecordUseCase: GetAllMyRecordUseCase,
+    private val addMyRecordUseCase: AddMyRecordUseCase
+): ViewModel() {
+    private val _recommendedPaths = MutableStateFlow<List<UserPath>>(emptyList())
+    val recommendedPaths = _recommendedPaths.asStateFlow()
+
+    private val _myRecords = MutableStateFlow<List<MyRecord>>(emptyList())
+    val myRecords = _myRecords.asStateFlow()
+
+    private val _isSheetOpen = MutableStateFlow(false)
+    val isSheetOpen get() = _isSheetOpen.asStateFlow()
+    private val _isPaused = MutableStateFlow(false)
+    val isPaused = _isPaused.asStateFlow()
+    private val _isRecording = MutableStateFlow(false)
+    private val _isFollowingPath = MutableStateFlow(false)
+    val isFollowingPath get() = _isRecording.asStateFlow()
+    val isRecoding get() = _isRecording.asStateFlow()
+    private val _recordingTime = MutableStateFlow<Long>(0L)
+    val recordingTime = _recordingTime.asStateFlow()
+    private val _activeTab = MutableStateFlow(WalkPathTab.RECOMMENDED)
+    val activeTab get() = _activeTab.asStateFlow()
+
+    private val _selectedPath = MutableStateFlow<UserPath?>(null)
+    val selectedPath get() = _selectedPath.asStateFlow()
+
+    init {
+        getRecommendedPaths()
+        getMyRecords()
+    }
+
+    private fun getRecommendedPaths() {
+        viewModelScope.launch {
+            getAllRecommendedPathsUseCase().collectLatest { paths ->
+                _recommendedPaths.value = paths.filterNotNull()
+            }
+        }
+    }
+
+    private fun getMyRecords() {
+        viewModelScope.launch {
+            getAllMyRecordUseCase().collectLatest { records ->
+                _myRecords.value = records.filterNotNull()
+            }
+        }
+    }
+
+    fun savePath() {
+        viewModelScope.launch {
+            _selectedPath.value?.let { path ->
+                addMyRecordUseCase(path.toMyRecord()).collectLatest { success ->
+                    if (success) {
+                        getMyRecords() // Refresh the list
+                    }
+                }
+            }
+        }
+    }
+
+    fun clearSelectedPath() {
+        _selectedPath.value = null
+    }
+
+    fun updateRecordingTime(changeRate: Long?) {
+        _recordingTime.value += changeRate ?: -_recordingTime.value
+    }
+
+    fun updateIsSheetOpen(newState: Boolean?) {
+        viewModelScope.launch { _isSheetOpen.value = newState ?: !_isSheetOpen.value }
+    }
+
+    fun updateIsFollowingPath(newState: Boolean?) {
+        viewModelScope.launch { _isFollowingPath.value = newState ?: !_isFollowingPath.value }
+    }
+
+    fun updateIsPaused(newState: Boolean?) {
+        viewModelScope.launch { _isPaused.value = newState ?: !_isPaused.value }
+    }
+
+    fun updateIsRecording(newState: Boolean?) {
+        viewModelScope.launch { _isRecording.value = newState ?: !_isRecording.value }
+    }
+
+    fun updatePausedState() {
+        viewModelScope.launch { _isPaused.value = !_isPaused.value }
+    }
+
+    fun updateActiveTab(walkPathTab: WalkPathTab) {
+        viewModelScope.launch { _activeTab.value = walkPathTab }
+    }
+
+    fun updateSelectedPath(path: UserPath?) {
+        viewModelScope.launch { _selectedPath.value = path }
+    }
+
+    fun updateSelectedPathLikes(isLiked: Boolean): Boolean {
+        viewModelScope.launch {
+            _selectedPath.value?.let {
+                val preLikes = it.likes
+                _selectedPath.value = it.copy(likes = if (isLiked) preLikes - 1 else preLikes + 1)
+            }
+        }
+        return !isLiked
+    }
+
+}

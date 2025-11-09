@@ -3,12 +3,12 @@ package com.sesac.trail.presentation.ui
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.Arrangement.spacedBy
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -22,32 +22,40 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import coil3.compose.AsyncImage
 import kotlinx.coroutines.launch
 import com.sesac.common.ui.theme.*
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import com.sesac.domain.model.LatLngPoint
+import com.sesac.domain.model.UserPath
+import com.sesac.trail.presentation.TrailViewModel
 import com.sesac.trail.presentation.component.TagFlow
-import com.sesac.trail.presentation.model.UserPath
 
 
 // --- Main Composable ---
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TrailDetailScreen(
-    path: UserPath,
-    onBack: () -> Unit,
+//    path: UserPath,
+    viewModel: TrailViewModel = hiltViewModel<TrailViewModel>(),
+    navController: NavController,
     onStartFollowing: (UserPath) -> Unit
 ) {
     var isLiked by remember { mutableStateOf(false) }
-    var likeCount by remember { mutableStateOf(path.likes) }
+//    var likeCount by remember { mutableStateOf(path.likes) }
+    val selectedDetailPath by viewModel.selectedPath.collectAsStateWithLifecycle()
     var isFavorite by remember { mutableStateOf(false) }
 
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
 
     val handleLike = {
-        if (isLiked) likeCount-- else likeCount++
-        isLiked = !isLiked
+//        if (isLiked) likeCount-- else likeCount++
+//        isLiked = !isLiked
+        isLiked = viewModel.updateSelectedPathLikes(isLiked)
     }
 
     val handleFavorite: () -> Unit = {
@@ -58,15 +66,16 @@ fun TrailDetailScreen(
         }
     }
 
-    Scaffold(
-    ) { _ ->
+//    Scaffold(
+//    ) { _ ->
+    selectedDetailPath?.let {
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
         ) {
             PathImageHeader(
-                pathName = path.name,
+                pathName = it.name,
                 isLiked = isLiked,
                 onLikeClick = handleLike
             )
@@ -80,7 +89,7 @@ fun TrailDetailScreen(
                 // Title & Uploader
                 Column {
                     Text(
-                        text = path.name,
+                        text = it.name,
                         style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Bold
                     )
@@ -94,7 +103,7 @@ fun TrailDetailScreen(
                         )
                         Spacer(Modifier.width(paddingMicro))
                         Text(
-                            text = "@${path.uploader}",
+                            text = "@${it.uploader}",
                             style = MaterialTheme.typography.bodyMedium,
                             color = GrayTabText
                         )
@@ -103,7 +112,7 @@ fun TrailDetailScreen(
 
                 // Follow Button
                 Button(
-                    onClick = { onStartFollowing(path) },
+                    onClick = { onStartFollowing(it) },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(52.dp),
@@ -121,13 +130,13 @@ fun TrailDetailScreen(
                         InfoCard(
                             icon = Icons.Filled.LocationOn,
                             label = "거리",
-                            value = path.distance,
+                            value = it.distance.toString(),
                             modifier = Modifier.weight(1f)
                         )
                         InfoCard(
                             icon = Icons.Filled.Schedule,
                             label = "소요시간",
-                            value = path.time,
+                            value = it.time.toString(),
                             modifier = Modifier.weight(1f)
                         )
                     }
@@ -135,22 +144,22 @@ fun TrailDetailScreen(
                         InfoCard(
                             icon = Icons.Filled.Favorite,
                             label = "좋아요",
-                            value = "${likeCount}개",
+                            value = "${ selectedDetailPath!!.likes}개",
                             modifier = Modifier.weight(1f)
                         )
                         InfoCard(
-                            icon = Icons.Filled.TrendingUp,
+                            icon = Icons.AutoMirrored.Filled.TrendingUp,
                             label = "내 위치에서",
-                            value = path.distanceFromMe,
+                            value =  it.distanceFromMe.toString(),
                             modifier = Modifier.weight(1f)
                         )
                     }
                 }
                 // Route Features
                 PathSection(title = "코스 특징") {
-                    if (path.tags.isNotEmpty()) {
+                    if ( selectedDetailPath!!.tags.isNotEmpty()) {
                         TagFlow(
-                            selectedTags = path.tags,
+                            selectedTags =  selectedDetailPath!!.tags,
                             editable = false
                         )
                     } else {
@@ -165,7 +174,7 @@ fun TrailDetailScreen(
                 // Description
                 PathSection(title = "산책로 소개") {
                     Text(
-                        text = "이 산책로는 ${path.uploader}님이 공유한 멋진 코스입니다. " +
+                        text = "이 산책로는 ${ selectedDetailPath!!.uploader}님이 공유한 멋진 코스입니다. " +
                                 "도심 속에서 자연을 느낄 수 있는 특별한 장소로, " +
                                 "반려견과 함께 걷기에 최적화되어 있습니다. " +
                                 "적당한 난이도로 누구나 쉽게 즐길 수 있으며, " +
@@ -194,8 +203,10 @@ fun TrailDetailScreen(
                 }
             }
         }
+
     }
-}
+    }
+//}
 
 
 // --- Image Header ---
@@ -307,26 +318,27 @@ fun ReviewItem(userName: String, date: String, review: String) {
 @Preview(showBackground = true)
 @Composable
 fun WalkPathDetailPagePreview() {
-    val dummyPosition = MapPosition(
-        top = 0.5f,
-        left = 0.5f
+    val dummyPosition = LatLngPoint(
+        latitude = 0.5,
+        longitude = 0.5,
     )
     val mockPath = UserPath(
         id = 1,
         name = "강남역 주변 산책로",
         uploader = "산책왕123",
-        distance = "1.5km",
-        time = "15분",
+        distance = 1.5f,
+        time = 15,
         likes = 45,
-        distanceFromMe = "0.3km",
-        mapPosition = dummyPosition,
+        distanceFromMe = 0.3f,
+        latLngPoint = dummyPosition,
         tags = listOf("🌳 자연 친화적", "🐕 반려견 동반 가능", "🌸 꽃길","👨‍👩‍👧‍👦 가족 동반")
     )
 
-    MaterialTheme {
+    val navController = rememberNavController()
+    Android7HoursTheme {
         TrailDetailScreen(
-            path = mockPath,
-            onBack = {},
+//            path = mockPath,
+            navController = navController,
             onStartFollowing = {}
         )
     }

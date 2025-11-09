@@ -1,11 +1,21 @@
 package com.sesac.trail.presentation.ui
 
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -14,8 +24,27 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Upload
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -29,12 +58,27 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import coil3.compose.AsyncImage
-import kotlinx.coroutines.launch
-import com.sesac.common.ui.theme.*
+import com.sesac.common.ui.theme.GrayTabText
+import com.sesac.common.ui.theme.NoteBox
+import com.sesac.common.ui.theme.PaddingSection
+import com.sesac.common.ui.theme.PrimaryPurpleLight
+import com.sesac.common.ui.theme.Purple600
+import com.sesac.common.ui.theme.Red500
+import com.sesac.common.ui.theme.SheetHandle
+import com.sesac.common.ui.theme.paddingLarge
+import com.sesac.common.ui.theme.paddingMicro
+import com.sesac.common.ui.theme.paddingSmall
+import com.sesac.trail.nav_graph.TrailNavigationRoute
+import com.sesac.trail.presentation.TrailViewModel
 import com.sesac.trail.presentation.component.TagFlow
+import kotlinx.coroutines.launch
 
-// --- 데이터 클래스 (onSave로 전달될 데이터) ---
+// --- 데이터 클래스 ---
 data class WalkPathData(
     val name: String,
     val difficulty: String,
@@ -42,7 +86,13 @@ data class WalkPathData(
     val estimatedTime: String,
     val description: String,
     val tags: List<String>,
-    val imageUri: String? // React의 uploadedImage (String URL)
+    val imageUri: String?
+)
+
+data class ValidationState(
+    val isNameInvalid: Boolean = false,
+    val isDistanceInvalid: Boolean = false,
+    val isTimeInvalid: Boolean = false
 )
 
 // --- 메인 Composable ---
@@ -50,145 +100,161 @@ data class WalkPathData(
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun TrailCreateScreen(
-    onBack: () -> Unit,
-    onSave: (WalkPathData) -> Unit
+    viewModel: TrailViewModel = hiltViewModel(),
+    navController: NavController
 ) {
-    // --- State (React의 useState) ---
-    var pathName by remember { mutableStateOf("") }
-    var difficulty by remember { mutableStateOf("초급") }
-    var distance by remember { mutableStateOf("") }
-    var estimatedTime by remember { mutableStateOf("") }
-    var description by remember { mutableStateOf("") }
-    var selectedTags by remember { mutableStateOf(listOf<String>()) }
-    var uploadedImageUri by remember { mutableStateOf<String?>(null) }
+    val path by viewModel.selectedPath.collectAsStateWithLifecycle()
+    Log.d("Tag-TrailCreateScreen", "selectedCreatePath = $path")
 
-    // --- Toast/Snackbar (React의 sonner) ---
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
+    var validationState by remember { mutableStateOf(ValidationState()) }
 
-    // --- Image Picker ---
-    // React의 데모용 Unsplash URL 대신 실제 갤러리 런처 사용
-    val imagePickerLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetContent()
-    ) { uri ->
-        if (uri != null) {
-            uploadedImageUri = uri.toString()
-            scope.launch { snackbarHostState.showSnackbar("이미지가 업로드되었습니다") }
+    Scaffold(
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
+    ) { paddingValues ->
+        if (path == null) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator()
+            }
+            return@Scaffold
         }
-    }
 
-    // --- Handlers (React의 handle...) ---
-    val handleTagToggle: (String) -> Unit = { tag -> // ✅ 타입 명시 추가됨
-        if (selectedTags.contains(tag)) {
-            selectedTags = selectedTags - tag
-        } else {
-            if (selectedTags.size < 5) {
-                selectedTags = selectedTags + tag
-            } else {
-                // ✅ snackbar는 suspend 함수라 launch로 감싸야 함
-                scope.launch {
-                    snackbarHostState.showSnackbar("태그는 최대 5개까지 선택 가능합니다")
+        var uploadedImageUri by remember { mutableStateOf<String?>(null) }
+        var distanceString by remember { mutableStateOf(path?.distance?.takeIf { it > 0f }?.toString() ?: "") }
+        var timeString by remember { mutableStateOf(path?.time?.takeIf { it > 0 }?.toString() ?: "") }
+
+        LaunchedEffect(path) {
+            distanceString = path?.distance?.takeIf { it > 0f }?.toString() ?: ""
+            timeString = path?.time?.takeIf { it > 0 }?.toString() ?: ""
+        }
+
+        val imagePickerLauncher = rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.GetContent()
+        ) { uri ->
+            if (uri != null) {
+                uploadedImageUri = uri.toString()
+                scope.launch { snackbarHostState.showSnackbar("이미지가 업로드되었습니다") }
+            }
+        }
+
+        val handleTagToggle: (String) -> Unit = { tag ->
+            path?.let {
+                val newTags = if (it.tags.contains(tag)) {
+                    it.tags - tag
+                } else {
+                    if (it.tags.size < 5) {
+                        it.tags + tag
+                    } else {
+                        scope.launch {
+                            snackbarHostState.showSnackbar("태그는 최대 5개까지 선택 가능합니다")
+                        }
+                        it.tags
+                    }
+                }
+                viewModel.updateSelectedPath(it.copy(tags = newTags))
+            }
+        }
+
+        fun handleSave() {
+            scope.launch {
+                path?.let {
+                    val isNameInvalid = it.name.isBlank()
+                    val isDistanceInvalid = it.distance <= 0f
+                    val isTimeInvalid = it.time <= 0
+
+                    validationState = ValidationState(
+                        isNameInvalid = isNameInvalid,
+                        isDistanceInvalid = isDistanceInvalid,
+                        isTimeInvalid = isTimeInvalid
+                    )
+
+                    if (isNameInvalid || isDistanceInvalid || isTimeInvalid) {
+                        return@launch
+                    }
+
+                    Log.d("Tag-TrailCreateScreen", "New path created: $path")
+                    viewModel.savePath()
+                    snackbarHostState.showSnackbar("산책로가 등록되었습니다!")
+                    viewModel.updateSelectedPath(path)
+                    navController.navigate(TrailNavigationRoute.TrailDetailTab)
                 }
             }
         }
-    }
 
-    fun handleSave() {
-        scope.launch {
-            if (pathName.isBlank()) {
-                snackbarHostState.showSnackbar("산책로 이름을 입력해주세요")
-                return@launch
-            }
-            if (distance.isBlank()) {
-                snackbarHostState.showSnackbar("거리를 입력해주세요")
-                return@launch
-            }
-            if (estimatedTime.isBlank()) {
-                snackbarHostState.showSnackbar("예상 소요 시간을 입력해주세요")
-                return@launch
-            }
-
-            val newPathData = WalkPathData(
-                name = pathName,
-                difficulty = difficulty,
-                distance = distance,
-                estimatedTime = estimatedTime,
-                description = description,
-                tags = selectedTags,
-                imageUri = uploadedImageUri
-            )
-            onSave(newPathData)
-            snackbarHostState.showSnackbar("산책로가 등록되었습니다!")
-        }
-    }
-
-// --- UI (React의 return) ---
-    Scaffold { _ ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .padding(paddingValues)
                 .verticalScroll(rememberScrollState())
                 .padding(paddingLarge),
             verticalArrangement = Arrangement.spacedBy(PaddingSection)
         ) {
-            // 1. Image Upload
             ImageUploader(
                 imageUri = uploadedImageUri,
-                onUploadClick = {
-                    imagePickerLauncher.launch("image/*")
-                },
+                onUploadClick = { imagePickerLauncher.launch("image/*") },
                 onRemoveClick = { uploadedImageUri = null }
             )
 
-            // 2. Path Name
             FormTextField(
                 label = "산책로 이름",
-                value = pathName,
-                onValueChange = { pathName = it },
+                value = path?.name ?: "",
+                onValueChange = { newValue -> path?.let { viewModel.updateSelectedPath(it.copy(name = newValue)) } },
                 placeholder = "예: 한강공원 벚꽃길",
-                isRequired = true
+                isRequired = true,
+                isError = validationState.isNameInvalid
             )
 
-            // 3. Difficulty
             DifficultySelector(
-                selectedLevel = difficulty,
-                onLevelSelect = { difficulty = it }
+                selectedLevel = path?.difiiculty ?: "초급",
+                onLevelSelect = { newDifficulty -> path?.let { viewModel.updateSelectedPath(it.copy(difiiculty = newDifficulty)) } }
             )
 
-            // ✅ 4. Distance & Time (리팩터링: Row → DistanceTimeInputs)
             DistanceTimeInputs(
-                distance = distance,
-                onDistanceChange = { distance = it },
-                time = estimatedTime,
-                onTimeChange = { estimatedTime = it }
+                distance = distanceString,
+                onDistanceChange = { newString ->
+                    if (newString.matches(Regex("^\\d*\\.?\\d*\$"))) {
+                        distanceString = newString
+                        path?.let {
+                            viewModel.updateSelectedPath(it.copy(distance = newString.toFloatOrNull() ?: 0f))
+                        }
+                    }
+                },
+                isDistanceError = validationState.isDistanceInvalid,
+                time = timeString,
+                onTimeChange = { newString ->
+                    if (newString.matches(Regex("^\\d*\$"))) {
+                        timeString = newString
+                        path?.let {
+                            viewModel.updateSelectedPath(it.copy(time = newString.toIntOrNull() ?: 0))
+                        }
+                    }
+                },
+                isTimeError = validationState.isTimeInvalid
             )
 
-            // 5. Description
             FormTextField(
                 label = "산책로 소개",
-                value = description,
-                onValueChange = { description = it },
+                value = path?.description ?: "",
+                onValueChange = { newDescription -> path?.let { viewModel.updateSelectedPath(it.copy(description = newDescription)) } },
                 placeholder = "이 산책로의 특징이나 추천 이유를 작성해주세요...",
                 minLines = 4
             )
 
-            // 6. Tags
             TagFlow(
-                selectedTags = selectedTags,
-                onTagToggle = { tag ->
-                    selectedTags = if (selectedTags.contains(tag)) {
-                        selectedTags - tag
-                    } else if (selectedTags.size < 5) {
-                        selectedTags + tag
-                    } else selectedTags
-                },
+                selectedTags = path?.tags ?: emptyList(),
+                onTagToggle = handleTagToggle,
                 editable = true
             )
 
-            // 7. 하단 버튼 (그대로 유지)
             CreateBottomActions(
-                onCancel = onBack,
-                onSave = { handleSave() }
+                onCancel = {
+                    viewModel.clearSelectedPath()
+                    navController.popBackStack()
+                },
+                onSave = {
+                    handleSave()
+                }
             )
         }
     }
@@ -316,6 +382,7 @@ fun FormTextField(
     placeholder: String,
     modifier: Modifier = Modifier,
     isRequired: Boolean = false,
+    isError: Boolean = false,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     minLines: Int = 1
 ) {
@@ -334,7 +401,8 @@ fun FormTextField(
             keyboardOptions = keyboardOptions,
             minLines = minLines,
             modifier = Modifier.fillMaxWidth(), // ✅ 내부는 fillMaxWidth 유지
-            shape = RoundedCornerShape(12.dp)
+            shape = MaterialTheme.shapes.medium,
+            isError = isError
         )
     }
 }
@@ -395,8 +463,10 @@ fun LabeledSection(
 fun DistanceTimeInputs(
     distance: String,
     onDistanceChange: (String) -> Unit,
+    isDistanceError: Boolean,
     time: String,
-    onTimeChange: (String) -> Unit
+    onTimeChange: (String) -> Unit,
+    isTimeError: Boolean
 ) {
     Row(horizontalArrangement = Arrangement.spacedBy(paddingSmall)) {
         FormTextField(
@@ -405,6 +475,7 @@ fun DistanceTimeInputs(
             onValueChange = onDistanceChange,
             placeholder = "1.5",
             isRequired = true,
+            isError = isDistanceError,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
             modifier = Modifier.width(0.dp).weight(1f, fill = true)
         )
@@ -414,6 +485,7 @@ fun DistanceTimeInputs(
             onValueChange = onTimeChange,
             placeholder = "25",
             isRequired = true,
+            isError = isTimeError,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
             modifier = Modifier.width(0.dp).weight(1f, fill = true)
         )
@@ -427,8 +499,8 @@ fun DistanceTimeInputs(
 fun WalkPathCreatePagePreview() {
     MaterialTheme {
         TrailCreateScreen(
-            onBack = {},
-            onSave = { _: WalkPathData -> } // ✅ 타입 명시
+            navController = rememberNavController(),
+//            onSave = { }, // ✅ 타입 명시
         )
     }
 }

@@ -1,5 +1,6 @@
 package com.sesac.trail.presentation.component
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -33,11 +34,13 @@ import com.sesac.common.ui.theme.PrimaryGreenDark
 import com.sesac.common.ui.theme.Purple600
 import com.sesac.common.ui.theme.paddingMicro
 import com.sesac.common.ui.theme.paddingSmall
-import com.sesac.trail.presentation.model.MyRecord
+import com.sesac.domain.model.MyRecord
+import com.sesac.trail.presentation.TrailViewModel
 
 
 @Composable
 fun MyRecordsTabContent(
+    viewModel: TrailViewModel,
     records: List<MyRecord>,
     onFollowClick: () -> Unit,
     onRegisterClick: () -> Unit
@@ -48,6 +51,7 @@ fun MyRecordsTabContent(
     ) {
         items(records) { record ->
             MyRecordItem(
+                viewModel = viewModel,
                 record = record,
                 onFollowClick = onFollowClick,
                 onRegisterClick = onRegisterClick
@@ -58,6 +62,7 @@ fun MyRecordsTabContent(
 
 @Composable
 fun MyRecordItem(
+    viewModel: TrailViewModel,
     record: MyRecord,
     onFollowClick: () -> Unit,
     onRegisterClick: () -> Unit
@@ -74,7 +79,7 @@ fun MyRecordItem(
             Box(
                 modifier = Modifier
                     .size(48.dp)
-                    .background(record.color, RoundedCornerShape(8.dp)),
+                    .background(record.color as Color, RoundedCornerShape(8.dp)),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(Icons.Filled.Pets, contentDescription = "Walk", tint = Color.White)
@@ -86,7 +91,7 @@ fun MyRecordItem(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(record.name, fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                    Text(record.date, fontSize = 12.sp, color = Color.Gray)
+                    Text(record.date.toString(), fontSize = 12.sp, color = Color.Gray)
                 }
                 Text("${record.distance} · ${record.time}", fontSize = 14.sp)
                 Row {
@@ -103,7 +108,11 @@ fun MyRecordItem(
                     contentPadding = PaddingValues(horizontal = paddingSmall, vertical = paddingMicro)
                 ) { Text("따라가기") }
                 Button(
-                    onClick = onRegisterClick,
+                    onClick = {
+                        viewModel.updateSelectedPath(record.toUserPath())
+                        Log.d("Tag-MyRecordControlTab", "record = $record")
+                        onRegisterClick()
+                    },
                     colors = ButtonDefaults.buttonColors(containerColor = PrimaryGreenDark),
                     contentPadding = PaddingValues(horizontal = paddingSmall, vertical = paddingMicro)
                 ) { Text("등록하기") }

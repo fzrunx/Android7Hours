@@ -21,12 +21,16 @@ val NavBackStackEntry.topBarAsRouteName: TopBarData
                 AppTopBarData(title = "7Hours")
             }
 
-            routeName.contains("Trail") -> {
+            routeName.contains("TrailMain") -> {
                 AppTopBarData(title = "산책로")
             }
 
             routeName.contains("TrailDetail") -> {
-                AppTopBarData(title = "산책로", titleIcon = AutoMirrored.Filled.ArrowBack)
+                AppTopBarData(title = "산책로 상세", titleIcon = AutoMirrored.Filled.ArrowBack)
+            }
+
+            routeName.contains("TrailCreate") -> {
+                AppTopBarData(title = "산책로 생성", titleIcon = AutoMirrored.Filled.ArrowBack)
             }
 
             routeName.contains("Community") -> {
