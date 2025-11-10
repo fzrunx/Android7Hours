@@ -81,6 +81,7 @@ dependencies {
     implementation(libs.bundles.navigation)
     implementation(libs.bundles.coil)
     implementation(libs.hilt.android)
+    implementation(libs.androidx.hilt.navigation.compose)
     ksp(libs.hilt.compiler)
     implementation(libs.androidx.appcompat)
     implementation(libs.androidx.constraintlayout)

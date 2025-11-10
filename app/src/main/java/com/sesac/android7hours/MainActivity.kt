@@ -16,6 +16,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.naver.maps.map.MapView
@@ -23,13 +24,15 @@ import com.sesac.android7hours.common.AppTopBarData
 import com.sesac.android7hours.common.topBarAsRouteName
 import com.sesac.android7hours.nav_graph.AppBottomBarItem
 import com.sesac.android7hours.nav_graph.AppNavHost
-import com.sesac.home.nav_graph.EntryPointScreen
 import com.sesac.common.ui.theme.Android7HoursTheme
+import com.sesac.home.nav_graph.EntryPointScreen
 import com.sesac.home.nav_graph.HomeNavigationRoute
 import com.sesac.monitor.presentation.MonitorMapViewLifecycleHelper
 import com.sesac.trail.presentation.TrailMapViewLifecycleHelper
+import com.sesac.trail.presentation.TrailViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import com.sesac.common.R as cR
+
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -40,6 +43,7 @@ class MainActivity : ComponentActivity() {
             val context = LocalContext.current
             val trailMapView = MapView(context)
             val monitorMapView = MapView(context)
+            val trailViewModel = hiltViewModel<TrailViewModel>()
             val navController = rememberNavController()
             val startDestination = HomeNavigationRoute.HomeTab
             val navBackStackEntry by navController.currentBackStackEntryAsState()
@@ -62,6 +66,8 @@ class MainActivity : ComponentActivity() {
                         stringResource(cR.string.mypage_management),
                         stringResource(cR.string.mypage_favorite),
                         stringResource(cR.string.mypage_setting),
+                        stringResource(cR.string.trail_create_page),
+                        stringResource(cR.string.trail_detail_page),
                     ),
                     appTopBarData = appTopBarData,
                     appBottomBarItem = appBottomBarItem,
@@ -69,10 +75,12 @@ class MainActivity : ComponentActivity() {
                     LocalIsSearchOpen = LocalIsSearchOpen,
                     navHost = { paddingValues ->
                         AppNavHost(
+                            trailViewModel = trailViewModel,
                             paddingValues = paddingValues,
                             navController = navController,
                             startDestination = startDestination,
                             isSearchOpen = isSearchOpen,
+                            onStartFollowing = { UserPath -> Unit },
                             trailLifecycleHelper = trailLifecycleHelper,
                             monitorLifecycleHelper = monitorLifecycleHelper,
                             permissionState = permissionStates,

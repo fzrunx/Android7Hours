@@ -40,14 +40,17 @@ import com.sesac.common.ui.theme.SheetHandleWidth
 import com.sesac.common.ui.theme.paddingLarge
 import com.sesac.common.ui.theme.paddingMicro
 import com.sesac.common.ui.theme.paddingSmall
-import com.sesac.trail.presentation.model.UserPath
+import com.sesac.domain.model.MyRecord
+import com.sesac.domain.model.UserPath
+import com.sesac.trail.presentation.TrailViewModel
 import com.sesac.trail.presentation.ui.WalkPathTab
-import com.sesac.trail.presentation.ui.mockMyRecords
-import com.sesac.trail.presentation.ui.mockRecommendedPaths
 
 @Composable
 fun BottomSheetContent(
+    viewModel: TrailViewModel,
     activeTab: WalkPathTab,
+    recommendedPaths: List<UserPath?>,
+    myRecords: List<MyRecord?>,
     onSheetOpenToggle: () -> Unit,
     onStartRecording: () -> Unit,
     onTabChange: (WalkPathTab) -> Unit,
@@ -128,12 +131,13 @@ fun BottomSheetContent(
             ) {
                 when (activeTab) {
                     WalkPathTab.RECOMMENDED -> RecommendedTabContent(
-                        paths = mockRecommendedPaths,
+                        paths = recommendedPaths.filterNotNull(),
                         onPathClick = onPathClick,
                         onFollowClick = onFollowClick
                     )
                     WalkPathTab.MY_RECORDS -> MyRecordsTabContent(
-                        records = mockMyRecords,
+                        viewModel = viewModel,
+                        records = myRecords.filterNotNull(),
                         onFollowClick = { /* MyRecord에서 UserPath로 변환 필요 */ },
                         onRegisterClick = onRegisterClick
                     )

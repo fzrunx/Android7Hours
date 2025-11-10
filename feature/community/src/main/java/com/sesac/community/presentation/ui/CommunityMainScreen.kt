@@ -1,5 +1,6 @@
 package com.sesac.community.presentation.ui
 
+import android.annotation.SuppressLint
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
@@ -36,6 +37,7 @@ import coil3.compose.rememberAsyncImagePainter
 import kotlinx.coroutines.launch
 import com.sesac.common.R as cR
 
+@SuppressLint("UnrememberedMutableState")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CommunityMainScreen(
