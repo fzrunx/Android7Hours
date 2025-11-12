@@ -1,38 +1,43 @@
 package com.sesac.home.presentation.ui
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Card
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import coil3.request.crossfade
 import coil3.size.Scale
-import com.sesac.common.R as cR
 import com.sesac.common.component.CommonLazyRow
 import com.sesac.common.ui.theme.Android7HoursTheme
 import com.sesac.common.ui.theme.bannerHeight
 import com.sesac.common.ui.theme.cardWidth
 import com.sesac.common.ui.theme.paddingLarge
 import com.sesac.common.ui.theme.paddingMedium
-import com.sesac.domain.model.BannerData
-import com.sesac.domain.model.HomeCardData
 import com.sesac.home.presentation.HomeViewModel
+import com.sesac.common.R as cR
 
 
 // --- 4. HomePage ---
@@ -76,10 +81,14 @@ fun HomeScreen(
                 title = "애견 카페",
                 items = dogCafeList,
             ) { item -> ContentCardView(item, {}, Modifier.width(cardWidth)) } }
-            item { CommunityCard(
-                image = communityList.component1()?.imageResList?.component1() ?: cR.drawable.icons8_dog_50,
-                onClick = onNavigateToCommunity,
-                modifier = Modifier.padding(horizontal = paddingLarge, vertical = paddingMedium))
+            item {
+                if (communityList.isNotEmpty()) {
+                    CommunityCard(
+                        image = communityList.first()?.imageResList?.firstOrNull() ?: cR.drawable.icons8_dog_50,
+                        onClick = onNavigateToCommunity,
+                        modifier = Modifier.padding(horizontal = paddingLarge, vertical = paddingMedium)
+                    )
+                }
             }
         }
     }

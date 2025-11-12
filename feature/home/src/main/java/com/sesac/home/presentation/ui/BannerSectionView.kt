@@ -42,7 +42,7 @@ import com.sesac.common.ui.theme.buttonRound
 import com.sesac.common.ui.theme.paddingLarge
 import com.sesac.common.ui.theme.paddingMedium
 import com.sesac.common.ui.theme.paddingMicro
-import com.sesac.domain.model.BannerData
+import com.sesac.domain.local.model.BannerData
 
 @Composable
 fun BannerSectionView(banners: List<BannerData?>, modifier: Modifier = Modifier) {

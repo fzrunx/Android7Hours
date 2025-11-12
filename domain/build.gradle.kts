@@ -17,4 +17,7 @@ dependencies {
     implementation(libs.hilt.core)
     ksp(libs.hilt.compiler)
     implementation(libs.threetenabp)
+    implementation(libs.converter.moshi)
+    implementation(libs.moshi.kotlin)
+    ksp(libs.moshi.kotlin.codegen)
 }

@@ -66,6 +66,7 @@ dependencies {
     implementation(project(":feature:trail"))
     implementation(project(":feature:monitor"))
     implementation(project(":feature:mypage"))
+    implementation(project(":feature:auth"))
     implementation(project(":data"))
     implementation(project(":domain"))
 

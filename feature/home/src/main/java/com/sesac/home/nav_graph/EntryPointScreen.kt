@@ -14,6 +14,7 @@ import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -82,6 +83,28 @@ fun EntryPointScreen(
                         }
                     },
                     actions = {
+                        appTopBarData.actions.forEach { action ->
+                            when (action) {
+                                is TopBarAction.IconAction -> {
+                                    IconButton(onClick = action.onClick) {
+                                        Icon(
+                                            imageVector = action.icon,
+                                            contentDescription = action.contentDescription
+                                        )
+                                    }
+                                }
+                                is TopBarAction.TextAction -> {
+                                    if (action.isButton) {
+                                        TextButton(onClick = action.onClick) {
+                                            Text(text = action.text)
+                                        }
+                                    } else {
+                                        Text(text = action.text)
+                                    }
+                                }
+                            }
+                        }
+
                         if (isScaffoldAction) {
                             IconButton(
                                 onClick = { isSearchOpen.value = !isSearchOpen.value },

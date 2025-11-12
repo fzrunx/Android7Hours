@@ -5,7 +5,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 interface TopBarData {
     var title: String
     var titleIcon: Any?
-
+    val actions: List<TopBarAction>
 }
 
 interface BottomBarItem{

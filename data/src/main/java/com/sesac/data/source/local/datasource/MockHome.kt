@@ -1,9 +1,9 @@
 package com.sesac.data.source.local.datasource
 
-import com.sesac.domain.model.BannerData
-import com.sesac.domain.model.DogCafe
-import com.sesac.domain.model.TravelDestination
-import com.sesac.domain.model.WalkPath
+import com.sesac.domain.local.model.BannerData
+import com.sesac.domain.local.model.DogCafe
+import com.sesac.domain.local.model.TravelDestination
+import com.sesac.domain.local.model.WalkPath
 
 object MockHome {
     val bannerDataList = mutableListOf<BannerData>()

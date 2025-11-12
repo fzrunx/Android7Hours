@@ -1,15 +1,19 @@
 package com.sesac.data.di
 
+import com.sesac.data.repository.AuthRepositoryImpl
 import com.sesac.data.repository.CommunityRepositoryImpl
 import com.sesac.data.repository.HomeRepositoryImpl
 import com.sesac.data.repository.MonitorRepositoryImpl
 import com.sesac.data.repository.MypageRepositoryImpl
+import com.sesac.data.repository.SessionRepositoryImpl
 import com.sesac.data.repository.TrailRepositoryImpl
-import com.sesac.domain.repository.CommunityRepository
-import com.sesac.domain.repository.HomeRepository
-import com.sesac.domain.repository.MonitorRepository
-import com.sesac.domain.repository.MypageRepository
-import com.sesac.domain.repository.TrailRepository
+import com.sesac.domain.local.repository.CommunityRepository
+import com.sesac.domain.local.repository.HomeRepository
+import com.sesac.domain.local.repository.MonitorRepository
+import com.sesac.domain.local.repository.MypageRepository
+import com.sesac.domain.local.repository.TrailRepository
+import com.sesac.domain.remote.repository.AuthRepository
+import com.sesac.domain.remote.repository.SessionRepository
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -49,4 +53,16 @@ abstract class RepositoryModule {
     abstract fun bindMypageRepository(
         mypageRepositoryImpl: MypageRepositoryImpl
     ): MypageRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindAuthRepository(
+        myAuthRepositoryImpl: AuthRepositoryImpl
+    ): AuthRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindSessionRepository(
+        sessionRepositoryImpl: SessionRepositoryImpl
+    ): SessionRepository
 }

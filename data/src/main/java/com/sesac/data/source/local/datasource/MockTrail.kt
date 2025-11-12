@@ -3,10 +3,9 @@ package com.sesac.data.source.local.datasource
 import com.sesac.common.ui.theme.AccentGreen
 import com.sesac.common.ui.theme.ColorBlue
 import com.sesac.common.ui.theme.Purple500
-import com.sesac.domain.model.LatLngPoint
-import com.sesac.domain.model.MyRecord
-import com.sesac.domain.model.RecommendedPath
-import com.sesac.domain.model.UserPath
+import com.sesac.domain.local.model.LatLngPoint
+import com.sesac.domain.local.model.MyRecord
+import com.sesac.domain.local.model.UserPath
 import java.util.Date
 
 object MockTrail {

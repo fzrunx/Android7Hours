@@ -3,7 +3,6 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
 
-    alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.kotlin.parcelize)
     alias(libs.plugins.ksp)
 }
@@ -48,6 +47,15 @@ dependencies {
     implementation(project(":feature:common"))
 
     implementation(libs.bundles.compose)
+    implementation(libs.retrofit.core)
+    implementation(libs.androidx.datastore.core)
+    implementation(libs.androidx.datastore.preferences.core)
+    implementation(libs.androidx.datastore.preferences)
+    implementation(libs.converter.moshi)
+    implementation(libs.moshi.kotlin)
+    ksp(libs.moshi.kotlin.codegen)
+    implementation(libs.okhttp.core)
+    implementation(libs.okhttp.logging.interceptor)
     implementation(libs.kotilinx.coroutines.core)
     implementation(libs.hilt.android)
     implementation(libs.androidx.room.runtime)

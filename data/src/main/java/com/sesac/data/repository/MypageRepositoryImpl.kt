@@ -1,13 +1,11 @@
 package com.sesac.data.repository
 
 import com.sesac.data.source.local.datasource.MockMypage
-import com.sesac.domain.model.FavoriteCommunityPost
-import com.sesac.domain.model.FavoriteWalkPath
-import com.sesac.domain.model.MypageMenuItem
-import com.sesac.domain.model.MypagePermission
-import com.sesac.domain.model.MypageSchedule
-import com.sesac.domain.model.MypageStat
-import com.sesac.domain.repository.MypageRepository
+import com.sesac.domain.local.model.FavoriteCommunityPost
+import com.sesac.domain.local.model.FavoriteWalkPath
+import com.sesac.domain.local.model.MypageSchedule
+import com.sesac.domain.local.model.MypageStat
+import com.sesac.domain.local.repository.MypageRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import org.threeten.bp.LocalDate

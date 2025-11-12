@@ -27,7 +27,7 @@ import coil3.size.Scale
 import com.sesac.common.ui.theme.cardHeight
 import com.sesac.common.ui.theme.cardRound
 import com.sesac.common.ui.theme.paddingMedium
-import com.sesac.domain.model.HomeCardData
+import com.sesac.domain.local.model.HomeCardData
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

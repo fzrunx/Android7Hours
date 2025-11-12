@@ -29,11 +29,8 @@ import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.runtime.snapshots.SnapshotStateMap
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -69,7 +66,7 @@ import com.sesac.common.ui.theme.permEnabledBg
 import com.sesac.common.ui.theme.permEnabledBorder
 import com.sesac.common.ui.theme.shapeCard
 import com.sesac.common.ui.theme.shapeIcon
-import com.sesac.domain.model.MypagePermission
+import com.sesac.domain.local.model.MypagePermission
 import com.sesac.mypage.presentation.MypageViewModel
 
 val permissions = listOf(

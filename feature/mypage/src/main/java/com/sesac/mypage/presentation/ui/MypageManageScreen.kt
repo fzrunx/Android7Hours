@@ -42,7 +42,6 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -64,7 +63,7 @@ import com.sesac.common.ui.theme.Red500
 import com.sesac.common.ui.theme.paddingLarge
 import com.sesac.common.ui.theme.paddingMedium
 import com.sesac.common.ui.theme.paddingSmall
-import com.sesac.domain.model.MypageSchedule
+import com.sesac.domain.local.model.MypageSchedule
 import com.sesac.mypage.presentation.MypageViewModel
 import org.threeten.bp.Instant
 import org.threeten.bp.LocalDate

@@ -9,8 +9,9 @@ import androidx.compose.runtime.snapshots.SnapshotStateMap
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
+import com.sesac.auth.nav_graph.authRoute
 import com.sesac.community.nav_graph.communityRoute
-import com.sesac.domain.model.UserPath
+import com.sesac.domain.local.model.UserPath
 import com.sesac.home.nav_graph.homeRoute
 import com.sesac.monitor.nav_graph.monitorRoute
 import com.sesac.monitor.presentation.MonitorMapViewLifecycleHelper
@@ -25,6 +26,7 @@ fun AppNavHost(
     paddingValues: PaddingValues,
     trailViewModel: TrailViewModel,
     navController: NavHostController,
+    nav2Home: () -> Unit,
     startDestination: Any,
     isSearchOpen: MutableState<Boolean>,
     onStartFollowing: (UserPath) -> Unit,
@@ -63,6 +65,10 @@ fun AppNavHost(
         mypageRoute(
             navController = navController,
             permissionState = permissionState,
+        )
+        authRoute(
+            navController = navController,
+            nav2Home = nav2Home,
         )
     }
 }
