@@ -6,15 +6,16 @@ import com.sesac.domain.local.model.FavoriteCommunityPost
 import com.sesac.domain.local.model.FavoriteWalkPath
 import com.sesac.domain.local.model.MypageSchedule
 import com.sesac.domain.local.model.MypageStat
-import com.sesac.domain.local.usecase.AddScheduleUseCase
-import com.sesac.domain.local.usecase.DeleteFavoriteCommunityPostUseCase
-import com.sesac.domain.local.usecase.DeleteFavoriteWalkPathsUseCase
-import com.sesac.domain.local.usecase.DeleteScheduleUseCase
-import com.sesac.domain.local.usecase.GetFavoriteCommunityPostsUseCase
-import com.sesac.domain.local.usecase.GetFavoriteWalkPathsUseCase
-import com.sesac.domain.local.usecase.GetMypageStatsUseCase
-import com.sesac.domain.local.usecase.GetSchedulesUseCase
-import com.sesac.domain.local.usecase.UpdatePermissionStatusUseCase
+import com.sesac.domain.local.usecase.mypage.AddScheduleUseCase
+import com.sesac.domain.local.usecase.mypage.DeleteFavoriteCommunityPostUseCase
+import com.sesac.domain.local.usecase.mypage.DeleteFavoriteWalkPathsUseCase
+import com.sesac.domain.local.usecase.mypage.DeleteScheduleUseCase
+import com.sesac.domain.local.usecase.mypage.GetFavoriteCommunityPostsUseCase
+import com.sesac.domain.local.usecase.mypage.GetFavoriteWalkPathsUseCase
+import com.sesac.domain.local.usecase.mypage.GetMypageStatsUseCase
+import com.sesac.domain.local.usecase.mypage.GetSchedulesUseCase
+import com.sesac.domain.local.usecase.mypage.MypageUseCase
+import com.sesac.domain.local.usecase.mypage.UpdatePermissionStatusUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -26,16 +27,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class MypageViewModel @Inject constructor(
-    private val getMypageStatsUseCase: GetMypageStatsUseCase,
-    private val getFavoriteWalkPathsUseCase: GetFavoriteWalkPathsUseCase,
-    private val deleteFavoriteWalkPathsUseCase: DeleteFavoriteWalkPathsUseCase,
-    private val getFavoriteCommunityPostsUseCase: GetFavoriteCommunityPostsUseCase,
-    private val deleteFavoriteCommunityPostUseCase: DeleteFavoriteCommunityPostUseCase,
-    private val getSchedulesUseCase: GetSchedulesUseCase,
-    private val addScheduleUseCase: AddScheduleUseCase,
-    private val deleteScheduleUseCase: DeleteScheduleUseCase,
-//    private val getMypagePermissionsUseCase: GetMypagePermissionsUseCase,
-    private val updatePermissionStatusUseCase: UpdatePermissionStatusUseCase
+    private val mypageUseCase: MypageUseCase,
 ) : ViewModel() {
     val tabLabels = listOf("산책로", "커뮤니티")
     private val _activeFilter = MutableStateFlow<String>(tabLabels[0])
@@ -64,19 +56,19 @@ class MypageViewModel @Inject constructor(
 
     fun getStats() {
         viewModelScope.launch {
-            getMypageStatsUseCase().collectLatest { _stats.value = it }
+            mypageUseCase.getMypageStatsUseCase().collectLatest { _stats.value = it }
         }
     }
 
     fun getFavoriteWalkPaths() {
         viewModelScope.launch {
-            getFavoriteWalkPathsUseCase().collectLatest { _favoriteWalkPaths.value = it }
+            mypageUseCase.getFavoriteWalkPathsUseCase().collectLatest { _favoriteWalkPaths.value = it }
         }
     }
 
     fun deleteFavoriteWalkPath(favoriteWalkPath: FavoriteWalkPath) {
         viewModelScope.launch {
-            deleteFavoriteWalkPathsUseCase(favoriteWalkPath.id).collectLatest { success ->
+            mypageUseCase.deleteFavoriteWalkPathsUseCase(favoriteWalkPath.id).collectLatest { success ->
                 if (success) {
                     getFavoriteWalkPaths()
                 }
@@ -86,13 +78,13 @@ class MypageViewModel @Inject constructor(
 
     fun getFavoriteCommunityPost() {
         viewModelScope.launch {
-            getFavoriteCommunityPostsUseCase().collectLatest { _favoritePosts.value = it }
+            mypageUseCase.getFavoriteCommunityPostsUseCase().collectLatest { _favoritePosts.value = it }
         }
     }
 
     fun deleteFavoriteCommunityPost(favoriteCommunityPost: FavoriteCommunityPost) {
         viewModelScope.launch {
-            deleteFavoriteCommunityPostUseCase(favoriteCommunityPost.id).collectLatest { success ->
+            mypageUseCase.deleteFavoriteCommunityPostUseCase(favoriteCommunityPost.id).collectLatest { success ->
                 if (success) {
                     getFavoriteCommunityPost()
                 }
@@ -102,7 +94,7 @@ class MypageViewModel @Inject constructor(
 
     fun getSchedules(date: LocalDate) {
         viewModelScope.launch {
-            getSchedulesUseCase(date)
+            mypageUseCase.getSchedulesUseCase(date)
                 .catch { e -> /* Handle error */ }
                 .collectLatest { _schedules.value = it }
         }
@@ -110,7 +102,7 @@ class MypageViewModel @Inject constructor(
 
     fun addSchedule(schedule: MypageSchedule) {
         viewModelScope.launch {
-            addScheduleUseCase(schedule).collectLatest { success ->
+            mypageUseCase.addScheduleUseCase(schedule).collectLatest { success ->
                 if (success) {
                     getSchedules(schedule.date) // Reload schedules for the date
                 }
@@ -120,7 +112,7 @@ class MypageViewModel @Inject constructor(
 
     fun deleteSchedule(schedule: MypageSchedule) {
         viewModelScope.launch {
-            deleteScheduleUseCase(schedule.id).collectLatest { success ->
+            mypageUseCase.deleteScheduleUseCase(schedule.id).collectLatest { success ->
                 if (success) {
                     getSchedules(schedule.date) // Reload schedules for the date
                 }
@@ -133,7 +125,7 @@ class MypageViewModel @Inject constructor(
 
     fun updatePermission(key: String, isEnabled: Boolean) {
         viewModelScope.launch {
-            updatePermissionStatusUseCase(key, isEnabled).collectLatest {
+            mypageUseCase.updatePermissionStatusUseCase(key, isEnabled).collectLatest {
                 // Can optionally reload permissions if the state is mutable
             }
         }

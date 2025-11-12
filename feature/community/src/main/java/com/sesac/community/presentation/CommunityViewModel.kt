@@ -7,7 +7,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.sesac.community.utils.calculateTimeAgo
 import com.sesac.domain.local.model.Community
-import com.sesac.domain.local.usecase.GetAllCommunityUseCase
+import com.sesac.domain.local.usecase.community.CommunityUseCase
+import com.sesac.domain.local.usecase.community.GetAllCommunityUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -46,7 +47,7 @@ data class Comment(
 
 @HiltViewModel
 class CommunityViewModel @Inject constructor(
-    private val getAllPostsUseCase: GetAllCommunityUseCase,
+    private val communityUseCase: CommunityUseCase,
 ) : ViewModel() {
 
     private val _posts = MutableStateFlow<List<Post>>(emptyList())
@@ -75,7 +76,7 @@ class CommunityViewModel @Inject constructor(
 
     private fun observePosts() {
         viewModelScope.launch {
-            getAllPostsUseCase()
+            communityUseCase.getAllCommunityUseCase()
                 .map { postModels ->
                     postModels.mapIndexed { index, postModel ->
                         postModel.toPresentation(index.toLong())

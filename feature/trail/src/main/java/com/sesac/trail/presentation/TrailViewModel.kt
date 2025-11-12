@@ -4,9 +4,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.sesac.domain.local.model.MyRecord
 import com.sesac.domain.local.model.UserPath
-import com.sesac.domain.local.usecase.GetAllMyRecordUseCase
-import com.sesac.domain.local.usecase.GetAllRecommendedPathsUseCase
-import com.sesac.domain.local.usecase.AddMyRecordUseCase
+import com.sesac.domain.local.usecase.trail.GetAllMyRecordUseCase
+import com.sesac.domain.local.usecase.trail.GetAllRecommendedPathsUseCase
+import com.sesac.domain.local.usecase.trail.AddMyRecordUseCase
+import com.sesac.domain.local.usecase.trail.TrailUseCase
 import com.sesac.trail.presentation.ui.WalkPathTab
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -18,9 +19,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class TrailViewModel @Inject constructor(
-    private val getAllRecommendedPathsUseCase: GetAllRecommendedPathsUseCase,
-    private val getAllMyRecordUseCase: GetAllMyRecordUseCase,
-    private val addMyRecordUseCase: AddMyRecordUseCase
+    private val trailUseCase: TrailUseCase,
 ): ViewModel() {
     private val _recommendedPaths = MutableStateFlow<List<UserPath>>(emptyList())
     val recommendedPaths = _recommendedPaths.asStateFlow()
@@ -51,7 +50,7 @@ class TrailViewModel @Inject constructor(
 
     private fun getRecommendedPaths() {
         viewModelScope.launch {
-            getAllRecommendedPathsUseCase().collectLatest { paths ->
+            trailUseCase.getAllRecommendedPathsUseCase().collectLatest { paths ->
                 _recommendedPaths.value = paths.filterNotNull()
             }
         }
@@ -59,7 +58,7 @@ class TrailViewModel @Inject constructor(
 
     private fun getMyRecords() {
         viewModelScope.launch {
-            getAllMyRecordUseCase().collectLatest { records ->
+            trailUseCase.getAllMyRecordUseCase().collectLatest { records ->
                 _myRecords.value = records.filterNotNull()
             }
         }
@@ -68,7 +67,7 @@ class TrailViewModel @Inject constructor(
     fun savePath() {
         viewModelScope.launch {
             _selectedPath.value?.let { path ->
-                addMyRecordUseCase(path.toMyRecord()).collectLatest { success ->
+                trailUseCase.addMyRecordUseCase(path.toMyRecord()).collectLatest { success ->
                     if (success) {
                         getMyRecords() // Refresh the list
                     }

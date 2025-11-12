@@ -7,11 +7,13 @@ import com.sesac.domain.local.model.Community
 import com.sesac.domain.local.model.DogCafe
 import com.sesac.domain.local.model.TravelDestination
 import com.sesac.domain.local.model.WalkPath
-import com.sesac.domain.local.usecase.GetAllBannersUseCase
-import com.sesac.domain.local.usecase.GetAllCommunityUseCase
-import com.sesac.domain.local.usecase.GetAllDogCafeUseCase
-import com.sesac.domain.local.usecase.GetAllTravelDestinationUseCase
-import com.sesac.domain.local.usecase.GetAllWalkPathUseCase
+import com.sesac.domain.local.usecase.community.CommunityUseCase
+import com.sesac.domain.local.usecase.home.GetAllBannersUseCase
+import com.sesac.domain.local.usecase.community.GetAllCommunityUseCase
+import com.sesac.domain.local.usecase.home.GetAllDogCafeUseCase
+import com.sesac.domain.local.usecase.home.GetAllTravelDestinationUseCase
+import com.sesac.domain.local.usecase.home.GetAllWalkPathUseCase
+import com.sesac.domain.local.usecase.home.HomeUseCase
 import com.sesac.domain.remote.model.UserInfo
 import com.sesac.domain.remote.result.AuthResult
 import com.sesac.domain.remote.usecase.auth.AuthUseCase
@@ -24,11 +26,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
-    private val getAllBannersUseCase: GetAllBannersUseCase,
-    private val getAllDogCafeUseCase: GetAllDogCafeUseCase,
-    private val getAllTravelDestinationUseCase: GetAllTravelDestinationUseCase,
-    private val getAllWalkPathUseCase: GetAllWalkPathUseCase,
-    private val getAllCommunityUseCase: GetAllCommunityUseCase,
+    private val homeUseCase: HomeUseCase,
+    private val communityUseCase: CommunityUseCase,
     private val authUseCase: AuthUseCase,
 ): ViewModel() {
     private val _bannerList = MutableStateFlow<List<BannerData?>>(emptyList())
@@ -48,11 +47,11 @@ class HomeViewModel @Inject constructor(
     init {
         viewModelScope.launch {
 //            authUseCase.getAllUsers().collectLatest { _userAPIList.value = it }
-            getAllBannersUseCase().collectLatest { _bannerList.value = it }
-            getAllDogCafeUseCase().collectLatest { _dogCafelist.value = it }
-            getAllTravelDestinationUseCase().collectLatest { _travelDestinationList.value = it }
-            getAllWalkPathUseCase().collectLatest { _walkPathDestinationList.value = it }
-            getAllCommunityUseCase().collectLatest { _communityList.value = it }
+            homeUseCase.getAllBannersUseCase().collectLatest { _bannerList.value = it }
+            homeUseCase.getAllDogCafeUseCase().collectLatest { _dogCafelist.value = it }
+            homeUseCase.getAllTravelDestinationUseCase().collectLatest { _travelDestinationList.value = it }
+            homeUseCase.getAllWalkPathUseCase().collectLatest { _walkPathDestinationList.value = it }
+            communityUseCase.getAllCommunityUseCase().collectLatest { _communityList.value = it }
         }
     }
 
