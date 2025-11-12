@@ -1,6 +1,6 @@
 package com.sesac.data.source.local.datasource
 
-import com.sesac.domain.model.LatLngPoint
+import com.sesac.domain.local.model.LatLngPoint
 
 object MockMonitor {
     val latLngPointList = mutableListOf<LatLngPoint?>()

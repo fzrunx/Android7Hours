@@ -9,7 +9,14 @@ import android.widget.EditText
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ExitToApp
+import androidx.compose.material.icons.automirrored.filled.Login
+import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.Login
 import androidx.compose.runtime.compositionLocalOf
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
@@ -24,9 +31,11 @@ import com.sesac.android7hours.common.AppTopBarData
 import com.sesac.android7hours.common.topBarAsRouteName
 import com.sesac.android7hours.nav_graph.AppBottomBarItem
 import com.sesac.android7hours.nav_graph.AppNavHost
+import com.sesac.auth.nav_graph.AuthNavigationRoute
 import com.sesac.common.ui.theme.Android7HoursTheme
 import com.sesac.home.nav_graph.EntryPointScreen
 import com.sesac.home.nav_graph.HomeNavigationRoute
+import com.sesac.home.nav_graph.TopBarAction
 import com.sesac.monitor.presentation.MonitorMapViewLifecycleHelper
 import com.sesac.trail.presentation.TrailMapViewLifecycleHelper
 import com.sesac.trail.presentation.TrailViewModel
@@ -36,18 +45,48 @@ import com.sesac.common.R as cR
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+
+    private val mainViewModel: MainViewModel by viewModels()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
             val context = LocalContext.current
+            val mainUiState by mainViewModel.uiState.collectAsState()
             val trailMapView = MapView(context)
             val monitorMapView = MapView(context)
             val trailViewModel = hiltViewModel<TrailViewModel>()
             val navController = rememberNavController()
             val startDestination = HomeNavigationRoute.HomeTab
             val navBackStackEntry by navController.currentBackStackEntryAsState()
-            val appTopBarData = navBackStackEntry?.topBarAsRouteName ?: AppTopBarData()
+
+            val topBarActions = if (mainUiState.isLoggedIn) {
+                listOf(
+                    TopBarAction.TextAction(text = mainUiState.nickname ?: "User"),
+                    TopBarAction.IconAction(
+                        icon = Icons.AutoMirrored.Filled.ExitToApp,
+                        contentDescription = "Logout",
+                        onClick = { mainViewModel.onLogout() }
+                    )
+                )
+            } else {
+                listOf(
+                    TopBarAction.IconAction(
+                        icon = Icons.Default.AccountCircle,
+                        contentDescription = "Login",
+                        onClick = { navController.navigate(AuthNavigationRoute.LoginTab) }
+                    )
+                )
+            }
+
+            val currentTopBarData = navBackStackEntry?.topBarAsRouteName ?: AppTopBarData()
+            val finalTopBarData = if (currentTopBarData is AppTopBarData) {
+                currentTopBarData.copy(actions = topBarActions)
+            } else {
+                currentTopBarData
+            }
+
             val appBottomBarItem = remember { AppBottomBarItem().fetch() }
             val trailLifecycleHelper = remember { TrailMapViewLifecycleHelper(trailMapView) }
             val monitorLifecycleHelper = remember { MonitorMapViewLifecycleHelper(monitorMapView) }
@@ -69,7 +108,7 @@ class MainActivity : ComponentActivity() {
                         stringResource(cR.string.trail_create_page),
                         stringResource(cR.string.trail_detail_page),
                     ),
-                    appTopBarData = appTopBarData,
+                    appTopBarData = finalTopBarData,
                     appBottomBarItem = appBottomBarItem,
                     isSearchOpen = isSearchOpen,
                     LocalIsSearchOpen = LocalIsSearchOpen,
@@ -78,6 +117,7 @@ class MainActivity : ComponentActivity() {
                             trailViewModel = trailViewModel,
                             paddingValues = paddingValues,
                             navController = navController,
+                            nav2Home = { navController.navigate(HomeNavigationRoute.HomeTab) },
                             startDestination = startDestination,
                             isSearchOpen = isSearchOpen,
                             onStartFollowing = { UserPath -> Unit },

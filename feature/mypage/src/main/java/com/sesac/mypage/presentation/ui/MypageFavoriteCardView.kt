@@ -55,8 +55,8 @@ import com.sesac.common.ui.theme.primaryContainer
 import com.sesac.common.ui.theme.shapeCard
 import com.sesac.common.ui.theme.shapeImage
 import com.sesac.common.ui.theme.star
-import com.sesac.domain.model.FavoriteCommunityPost
-import com.sesac.domain.model.FavoriteWalkPath
+import com.sesac.domain.local.model.FavoriteCommunityPost
+import com.sesac.domain.local.model.FavoriteWalkPath
 
 @Composable
 fun FavoriteWalkPathCard(

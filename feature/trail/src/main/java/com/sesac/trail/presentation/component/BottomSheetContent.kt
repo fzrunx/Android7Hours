@@ -40,8 +40,8 @@ import com.sesac.common.ui.theme.SheetHandleWidth
 import com.sesac.common.ui.theme.paddingLarge
 import com.sesac.common.ui.theme.paddingMicro
 import com.sesac.common.ui.theme.paddingSmall
-import com.sesac.domain.model.MyRecord
-import com.sesac.domain.model.UserPath
+import com.sesac.domain.local.model.MyRecord
+import com.sesac.domain.local.model.UserPath
 import com.sesac.trail.presentation.TrailViewModel
 import com.sesac.trail.presentation.ui.WalkPathTab
 

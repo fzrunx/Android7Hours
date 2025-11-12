@@ -1,10 +1,9 @@
 package com.sesac.trail.nav_graph
 
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
-import com.sesac.domain.model.UserPath
+import com.sesac.domain.local.model.UserPath
 import com.sesac.trail.presentation.TrailMapViewLifecycleHelper
 import com.sesac.trail.presentation.TrailViewModel
 import com.sesac.trail.presentation.ui.TrailCreateScreen

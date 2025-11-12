@@ -29,8 +29,8 @@ import androidx.navigation.compose.rememberNavController
 import coil3.compose.AsyncImage
 import kotlinx.coroutines.launch
 import com.sesac.common.ui.theme.*
-import com.sesac.domain.model.LatLngPoint
-import com.sesac.domain.model.UserPath
+import com.sesac.domain.local.model.LatLngPoint
+import com.sesac.domain.local.model.UserPath
 import com.sesac.trail.presentation.TrailViewModel
 import com.sesac.trail.presentation.component.TagFlow
 

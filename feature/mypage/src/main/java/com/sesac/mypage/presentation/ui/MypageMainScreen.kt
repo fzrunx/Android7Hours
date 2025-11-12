@@ -36,7 +36,7 @@ import com.sesac.common.ui.theme.elevationSmall
 import com.sesac.common.ui.theme.iconSizeMedium
 import com.sesac.common.ui.theme.paddingLarge
 import com.sesac.common.ui.theme.paddingSmall
-import com.sesac.domain.model.MypageMenuItem
+import com.sesac.domain.local.model.MypageMenuItem
 import com.sesac.mypage.nav_graph.MypageNavigationRoute
 import com.sesac.mypage.presentation.MypageViewModel
 

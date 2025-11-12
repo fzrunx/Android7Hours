@@ -1,8 +1,8 @@
 package com.sesac.data.repository
 
 import com.sesac.data.source.local.datasource.MockMonitor
-import com.sesac.domain.model.LatLngPoint
-import com.sesac.domain.repository.MonitorRepository
+import com.sesac.domain.local.model.LatLngPoint
+import com.sesac.domain.local.repository.MonitorRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import javax.inject.Inject
