@@ -6,14 +6,6 @@ import com.sesac.domain.local.model.FavoriteCommunityPost
 import com.sesac.domain.local.model.FavoriteWalkPath
 import com.sesac.domain.local.model.MypageSchedule
 import com.sesac.domain.local.model.MypageStat
-import com.sesac.domain.local.usecase.mypage.AddScheduleUseCase
-import com.sesac.domain.local.usecase.mypage.DeleteFavoriteCommunityPostUseCase
-import com.sesac.domain.local.usecase.mypage.DeleteFavoriteWalkPathsUseCase
-import com.sesac.domain.local.usecase.mypage.DeleteScheduleUseCase
-import com.sesac.domain.local.usecase.mypage.GetFavoriteCommunityPostsUseCase
-import com.sesac.domain.local.usecase.mypage.GetFavoriteWalkPathsUseCase
-import com.sesac.domain.local.usecase.mypage.GetMypageStatsUseCase
-import com.sesac.domain.local.usecase.mypage.GetSchedulesUseCase
 import com.sesac.domain.local.usecase.mypage.MypageUseCase
 import com.sesac.domain.local.usecase.mypage.UpdatePermissionStatusUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel

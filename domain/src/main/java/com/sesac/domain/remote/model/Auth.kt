@@ -20,6 +20,9 @@ data class UserAPI(
 data class UserInfo(
     val username: String,
     val nickname: String?,
+    @Json(name = "full_name")
+    val fullName: String,
+    val email: String,
 )
 
 @JsonClass(generateAdapter = true)
@@ -33,6 +36,7 @@ data class LoginResponse(
     val refresh: String,
     val access: String,
     val user: UserInfo,
+//    val user: UserAPI,
 )
 
 @JsonClass(generateAdapter = true)

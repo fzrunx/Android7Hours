@@ -63,9 +63,6 @@ dependencies {
 //    ksp(libs.androidx.room.compiler)
 
     implementation(libs.hilt.android)
-//    implementation(libs.play.services.maps)
-    implementation("com.naver.maps:map-sdk:3.23.0")  // 해당 부분 넣어야됨
-    implementation("com.google.android.gms:play-services-location:21.3.0")
     ksp(libs.hilt.compiler)
 
     testImplementation(libs.junit)

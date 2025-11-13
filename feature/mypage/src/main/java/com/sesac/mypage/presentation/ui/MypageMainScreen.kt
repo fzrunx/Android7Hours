@@ -1,5 +1,6 @@
 package com.sesac.mypage.presentation.ui
 
+import android.util.Log
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
@@ -29,6 +30,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.sesac.common.ui.theme.Android7HoursTheme
@@ -36,6 +38,7 @@ import com.sesac.common.ui.theme.elevationSmall
 import com.sesac.common.ui.theme.iconSizeMedium
 import com.sesac.common.ui.theme.paddingLarge
 import com.sesac.common.ui.theme.paddingSmall
+import com.sesac.domain.local.model.CommonUiState
 import com.sesac.domain.local.model.MypageMenuItem
 import com.sesac.mypage.nav_graph.MypageNavigationRoute
 import com.sesac.mypage.presentation.MypageViewModel
@@ -51,58 +54,63 @@ val menuItems = listOf(
 @Composable
 fun MypageMainScreen(
     navController: NavController,
-    viewModel: MypageViewModel = hiltViewModel()
+    viewModel: MypageViewModel = hiltViewModel(),
+    uiState: CommonUiState,
 ) {
-    val stats by viewModel.stats.collectAsState(initial = emptyList())
+    val stats by viewModel.stats.collectAsStateWithLifecycle()
+    Log.d("TAG-MypageMainScreen", "user : ${uiState}")
 
-    LazyColumn(
-        modifier = Modifier
-            .fillMaxSize(),
-        contentPadding = PaddingValues(bottom = paddingLarge)
-    ) {
-        item {
-            ProfileHeaderView(
-                name = "김반려",
-                email = "kimbanrye@email.com",
-                imageUrl = "",
-                onNavigateToProfile = { /* navController.navigate("profile") */ }
-            )
-        }
-
-        item {
-            StatsSectionView(stats = stats)
-        }
-
-        item {
-            Text(
-                text = "메뉴",
-                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                modifier = Modifier.padding(
-                    start = paddingLarge,
-                    bottom = paddingSmall
+    if (uiState.isLoggedIn) {
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize(),
+            contentPadding = PaddingValues(bottom = paddingLarge)
+        ) {
+            item {
+                ProfileHeaderView(
+                    name = uiState.fullName ?: "",
+                    email = uiState.email ?: "",
+                    imageUrl = "",
+                    onNavigateToProfile = { /* navController.navigate("profile") */ }
                 )
-            )
-        }
-        items(menuItems) { item ->
-            MenuItemView(
-                item = item,
-                onClick = {
-                    when (item.key) {
-                        "MANAGE" -> navController.navigate(MypageNavigationRoute.ManageTab)
-                        "FAVORITE" -> navController.navigate(MypageNavigationRoute.FavoriteTab)
-                        "SETTING" -> navController.navigate(MypageNavigationRoute.SettingTab)
-                        // Handle other keys or do nothing
+            }
+
+            item {
+                StatsSectionView(stats = stats)
+            }
+
+            item {
+                Text(
+                    text = "메뉴",
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                    modifier = Modifier.padding(
+                        start = paddingLarge,
+                        bottom = paddingSmall
+                    )
+                )
+            }
+            items(menuItems) { item ->
+                MenuItemView(
+                    item = item,
+                    onClick = {
+                        when (item.key) {
+                            "MANAGE" -> navController.navigate(MypageNavigationRoute.ManageTab)
+                            "FAVORITE" -> navController.navigate(MypageNavigationRoute.FavoriteTab)
+                            "SETTING" -> navController.navigate(MypageNavigationRoute.SettingTab)
+                            // Handle other keys or do nothing
+                        }
                     }
-                }
-            )
+                )
+            }
+
+            item {
+                LogoutButton(
+                    onClick = { /* TODO: 로그아웃 로직 */ },
+                    modifier = Modifier.padding(paddingLarge)
+                )
+            }
         }
 
-        item {
-            LogoutButton(
-                onClick = { /* TODO: 로그아웃 로직 */ },
-                modifier = Modifier.padding(paddingLarge)
-            )
-        }
     }
 }
 
@@ -144,6 +152,7 @@ fun MyPageMainScreenPreview() {
     Android7HoursTheme {
         MypageMainScreen(
             navController = rememberNavController(),
+            uiState = CommonUiState(),
         )
     }
 }

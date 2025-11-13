@@ -16,7 +16,7 @@ fun NavGraphBuilder.trailRoute(
     navController: NavController,
 //    onSave: () -> Unit,
 //    path: UserPath,
-    onStartFollowing: (UserPath) -> Unit,
+    onStartFollowing: (Any) -> Unit,
     trailLifecycleHelper: TrailMapViewLifecycleHelper,
 ) {
     composable<TrailNavigationRoute.TrailMainTab> {

@@ -64,12 +64,14 @@ fun AuthLoginScreen(
         OutlinedTextField(
             value = email,
             onValueChange = { viewModel.loginEmail.value = it },
+            maxLines = 1,
             label = { Text("Email") }
         )
         Spacer(modifier = Modifier.height(8.dp))
         OutlinedTextField(
             value = password,
             onValueChange = { viewModel.loginPassword.value = it },
+            maxLines = 1,
             label = { Text("Password") }
         )
         Spacer(modifier = Modifier.height(16.dp))
@@ -77,7 +79,17 @@ fun AuthLoginScreen(
         Row(horizontalArrangement = Arrangement.SpaceEvenly) {
             when (uiState) {
                 is JoinUiState.Loading -> CircularProgressIndicator()
-                is JoinUiState.Error -> Text((uiState as JoinUiState.Error).message, color = MaterialTheme.colorScheme.error)
+                is JoinUiState.Error -> {
+                    Column {
+                        Button(onClick = { viewModel.onLoginClick() }) {
+                            Text("Log In")
+                        }
+                        Text(
+                            (uiState as JoinUiState.Error).message,
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    }
+                }
                 else -> Button(onClick = { viewModel.onLoginClick() }) {
                     Text("Log In")
                 }
