@@ -16,6 +16,8 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import android.util.Log
+import kotlinx.coroutines.delay
 
 sealed interface JoinUiState {
     object Idle : JoinUiState
@@ -204,8 +206,45 @@ class AuthViewModel @Inject constructor(
                 }
         }
     }
+    fun onKakaoLoginSuccess(accessToken: String) {
+        // 1. 뷰모델이 토큰을 받았는지 로그로 확인
+        Log.d("AuthViewModel", "Received Kakao Access Token: $accessToken")
+
+        // 2. UI 상태를 '로딩'으로 변경 (이메일 로그인과 동일)
+        _joinUiState.value = JoinUiState.Loading
+
+        viewModelScope.launch {
+            try {
+                // --- (TODO: 3. Retrofit + Repository 로직) ---
+                // 이 accessToken을 GeoDjango 서버로 전송합니다.
+                // val response = authUseCase.sendKakaoToken(accessToken)
+
+                // if (response is AuthResult.Success) {
+                //    ... (서버가 준 7Hours 전용 토큰 저장)
+                //    sessionUseCase.saveSession(...)
+                //    _joinUiState.value = JoinUiState.Success("Login successful!")
+                // } else {
+                //    _joinUiState.value = JoinUiState.Error("서버 로그인 실패")
+                // }
+                // ---
+
+
+                // --- [임시 테스트 코드] ---
+                // 지금은 서버가 없으므로, 1초 뒤 강제로 '성공' 상태로 만듭니다.
+                delay(1000)
+                Log.d("AuthViewModel", "Simulating Kakao login success...")
+                _joinUiState.value = JoinUiState.Success("Login successful!") // [수정] Success 상태 통일
+                // ---
+
+            } catch (e: Exception) {
+                _joinUiState.value = JoinUiState.Error(e.message ?: "Unknown error")
+            }
+        }
+    }
+    // ---
 
     fun resetUiState() {
         _joinUiState.value = JoinUiState.Idle
     }
 }
+

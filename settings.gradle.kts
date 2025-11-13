@@ -17,6 +17,7 @@ dependencyResolutionManagement {
         google()
         mavenCentral()
         maven("https://repository.map.naver.com/archive/maven")  // 여기 값도 넣어야 받아옴
+        maven { url = uri("https://devrepo.kakao.com/nexus/content/groups/public/") } // KakaoLogin
     }
 }
 
