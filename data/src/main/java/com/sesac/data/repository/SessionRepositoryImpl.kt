@@ -1,7 +1,8 @@
 package com.sesac.data.repository
 
 import com.sesac.data.datastore.AuthDataStore
-import com.sesac.domain.remote.model.UserInfo
+import com.sesac.domain.remote.model.LoginResponse
+import com.sesac.domain.remote.model.User
 import com.sesac.domain.remote.repository.SessionRepository
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
@@ -13,10 +14,10 @@ class SessionRepositoryImpl @Inject constructor(
 ) : SessionRepository {
     override fun getAccessToken(): Flow<String?> = authDataStore.accessToken
     override fun getRefreshToken(): Flow<String?> = authDataStore.refreshToken
-    override fun getUserInfo(): Flow<UserInfo?> = authDataStore.userInfo
+    override fun getUserInfo(): Flow<User?> = authDataStore.user
 
-    override suspend fun saveSession(accessToken: String, refreshToken: String, userInfo: UserInfo) {
-        authDataStore.saveSession(accessToken, refreshToken, userInfo)
+    override suspend fun saveSession(loginResponse: LoginResponse) {
+        authDataStore.saveSession(loginResponse.access, loginResponse.refresh, loginResponse.user)
     }
 
     override suspend fun clearSession() {

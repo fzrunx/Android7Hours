@@ -22,6 +22,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.naver.maps.map.MapView
@@ -52,7 +53,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             val context = LocalContext.current
-            val uiState by commonViewModel.uiState.collectAsState()
+            val uiState by commonViewModel.uiState.collectAsStateWithLifecycle()
             val trailMapView = MapView(context)
             val monitorMapView = MapView(context)
             val trailViewModel = hiltViewModel<TrailViewModel>()
@@ -117,6 +118,7 @@ class MainActivity : ComponentActivity() {
                             paddingValues = paddingValues,
                             navController = navController,
                             nav2Home = { navController.navigate(HomeNavigationRoute.HomeTab) },
+                            nav2LoginScreen = { navController.navigate(AuthNavigationRoute.LoginTab) },
                             startDestination = startDestination,
                             uiState = uiState,
                             isSearchOpen = isSearchOpen,

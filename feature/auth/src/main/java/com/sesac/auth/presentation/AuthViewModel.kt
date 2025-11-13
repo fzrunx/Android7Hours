@@ -4,8 +4,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.sesac.auth.utils.ValidationUtils
+import com.sesac.domain.remote.model.Auth
 import com.sesac.domain.remote.model.LoginRequest
-import com.sesac.domain.remote.model.UserAPI
+import com.sesac.domain.remote.model.LoginResponse
 import com.sesac.domain.remote.result.AuthResult
 import com.sesac.domain.remote.usecase.auth.AuthUseCase
 import com.sesac.domain.remote.usecase.session.SessionUseCase
@@ -141,8 +142,8 @@ class AuthViewModel @Inject constructor(
             _joinUiState.value = JoinUiState.Loading
             val form = _joinFormState.value
 
-            val userToPost = UserAPI(
-                id = 0, // Server will generate
+            val userToPost = Auth(
+//                id = -1, // Server will generate
                 username = form.email,
                 email = form.email,
                 fullName = form.name,
@@ -184,11 +185,8 @@ class AuthViewModel @Inject constructor(
                 .collectLatest { result ->
                     when (result) {
                         is AuthResult.Success -> {
-                            sessionUseCase.saveSession(
-                                accessToken = result.resultData.access,
-                                refreshToken = result.resultData.refresh,
-                                userInfo = result.resultData.user
-                            )
+                            val loginResponse = LoginResponse(result.resultData.access, result.resultData.refresh, result.resultData.user)
+                            sessionUseCase.saveSession(loginResponse)
                             _joinUiState.value = JoinUiState.Success("Login successful!")
                         }
                         is AuthResult.NetworkError -> {

@@ -2,7 +2,7 @@ package com.sesac.common
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.sesac.domain.local.model.CommonUiState
+import com.sesac.domain.local.model.CommonAuthUiState
 import com.sesac.domain.remote.usecase.session.SessionUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
@@ -17,19 +17,25 @@ class CommonViewModel @Inject constructor(
     private val sessionUseCase: SessionUseCase
 ) : ViewModel() {
 
-    val uiState: StateFlow<CommonUiState> = combine(
+    val uiState: StateFlow<CommonAuthUiState> = combine(
         sessionUseCase.getAccessToken(),
         sessionUseCase.getUserInfo()
-    ) { token, userInfo ->
-        if (token != null && userInfo != null) {
-            CommonUiState(isLoggedIn = true, nickname = userInfo.nickname, fullName = userInfo.fullName)
+    ) { token, user ->
+        if (token != null && user != null) {
+            CommonAuthUiState(
+                isLoggedIn = true,
+                id = user.id,
+                nickname = user.nickname,
+                fullName = user.fullName,
+                email = user.email,
+            )
         } else {
-            CommonUiState(isLoggedIn = false)
+            CommonAuthUiState(isLoggedIn = false)
         }
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5_000),
-        initialValue = CommonUiState()
+        initialValue = CommonAuthUiState()
     )
 
     fun onLogout() {

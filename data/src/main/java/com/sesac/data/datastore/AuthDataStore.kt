@@ -6,7 +6,7 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
-import com.sesac.domain.remote.model.UserInfo
+import com.sesac.domain.remote.model.User
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.adapter
 
@@ -31,7 +31,7 @@ class AuthDataStore @Inject constructor(
     }
 
     @OptIn(ExperimentalStdlibApi::class)
-    private val userInfoAdapter = moshi.adapter<UserInfo>()
+    private val userAdapter = moshi.adapter<User>()
 
     val accessToken: Flow<String?> = context.dataStore.data
         .map { preferences ->
@@ -43,18 +43,18 @@ class AuthDataStore @Inject constructor(
             preferences[PreferencesKeys.REFRESH_TOKEN]
         }
 
-    val userInfo: Flow<UserInfo?> = context.dataStore.data
+    val user: Flow<User?> = context.dataStore.data
         .map { preferences ->
             preferences[PreferencesKeys.USER_INFO]?.let { jsonString ->
-                userInfoAdapter.fromJson(jsonString)
+                userAdapter.fromJson(jsonString)
             }
         }
 
-    suspend fun saveSession(accessToken: String, refreshToken: String, userInfo: UserInfo) {
+    suspend fun saveSession(accessToken: String, refreshToken: String, user: User) {
         context.dataStore.edit { preferences ->
             preferences[PreferencesKeys.ACCESS_TOKEN] = accessToken
             preferences[PreferencesKeys.REFRESH_TOKEN] = refreshToken
-            preferences[PreferencesKeys.USER_INFO] = userInfoAdapter.toJson(userInfo)
+            preferences[PreferencesKeys.USER_INFO] = userAdapter.toJson(user)
         }
     }
 

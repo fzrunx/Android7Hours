@@ -8,13 +8,8 @@ import com.sesac.domain.local.model.DogCafe
 import com.sesac.domain.local.model.TravelDestination
 import com.sesac.domain.local.model.WalkPath
 import com.sesac.domain.local.usecase.community.CommunityUseCase
-import com.sesac.domain.local.usecase.home.GetAllBannersUseCase
-import com.sesac.domain.local.usecase.community.GetAllCommunityUseCase
-import com.sesac.domain.local.usecase.home.GetAllDogCafeUseCase
-import com.sesac.domain.local.usecase.home.GetAllTravelDestinationUseCase
-import com.sesac.domain.local.usecase.home.GetAllWalkPathUseCase
 import com.sesac.domain.local.usecase.home.HomeUseCase
-import com.sesac.domain.remote.model.UserInfo
+import com.sesac.domain.remote.model.User
 import com.sesac.domain.remote.result.AuthResult
 import com.sesac.domain.remote.usecase.auth.AuthUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -35,7 +30,7 @@ class HomeViewModel @Inject constructor(
     private val _travelDestinationList = MutableStateFlow<List<TravelDestination?>>(emptyList())
     private val _walkPathDestinationList = MutableStateFlow<List<WalkPath?>>(emptyList())
     private val _communityList = MutableStateFlow<List<Community?>>(emptyList())
-    private val _userAPIList = MutableStateFlow<AuthResult<List<UserInfo>>>(AuthResult.NoConstructor)
+    private val _userAPIList = MutableStateFlow<AuthResult<List<User>>>(AuthResult.NoConstructor)
 
     val bannerList get() = _bannerList.asStateFlow()
     val dogCafeList get() = _dogCafelist.asStateFlow()

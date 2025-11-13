@@ -2,28 +2,20 @@ package com.sesac.mypage.presentation.ui
 
 import android.util.Log
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Logout
-import androidx.compose.material3.Button
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -34,11 +26,10 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.sesac.common.ui.theme.Android7HoursTheme
-import com.sesac.common.ui.theme.elevationSmall
-import com.sesac.common.ui.theme.iconSizeMedium
+import com.sesac.common.ui.theme.White
 import com.sesac.common.ui.theme.paddingLarge
 import com.sesac.common.ui.theme.paddingSmall
-import com.sesac.domain.local.model.CommonUiState
+import com.sesac.domain.local.model.CommonAuthUiState
 import com.sesac.domain.local.model.MypageMenuItem
 import com.sesac.mypage.nav_graph.MypageNavigationRoute
 import com.sesac.mypage.presentation.MypageViewModel
@@ -54,96 +45,95 @@ val menuItems = listOf(
 @Composable
 fun MypageMainScreen(
     navController: NavController,
+    nav2LoginScreen: () -> Unit,
     viewModel: MypageViewModel = hiltViewModel(),
-    uiState: CommonUiState,
+    uiState: CommonAuthUiState,
 ) {
     val stats by viewModel.stats.collectAsStateWithLifecycle()
-    Log.d("TAG-MypageMainScreen", "user : ${uiState}")
+    Log.d("TAG-MypageMainScreen", "user : $uiState")
 
-    if (uiState.isLoggedIn) {
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize(),
-            contentPadding = PaddingValues(bottom = paddingLarge)
-        ) {
-            item {
-                ProfileHeaderView(
-                    name = uiState.fullName ?: "",
-                    email = uiState.email ?: "",
-                    imageUrl = "",
-                    onNavigateToProfile = { /* navController.navigate("profile") */ }
-                )
-            }
-
-            item {
-                StatsSectionView(stats = stats)
-            }
-
-            item {
-                Text(
-                    text = "메뉴",
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                    modifier = Modifier.padding(
-                        start = paddingLarge,
-                        bottom = paddingSmall
-                    )
-                )
-            }
-            items(menuItems) { item ->
-                MenuItemView(
-                    item = item,
-                    onClick = {
-                        when (item.key) {
-                            "MANAGE" -> navController.navigate(MypageNavigationRoute.ManageTab)
-                            "FAVORITE" -> navController.navigate(MypageNavigationRoute.FavoriteTab)
-                            "SETTING" -> navController.navigate(MypageNavigationRoute.SettingTab)
-                            // Handle other keys or do nothing
-                        }
-                    }
-                )
-            }
-
-            item {
-                LogoutButton(
-                    onClick = { /* TODO: 로그아웃 로직 */ },
-                    modifier = Modifier.padding(paddingLarge)
-                )
-            }
+    LaunchedEffect(uiState) {
+        if (!uiState.isLoggedIn){
+            nav2LoginScreen()
         }
-
     }
-}
 
-@Composable
-fun LogoutButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
-    Button(
-        onClick = onClick,
-        modifier = modifier.fillMaxWidth(),
-        shape = MaterialTheme.shapes.large,
-        colors = ButtonDefaults.buttonColors(
-            containerColor = Color.White,
-            contentColor = MaterialTheme.colorScheme.error
-        ),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.onError),
-        elevation = ButtonDefaults.buttonElevation(defaultElevation = elevationSmall)
+    LazyColumn(
+        modifier = Modifier
+            .fillMaxSize(),
+        contentPadding = PaddingValues(bottom = paddingLarge)
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center
-        ) {
-            Icon(
-                Icons.AutoMirrored.Filled.Logout,
-                contentDescription = null,
-                modifier = Modifier.size(iconSizeMedium)
-            )
-            Spacer(modifier = Modifier.width(paddingSmall))
-            Text(
-                text = "로그아웃",
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(vertical = paddingSmall)
+        item {
+            ProfileHeaderView(
+                name = uiState.fullName ?: "",
+                email = uiState.email ?: "",
+                imageUrl = "",
+                onNavigateToProfile = { /* navController.navigate("profile") */ }
             )
         }
+
+        item {
+            StatsSectionView(stats = stats)
+        }
+
+        item {
+            Text(
+                text = "메뉴",
+                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                modifier = Modifier.padding(
+                    start = paddingLarge,
+                    bottom = paddingSmall
+                )
+            )
+        }
+        items(menuItems) { item ->
+            MenuItemView(
+                item = item,
+                onClick = {
+                    when (item.key) {
+                        "MANAGE" -> navController.navigate(MypageNavigationRoute.ManageTab)
+                        "FAVORITE" -> navController.navigate(MypageNavigationRoute.FavoriteTab)
+                        "SETTING" -> navController.navigate(MypageNavigationRoute.SettingTab)
+                        // Handle other keys or do nothing
+                    }
+                }
+            )
+        }
+
+        item {
+            MypageButtonView(
+                onClick = { viewModel.logout() },
+                modifier = Modifier.padding(paddingLarge),
+                text = "로그아웃",
+                icon = Icons.AutoMirrored.Filled.Logout,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = White,
+                    contentColor = MaterialTheme.colorScheme.error
+                ),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.onError),
+            )
+        }
+
+        item {
+            MypageButtonView(
+                onClick = {
+                    viewModel.signout(uiState.id)
+                    viewModel.logout()
+                    nav2LoginScreen()
+                },
+                modifier = Modifier.padding(horizontal = paddingLarge),
+                text = "회원 탈퇴",
+                icon = Icons.Default.Delete,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = White,
+                    contentColor = MaterialTheme.colorScheme.error
+                ),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.onError),
+            )
+        }
+
     }
+
 }
 
 @Preview(showBackground = true)
@@ -152,7 +142,8 @@ fun MyPageMainScreenPreview() {
     Android7HoursTheme {
         MypageMainScreen(
             navController = rememberNavController(),
-            uiState = CommonUiState(),
+            nav2LoginScreen = {},
+            uiState = CommonAuthUiState(),
         )
     }
 }
