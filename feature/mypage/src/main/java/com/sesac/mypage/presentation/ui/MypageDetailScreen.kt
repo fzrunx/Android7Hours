@@ -1,5 +1,6 @@
 package com.sesac.mypage.presentation.ui
 
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -31,6 +32,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Divider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -65,6 +67,7 @@ import com.sesac.common.ui.theme.paddingMedium
 import com.sesac.common.ui.theme.paddingSmall
 import com.sesac.domain.model.CommonAuthUiState
 import com.sesac.domain.model.Pet
+import com.sesac.mypage.nav_graph.MypageNavigationRoute
 import com.sesac.mypage.presentation.MypageViewModel
 import com.sesac.common.R as cR
 
@@ -77,8 +80,10 @@ fun MypageDetailScreen(
     val pets by viewModel.userPets.collectAsStateWithLifecycle()
 
     LaunchedEffect(uiState.id) {
-        if (uiState.id != -1) {
-            viewModel.getUserPets(uiState.id)
+        if (uiState.id != -1 && !uiState.token.isNullOrEmpty()) {
+//            viewModel.getUserPets(uiState.id)
+            viewModel.getAllUserPets(uiState.token!!)
+            Log.d("TAG-MypageDetailScreen", "pets : $pets")
         }
     }
 
@@ -116,7 +121,8 @@ fun MypageDetailScreen(
         item {
             PetInfoSection(
                 pets = pets,
-                onAddPetClicked = { /* TODO: Navigate to Add Pet Screen */ }
+                uiState = uiState,
+                onAddPetClicked = { navController.navigate(MypageNavigationRoute.AddPetScreen) }
             )
         }
     }
@@ -207,13 +213,17 @@ fun UserInfoRow(icon: ImageVector, label: String, value: String, iconBgColor: Co
 }
 
 @Composable
-fun PetInfoSection(pets: List<Pet>, onAddPetClicked: () -> Unit) {
+fun PetInfoSection(
+    pets: List<Pet>,
+    uiState: CommonAuthUiState,
+    onAddPetClicked: () -> Unit,
+) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(paddingLarge)
     ) {
-        Text(text = "반려견 정보", style = Typography.titleMedium, fontWeight = FontWeight.Bold)
+        Text(text = "반려견 정보", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
         Spacer(modifier = Modifier.height(paddingMedium))
 
         if (pets.isEmpty()) {
@@ -221,7 +231,9 @@ fun PetInfoSection(pets: List<Pet>, onAddPetClicked: () -> Unit) {
         } else {
             Column(verticalArrangement = Arrangement.spacedBy(paddingMedium)) {
                 pets.forEach { pet ->
-                    PetInfoCard(pet = pet)
+                    pet.takeIf { it.owner == uiState.email }?.let {
+                        PetInfoCard(pet = it)
+                    }
                 }
                 Spacer(modifier = Modifier.height(paddingMedium))
                 Button(

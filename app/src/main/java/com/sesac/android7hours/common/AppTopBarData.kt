@@ -59,6 +59,10 @@ val NavBackStackEntry.topBarAsRouteName: TopBarData
                 AppTopBarData(title = "내 프로필")
             }
 
+            routeName.contains("AddPetScreen") -> {
+                AppTopBarData(title = "반려견 등록")
+            }
+
             routeName.contains("Manage") -> {
                 AppTopBarData(title = "일정관리", titleIcon = AutoMirrored.Filled.ArrowBack)
             }

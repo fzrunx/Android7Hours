@@ -9,3 +9,8 @@ data class Pet(
     val neutering: Boolean,
     val breed: String,
 )
+
+data class Breed(
+    val id: Int = -1,
+    val breedName: String,
+)

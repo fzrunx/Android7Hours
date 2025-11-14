@@ -1,5 +1,6 @@
 package com.sesac.data.dto
 
+import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
 
 @JsonClass(generateAdapter = true)
@@ -11,4 +12,11 @@ data class PetDTO(
     val birthday: String,
     val neutering: Boolean,
     val breed: String,
+)
+
+@JsonClass(generateAdapter = true)
+data class BreedDTO(
+    val id: Int =-1,
+    @Json(name = "breed_name")
+    val breedName: String,
 )

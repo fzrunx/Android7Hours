@@ -48,6 +48,7 @@ dependencies {
 
     implementation(libs.bundles.compose)
     implementation(libs.retrofit.core)
+    implementation(libs.okhttp.urlconnection)
     implementation(libs.androidx.datastore.core)
     implementation(libs.androidx.datastore.preferences.core)
     implementation(libs.androidx.datastore.preferences)

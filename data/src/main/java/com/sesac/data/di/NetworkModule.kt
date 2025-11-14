@@ -8,15 +8,20 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import okhttp3.CookieJar
+import okhttp3.JavaNetCookieJar
+import okhttp3.OkHttpClient
+import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
+import java.net.CookieManager
 import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
 
-//    private const val BASE_URL = "http://127.0.0.1:8000/"
+    //    private const val BASE_URL = "http://127.0.0.1:8000/"
     private const val BASE_URL = "http://10.0.2.2:8000/"
 
     @Provides
@@ -28,11 +33,41 @@ object NetworkModule {
 
     @Provides
     @Singleton
+    fun provideCookieJar(): CookieJar {
+        return JavaNetCookieJar(CookieManager())
+    }
+
+    @Provides
+    @Singleton
+    fun provideCsrfTokenInterceptor(cookieJar: CookieJar): CsrfTokenInterceptor {
+        return CsrfTokenInterceptor(cookieJar)
+    }
+
+    @Provides
+    @Singleton
+    fun provideOkHttpClient(
+        cookieJar: CookieJar,
+        csrfTokenInterceptor: CsrfTokenInterceptor
+    ): OkHttpClient {
+        val loggingInterceptor = HttpLoggingInterceptor().apply {
+            level = HttpLoggingInterceptor.Level.BODY
+        }
+        return OkHttpClient.Builder()
+            .cookieJar(cookieJar)
+            .addInterceptor(csrfTokenInterceptor)
+            .addInterceptor(loggingInterceptor)
+            .build()
+    }
+
+    @Provides
+    @Singleton
     fun provideRetrofit(
+        okHttpClient: OkHttpClient,
         moshi: Moshi
     ): Retrofit =
         Retrofit.Builder()
             .baseUrl(BASE_URL)
+            .client(okHttpClient)
             .addConverterFactory(MoshiConverterFactory.create(moshi))
             .build()
 

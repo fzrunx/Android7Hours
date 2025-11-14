@@ -5,6 +5,7 @@ import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import com.sesac.domain.model.CommonAuthUiState
+import com.sesac.mypage.presentation.ui.AddPetScreen
 import com.sesac.mypage.presentation.ui.MypageDetailScreen
 import com.sesac.mypage.presentation.ui.MypageFavoriteScreen
 import com.sesac.mypage.presentation.ui.MypageMainScreen
@@ -35,6 +36,12 @@ fun NavGraphBuilder.mypageRoute(
     }
     composable<MypageNavigationRoute.DetailScreen> {
         MypageDetailScreen(
+            navController = navController,
+            uiState = uiState,
+        )
+    }
+    composable<MypageNavigationRoute.AddPetScreen> {
+        AddPetScreen(
             navController = navController,
             uiState = uiState,
         )

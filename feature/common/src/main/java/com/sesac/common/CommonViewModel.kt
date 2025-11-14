@@ -24,6 +24,7 @@ class CommonViewModel @Inject constructor(
         if (token != null && user != null) {
             CommonAuthUiState(
                 isLoggedIn = true,
+                token = token,
                 id = user.id,
                 nickname = user.nickname,
                 fullName = user.fullName,

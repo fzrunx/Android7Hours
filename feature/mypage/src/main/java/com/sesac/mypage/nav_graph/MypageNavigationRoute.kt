@@ -14,5 +14,7 @@ sealed interface MypageNavigationRoute {
     data object SettingTab: MypageNavigationRoute
     @Serializable
     data object DetailScreen: MypageNavigationRoute
+    @Serializable
+    data object AddPetScreen: MypageNavigationRoute
 
 }

@@ -108,6 +108,7 @@ class MainActivity : ComponentActivity() {
                         stringResource(cR.string.trail_create_page),
                         stringResource(cR.string.trail_detail_page),
                         "내 정보",
+                        "반려견 추가",
                     ),
                     appTopBarData = finalTopBarData,
                     appBottomBarItem = appBottomBarItem,

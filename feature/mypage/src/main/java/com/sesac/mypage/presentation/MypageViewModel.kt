@@ -2,6 +2,7 @@ package com.sesac.mypage.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.sesac.domain.model.Breed
 import com.sesac.domain.model.FavoriteCommunityPost
 import com.sesac.domain.model.FavoriteWalkPath
 import com.sesac.domain.model.MypageSchedule
@@ -38,6 +39,9 @@ class MypageViewModel @Inject constructor(
     // MypageDetailScreen
     private val _userPets = MutableStateFlow<List<Pet>>(emptyList())
     val userPets = _userPets.asStateFlow()
+    // AddPetScreen
+    private val _breeds = MutableStateFlow<List<Breed>>(emptyList())
+    val breeds = _breeds.asStateFlow()
     // MypageFavoriteScreen
     private val _favoriteWalkPaths = MutableStateFlow<List<FavoriteWalkPath>>(emptyList())
     val favoriteWalkPaths get() = _favoriteWalkPaths.asStateFlow()
@@ -65,9 +69,46 @@ class MypageViewModel @Inject constructor(
 
     fun getUserPets(userId: Int) {
         viewModelScope.launch {
-            petUseCase.getUserPetsUseCase(userId).collectLatest { result ->
+            petUseCase.getPetInfoUseCase(userId).collectLatest { result ->
                 if (result is AuthResult.Success) {
                     _userPets.value = result.resultData
+                }
+            }
+        }
+    }
+
+    fun getAllUserPets(token: String) {
+        viewModelScope.launch {
+            petUseCase.getUserPetsUseCase(token).collectLatest { result ->
+                if (result is AuthResult.Success) {
+                    _userPets.value = result.resultData
+                }
+            }
+        }
+    }
+
+    fun getBreeds() {
+        viewModelScope.launch {
+            petUseCase.getBreedsUseCase().collectLatest { result ->
+                if (result is AuthResult.Success) {
+                    _breeds.value = result.resultData
+                }
+            }
+        }
+    }
+
+    fun addPet(token: String, pet: Pet, onResult: (Boolean) -> Unit) {
+        viewModelScope.launch {
+            petUseCase.postUserPetUseCase(token, pet).collectLatest { result ->
+                when(result) {
+                    is AuthResult.Success -> {
+                        // Refresh user's pet list
+                        pet.owner.toIntOrNull()?.let { getAllUserPets(token) }
+                        onResult(true)
+                    }
+                    else -> {
+                        onResult(false)
+                    }
                 }
             }
         }
