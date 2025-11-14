@@ -5,6 +5,7 @@ import com.sesac.data.repository.CommunityRepositoryImpl
 import com.sesac.data.repository.HomeRepositoryImpl
 import com.sesac.data.repository.MonitorRepositoryImpl
 import com.sesac.data.repository.MypageRepositoryImpl
+import com.sesac.data.repository.PetRepositoryImpl
 import com.sesac.data.repository.SessionRepositoryImpl
 import com.sesac.data.repository.TrailRepositoryImpl
 import com.sesac.domain.repository.CommunityRepository
@@ -13,6 +14,7 @@ import com.sesac.domain.repository.MonitorRepository
 import com.sesac.domain.repository.MypageRepository
 import com.sesac.domain.repository.TrailRepository
 import com.sesac.domain.repository.AuthRepository
+import com.sesac.domain.repository.PetRepository
 import com.sesac.domain.repository.SessionRepository
 import dagger.Binds
 import dagger.Module
@@ -53,6 +55,12 @@ abstract class RepositoryModule {
     abstract fun bindMypageRepository(
         mypageRepositoryImpl: MypageRepositoryImpl
     ): MypageRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindPetRepository(
+        petRepositoryImpl: PetRepositoryImpl
+    ): PetRepository
 
     @Binds
     @Singleton

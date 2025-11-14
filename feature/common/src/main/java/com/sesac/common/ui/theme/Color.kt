@@ -13,7 +13,10 @@ val PurpleGrey40 = Color(0xFF625b71)
 val Pink40 = Color(0xFF7D5260)
 val White = Color.White
 
+val Gray200 = Color(0xFFE5E7EB)
+val Gray300 = Color(0xFFD1D5DB)
 val Gray400 = Color(0xFF9CA3AF) // text-gray-400
+val Gray500 = Color(0xFF6B7280) // text-gray-500
 
 // --- 앱 커스텀 색상 ---
 val Background = Color(0xFFF9FAFB)
@@ -51,6 +54,13 @@ val Purple600 = Color(0xFF5D3E8C)
 val Purple100 = Color(0xFFEDE9FE) // bg-purple-100
 val Purple700 = Color(0xFF6B21A8)
 val Yellow400 = Color(0xFFFACC15)
+
+val LightPurple = Color(0xFFEBE5FF)
+val LightBlue = Color(0xFFE0F3FF)
+val LightGreen = Color(0xFFE0FFE8)
+val LightGray = Color(0xFFEEF0F2)
+val LightPink = Color(0xFFFDF0F3)
+val LightBlue2 = Color(0xFFEFF5FF)
 
 val GrayTabText = Color(0xFF4B5563)
 

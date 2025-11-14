@@ -19,14 +19,14 @@ data class MypageStat(
 /**
  * 마이페이지 메인 화면의 메뉴 아이템을 나타내는 데이터 클래스
  * @param key 메뉴를 식별하기 위한 고유 키 (e.g., "MANAGE", "FAVORITE")
- * @param iconName 아이콘을 식별하기 위한 문자열 (e.g., "CalendarToday")
- * @param label 메뉴 이름 (e.g., "일정관리")
+ * @param icon 아이콘을 식별하기 위한 문자열 (e.g., "CalendarToday")
+ * @param labels 메뉴 이름 (e.g., "일정관리")
  * @param badgeCount 배지에 표시될 숫자 (없으면 null)
  */
 data class MypageMenuItem(
     val key: String,
-    val iconName: String,
-    val label: String,
+    val icon: Any,
+    val labels: List<String>,
     val badgeCount: Int? = null
 )
 

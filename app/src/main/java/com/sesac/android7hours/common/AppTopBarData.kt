@@ -55,6 +55,10 @@ val NavBackStackEntry.topBarAsRouteName: TopBarData
                 AppTopBarData(title = "마이페이지")
             }
 
+            routeName.contains("MypageNavigationRoute.DetailScreen") -> {
+                AppTopBarData(title = "내 프로필")
+            }
+
             routeName.contains("Manage") -> {
                 AppTopBarData(title = "일정관리", titleIcon = AutoMirrored.Filled.ArrowBack)
             }

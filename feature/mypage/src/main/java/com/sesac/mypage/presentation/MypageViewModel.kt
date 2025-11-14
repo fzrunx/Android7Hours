@@ -8,7 +8,10 @@ import com.sesac.domain.model.MypageSchedule
 import com.sesac.domain.model.MypageStat
 import com.sesac.domain.usecase.mypage.MypageUseCase
 import com.sesac.domain.model.User
+import com.sesac.domain.model.Pet
+import com.sesac.domain.result.AuthResult
 import com.sesac.domain.usecase.auth.AuthUseCase
+import com.sesac.domain.usecase.pet.PetUseCase
 import com.sesac.domain.usecase.session.SessionUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -24,6 +27,7 @@ class MypageViewModel @Inject constructor(
     private val mypageUseCase: MypageUseCase,
     private val authUseCase: AuthUseCase,
     private val sessionUseCase: SessionUseCase,
+    private val petUseCase: PetUseCase,
 ) : ViewModel() {
     val tabLabels = listOf("산책로", "커뮤니티")
     private val _activeFilter = MutableStateFlow<String>(tabLabels[0])
@@ -31,6 +35,9 @@ class MypageViewModel @Inject constructor(
     // MypageMainScreen
     private val _stats = MutableStateFlow<List<MypageStat>>(emptyList())
     val stats = _stats.asStateFlow()
+    // MypageDetailScreen
+    private val _userPets = MutableStateFlow<List<Pet>>(emptyList())
+    val userPets = _userPets.asStateFlow()
     // MypageFavoriteScreen
     private val _favoriteWalkPaths = MutableStateFlow<List<FavoriteWalkPath>>(emptyList())
     val favoriteWalkPaths get() = _favoriteWalkPaths.asStateFlow()
@@ -53,6 +60,16 @@ class MypageViewModel @Inject constructor(
     fun getStats() {
         viewModelScope.launch {
             mypageUseCase.getMypageStatsUseCase().collectLatest { _stats.value = it }
+        }
+    }
+
+    fun getUserPets(userId: Int) {
+        viewModelScope.launch {
+            petUseCase.getUserPetsUseCase(userId).collectLatest { result ->
+                if (result is AuthResult.Success) {
+                    _userPets.value = result.resultData
+                }
+            }
         }
     }
 

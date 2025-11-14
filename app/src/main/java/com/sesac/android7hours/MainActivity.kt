@@ -107,6 +107,7 @@ class MainActivity : ComponentActivity() {
                         stringResource(cR.string.mypage_setting),
                         stringResource(cR.string.trail_create_page),
                         stringResource(cR.string.trail_detail_page),
+                        "내 정보",
                     ),
                     appTopBarData = finalTopBarData,
                     appBottomBarItem = appBottomBarItem,

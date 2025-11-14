@@ -5,6 +5,7 @@ import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import com.sesac.domain.model.CommonAuthUiState
+import com.sesac.mypage.presentation.ui.MypageDetailScreen
 import com.sesac.mypage.presentation.ui.MypageFavoriteScreen
 import com.sesac.mypage.presentation.ui.MypageMainScreen
 import com.sesac.mypage.presentation.ui.MypageManageScreen
@@ -31,5 +32,11 @@ fun NavGraphBuilder.mypageRoute(
     }
     composable<MypageNavigationRoute.SettingTab> {
         MypageSettingScreen(permissionStates = permissionState)
+    }
+    composable<MypageNavigationRoute.DetailScreen> {
+        MypageDetailScreen(
+            navController = navController,
+            uiState = uiState,
+        )
     }
 }

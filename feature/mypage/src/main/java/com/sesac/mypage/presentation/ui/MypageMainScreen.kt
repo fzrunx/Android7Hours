@@ -8,8 +8,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Help
 import androidx.compose.material.icons.automirrored.filled.Logout
+import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Shield
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -24,6 +29,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.sesac.common.component.CommonMenuItem
 import com.sesac.common.ui.theme.Android7HoursTheme
 import com.sesac.common.ui.theme.White
 import com.sesac.common.ui.theme.paddingLarge
@@ -34,11 +40,11 @@ import com.sesac.mypage.nav_graph.MypageNavigationRoute
 import com.sesac.mypage.presentation.MypageViewModel
 
 val menuItems = listOf(
-    MypageMenuItem(key = "MANAGE", iconName = "CalendarToday", label = "일정관리"),
-    MypageMenuItem(key = "FAVORITE", iconName = "Star", label = "즐겨찾기"),
-    MypageMenuItem(key = "SETTING", iconName = "Settings", label = "설정"),
-    MypageMenuItem(key = "HELP", iconName = "Help", label = "도움말"),
-    MypageMenuItem(key = "POLICY", iconName = "Shield", label = "개인정보 처리방침")
+    MypageMenuItem(key = "MANAGE", icon = Icons.Default.CalendarToday, labels = listOf("일정관리")),
+    MypageMenuItem(key = "FAVORITE", icon = Icons.Default.Star, labels = listOf("즐겨찾기")),
+    MypageMenuItem(key = "SETTING", icon = Icons.Default.Settings, labels = listOf("설정")),
+    MypageMenuItem(key = "HELP", icon = Icons.AutoMirrored.Filled.Help, labels = listOf("도움말")),
+    MypageMenuItem(key = "POLICY", icon = Icons.Default.Shield, labels = listOf("개인정보 처리방침"))
 )
 
 @Composable
@@ -67,7 +73,7 @@ fun MypageMainScreen(
                 name = uiState.fullName ?: "",
                 email = uiState.email ?: "",
                 imageUrl = "",
-                onNavigateToProfile = { /* navController.navigate("profile") */ }
+                onNavigateToProfile = { navController.navigate(MypageNavigationRoute.DetailScreen) }
             )
         }
 
@@ -86,7 +92,7 @@ fun MypageMainScreen(
             )
         }
         items(menuItems) { item ->
-            MenuItemView(
+            CommonMenuItem(
                 item = item,
                 onClick = {
                     when (item.key) {

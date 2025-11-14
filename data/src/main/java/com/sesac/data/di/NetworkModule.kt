@@ -1,6 +1,7 @@
 package com.sesac.data.di
 
 import com.sesac.data.source.api.AuthApi
+import com.sesac.data.source.api.PetsApi
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import dagger.Module
@@ -37,8 +38,15 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideHomeApi(
+    fun provideAuthApi(
         retrofit: Retrofit
     ): AuthApi =
         retrofit.create(AuthApi::class.java)
+
+    @Provides
+    @Singleton
+    fun providePetsApi(
+        retrofit: Retrofit
+    ): PetsApi =
+        retrofit.create(PetsApi::class.java)
 }
