@@ -28,6 +28,7 @@ sealed interface JoinUiState {
 }
 
 data class JoinFormState(
+    // ... (JoinFormState 내용 변경 없음) ...
     val email: String = "",
     val isEmailValid: Boolean = true,
     val password: String = "",
@@ -59,6 +60,8 @@ class AuthViewModel @Inject constructor(
     // State for Login Screen
     val loginEmail = mutableStateOf("")
     val loginPassword = mutableStateOf("")
+
+    // ... (onEmailChange ~ onJoinClick 함수는 변경 없음) ...
 
     fun onEmailChange(email: String) {
         val isValid = if (email.isNotEmpty()) ValidationUtils.isValidEmail(email) else true
@@ -187,8 +190,9 @@ class AuthViewModel @Inject constructor(
                 .collectLatest { result ->
                     when (result) {
                         is AuthResult.Success -> {
-                            val loginResponse = LoginResponse(result.resultData.access, result.resultData.refresh, result.resultData.user)
-                            sessionUseCase.saveSession(loginResponse)
+                            // [참고] result.resultData가 이미 LoginResponse 타입이므로
+                            // val loginResponse = LoginResponse(...) 코드는 생략 가능합니다.
+                            sessionUseCase.saveSession(result.resultData)
                             _joinUiState.value = JoinUiState.Success("Login successful!")
                         }
                         is AuthResult.NetworkError -> {
@@ -204,39 +208,34 @@ class AuthViewModel @Inject constructor(
                 }
         }
     }
-    fun onKakaoLoginSuccess(accessToken: String) {
-        // 1. 뷰모델이 토큰을 받았는지 로그로 확인
-        Log.d("AuthViewModel", "Received Kakao Access Token: $accessToken")
 
-        // 2. UI 상태를 '로딩'으로 변경 (이메일 로그인과 동일)
+    // --- [수정] onKakaoLoginSuccess 함수 ---
+    fun onKakaoLoginSuccess(accessToken: String) {
+        Log.d("AuthViewModel", "Received Kakao Access Token: $accessToken")
         _joinUiState.value = JoinUiState.Loading
 
         viewModelScope.launch {
-            try {
-                // --- (TODO: 3. Retrofit + Repository 로직) ---
-                // 이 accessToken을 GeoDjango 서버로 전송합니다.
-                // val response = authUseCase.sendKakaoToken(accessToken)
-
-                // if (response is AuthResult.Success) {
-                //    ... (서버가 준 7Hours 전용 토큰 저장)
-                //    sessionUseCase.saveSession(...)
-                //    _joinUiState.value = JoinUiState.Success("Login successful!")
-                // } else {
-                //    _joinUiState.value = JoinUiState.Error("서버 로그인 실패")
-                // }
-                // ---
-
-
-                // --- [임시 테스트 코드] ---
-                // 지금은 서버가 없으므로, 1초 뒤 강제로 '성공' 상태로 만듭니다.
-                delay(1000)
-                Log.d("AuthViewModel", "Simulating Kakao login success...")
-                _joinUiState.value = JoinUiState.Success("Login successful!") // [수정] Success 상태 통일
-                // ---
-
-            } catch (e: Exception) {
-                _joinUiState.value = JoinUiState.Error(e.message ?: "Unknown error")
-            }
+            // [수정] 이제 AuthUseCase에 실제로 존재하는 함수를 호출합니다
+            // (물론, 3단계에 걸쳐 이 함수를 Domain, Data 계층에 만들어야 합니다)
+            authUseCase.loginWithKakao(accessToken)
+                .collectLatest { result ->
+                    when (result) {
+                        // [수정] onLoginClick과 동일한 로직을 사용합니다
+                        is AuthResult.Success -> {
+                            sessionUseCase.saveSession(result.resultData)
+                            _joinUiState.value = JoinUiState.Success("Login successful!")
+                        }
+                        is AuthResult.NetworkError -> {
+                            _joinUiState.value = JoinUiState.Error(result.exception.message ?: "Network Error")
+                        }
+                        is AuthResult.Loading -> {
+                            _joinUiState.value = JoinUiState.Loading
+                        }
+                        else -> {
+                            // Not handled state
+                        }
+                    }
+                }
         }
     }
     // ---
@@ -244,5 +243,5 @@ class AuthViewModel @Inject constructor(
     fun resetUiState() {
         _joinUiState.value = JoinUiState.Idle
     }
-}
 
+}

@@ -131,6 +131,9 @@ fun AuthLoginScreen(
         }
     }
 
+    // [추가] 카카오 로그인 시 요청할 스코프 정의
+    val kakaoLoginScopes = listOf("profile_nickname", "account_email")
+
     Column(
         modifier = Modifier
             .fillMaxSize()

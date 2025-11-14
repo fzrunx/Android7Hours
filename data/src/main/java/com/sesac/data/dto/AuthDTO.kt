@@ -34,3 +34,11 @@ data class LoginRequestDTO(
     val email: String,
     val password: String,
 )
+
+@JsonClass(generateAdapter = true)
+data class KakaoLoginRequestDTO(
+    @Json(name = "access_token")
+    val accessToken: String,
+    val email: String?,
+    val nickname: String?
+)

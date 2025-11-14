@@ -1,10 +1,12 @@
 package com.sesac.data.mapper
 
 import com.sesac.data.dto.AuthDTO
+import com.sesac.data.dto.KakaoLoginRequestDTO
 import com.sesac.data.dto.LoginRequestDTO
 import com.sesac.data.dto.LoginResponseDTO
 import com.sesac.data.dto.TokenDTO
 import com.sesac.domain.model.Auth
+import com.sesac.domain.model.KakaoLoginRequest
 import com.sesac.domain.model.LoginRequest
 import com.sesac.domain.model.LoginResponse
 import com.sesac.domain.model.Token
@@ -51,7 +53,7 @@ fun TokenDTO.toToken() = Token(
 )
 
 // Login Request/Response
-fun LoginRequest.LoginRequestDTO() = LoginRequestDTO(
+fun LoginRequest.toLoginRequestDTO() = LoginRequestDTO(
     email = this.email,
     password = this.password,
 )
@@ -71,4 +73,10 @@ fun LoginResponseDTO.toLoginResponse() = LoginResponse(
     refresh = refresh,
     access = access,
     user = user.toUser(),
+)
+
+fun KakaoLoginRequest.toDTO() = KakaoLoginRequestDTO(
+    accessToken = this.accessToken,
+    email = this.email,
+    nickname = this.nickname
 )
