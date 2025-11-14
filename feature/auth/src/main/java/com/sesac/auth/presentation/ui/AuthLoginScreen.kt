@@ -77,12 +77,13 @@ fun AuthLoginScreen(
                         PackageManager.GET_SIGNATURES
                     )
                 }
-                val signatures: Array<Signature> = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                    packageInfo.signingInfo?.apkContentsSigners ?: emptyArray()
-                } else {
-                    @Suppress("DEPRECATION")
-                    packageInfo.signatures ?: emptyArray()
-                }
+                val signatures: Array<Signature> =
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                        packageInfo.signingInfo?.apkContentsSigners ?: emptyArray()
+                    } else {
+                        @Suppress("DEPRECATION")
+                        packageInfo.signatures ?: emptyArray()
+                    }
                 if (signatures.isEmpty()) {
                     Log.e("KakaoHashKey", "No signatures found.")
                     return@LaunchedEffect
@@ -143,14 +144,16 @@ fun AuthLoginScreen(
             value = email,
             onValueChange = { viewModel.loginEmail.value = it },
             label = { Text("Email") },
-            modifier = Modifier.fillMaxWidth() // [수정] fillMaxWidth() 추가
+            modifier = Modifier.fillMaxWidth(), // [수정] fillMaxWidth() 추가
+            maxLines = 1,
         )
         Spacer(modifier = Modifier.height(8.dp))
         OutlinedTextField(
             value = password,
             onValueChange = { viewModel.loginPassword.value = it },
             label = { Text("Password") },
-            modifier = Modifier.fillMaxWidth() // [수정] fillMaxWidth() 추가
+            modifier = Modifier.fillMaxWidth(), // [수정] fillMaxWidth() 추가
+            maxLines = 1,
         )
         Spacer(modifier = Modifier.height(16.dp))
 

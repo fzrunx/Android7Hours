@@ -12,9 +12,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
-import androidx.compose.material.icons.automirrored.filled.Login
 import androidx.compose.material.icons.filled.AccountCircle
-import androidx.compose.material.icons.filled.Login
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -24,6 +22,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.naver.maps.map.MapView
@@ -32,6 +31,7 @@ import com.sesac.android7hours.common.topBarAsRouteName
 import com.sesac.android7hours.nav_graph.AppBottomBarItem
 import com.sesac.android7hours.nav_graph.AppNavHost
 import com.sesac.auth.nav_graph.AuthNavigationRoute
+import com.sesac.common.CommonViewModel
 import com.sesac.common.ui.theme.Android7HoursTheme
 import com.sesac.home.nav_graph.EntryPointScreen
 import com.sesac.home.nav_graph.HomeNavigationRoute
@@ -46,14 +46,14 @@ import com.sesac.common.R as cR
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
-    private val mainViewModel: MainViewModel by viewModels()
+    private val commonViewModel: CommonViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
             val context = LocalContext.current
-            val mainUiState by mainViewModel.uiState.collectAsState()
+            val uiState by commonViewModel.uiState.collectAsStateWithLifecycle()
             val trailMapView = MapView(context)
             val monitorMapView = MapView(context)
             val trailViewModel = hiltViewModel<TrailViewModel>()
@@ -61,13 +61,13 @@ class MainActivity : ComponentActivity() {
             val startDestination = HomeNavigationRoute.HomeTab
             val navBackStackEntry by navController.currentBackStackEntryAsState()
 
-            val topBarActions = if (mainUiState.isLoggedIn) {
+            val topBarActions = if (uiState.isLoggedIn) {
                 listOf(
-                    TopBarAction.TextAction(text = mainUiState.nickname ?: "User"),
+                    TopBarAction.TextAction(text = uiState.nickname ?: "User"),
                     TopBarAction.IconAction(
                         icon = Icons.AutoMirrored.Filled.ExitToApp,
                         contentDescription = "Logout",
-                        onClick = { mainViewModel.onLogout() }
+                        onClick = { commonViewModel.onLogout() }
                     )
                 )
             } else {
@@ -118,9 +118,11 @@ class MainActivity : ComponentActivity() {
                             paddingValues = paddingValues,
                             navController = navController,
                             nav2Home = { navController.navigate(HomeNavigationRoute.HomeTab) },
+                            nav2LoginScreen = { navController.navigate(AuthNavigationRoute.LoginTab) },
                             startDestination = startDestination,
+                            uiState = uiState,
                             isSearchOpen = isSearchOpen,
-                            onStartFollowing = { UserPath -> Unit },
+                            onStartFollowing = { Any -> Unit },
                             trailLifecycleHelper = trailLifecycleHelper,
                             monitorLifecycleHelper = monitorLifecycleHelper,
                             permissionState = permissionStates,

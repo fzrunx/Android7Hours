@@ -6,16 +6,10 @@ import com.sesac.domain.local.model.FavoriteCommunityPost
 import com.sesac.domain.local.model.FavoriteWalkPath
 import com.sesac.domain.local.model.MypageSchedule
 import com.sesac.domain.local.model.MypageStat
-import com.sesac.domain.local.usecase.mypage.AddScheduleUseCase
-import com.sesac.domain.local.usecase.mypage.DeleteFavoriteCommunityPostUseCase
-import com.sesac.domain.local.usecase.mypage.DeleteFavoriteWalkPathsUseCase
-import com.sesac.domain.local.usecase.mypage.DeleteScheduleUseCase
-import com.sesac.domain.local.usecase.mypage.GetFavoriteCommunityPostsUseCase
-import com.sesac.domain.local.usecase.mypage.GetFavoriteWalkPathsUseCase
-import com.sesac.domain.local.usecase.mypage.GetMypageStatsUseCase
-import com.sesac.domain.local.usecase.mypage.GetSchedulesUseCase
 import com.sesac.domain.local.usecase.mypage.MypageUseCase
-import com.sesac.domain.local.usecase.mypage.UpdatePermissionStatusUseCase
+import com.sesac.domain.remote.model.User
+import com.sesac.domain.remote.usecase.auth.AuthUseCase
+import com.sesac.domain.remote.usecase.session.SessionUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -28,6 +22,8 @@ import javax.inject.Inject
 @HiltViewModel
 class MypageViewModel @Inject constructor(
     private val mypageUseCase: MypageUseCase,
+    private val authUseCase: AuthUseCase,
+    private val sessionUseCase: SessionUseCase,
 ) : ViewModel() {
     val tabLabels = listOf("산책로", "커뮤니티")
     private val _activeFilter = MutableStateFlow<String>(tabLabels[0])
@@ -128,6 +124,24 @@ class MypageViewModel @Inject constructor(
             mypageUseCase.updatePermissionStatusUseCase(key, isEnabled).collectLatest {
                 // Can optionally reload permissions if the state is mutable
             }
+        }
+    }
+
+    fun logout() {
+        viewModelScope.launch {
+            sessionUseCase.clearSession()
+        }
+    }
+
+    fun signout(user: User) {
+        viewModelScope.launch {
+            authUseCase.deleteUserUseCase(user.id).collectLatest { }
+        }
+    }
+
+    fun signout(id: Int) {
+        viewModelScope.launch {
+            authUseCase.deleteUserUseCase(id).collectLatest { }
         }
     }
 }
