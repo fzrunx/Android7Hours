@@ -1,6 +1,5 @@
 package com.sesac.data.dto
 
-import com.sesac.domain.remote.model.User
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
 

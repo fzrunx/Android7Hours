@@ -1,10 +1,10 @@
 package com.sesac.android7hours.di
 
-import com.sesac.domain.local.repository.CommunityRepository
-import com.sesac.domain.local.usecase.community.CommunityUseCase
-import com.sesac.domain.local.usecase.community.GetAllCommunityUseCase
-import com.sesac.domain.local.usecase.community.GetCommunityDetailUseCase
-import com.sesac.domain.local.usecase.community.GetCommunitySearchUseCase
+import com.sesac.domain.repository.CommunityRepository
+import com.sesac.domain.usecase.community.CommunityUseCase
+import com.sesac.domain.usecase.community.GetAllCommunityUseCase
+import com.sesac.domain.usecase.community.GetCommunityDetailUseCase
+import com.sesac.domain.usecase.community.GetCommunitySearchUseCase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn

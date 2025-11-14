@@ -25,7 +25,7 @@ import com.naver.maps.map.util.FusedLocationSource
 import com.sesac.common.ui.theme.paddingLarge
 import kotlinx.coroutines.delay
 import com.sesac.common.utils.PathMarker
-import com.sesac.domain.local.model.UserPath
+import com.sesac.domain.model.UserPath
 import com.sesac.trail.nav_graph.TrailNavigationRoute
 import com.sesac.trail.presentation.TrailMapViewLifecycleHelper
 import com.sesac.trail.presentation.TrailViewModel

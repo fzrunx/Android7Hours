@@ -2,10 +2,8 @@ package com.sesac.monitor.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.sesac.domain.local.model.LatLngPoint
-import com.sesac.domain.local.usecase.monitor.GetAllDummyLatLngUseCase
-import com.sesac.domain.local.usecase.monitor.GetRandomDummyLatLngUseCase
-import com.sesac.domain.local.usecase.monitor.MonitorUseCase
+import com.sesac.domain.model.LatLngPoint
+import com.sesac.domain.usecase.monitor.MonitorUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow

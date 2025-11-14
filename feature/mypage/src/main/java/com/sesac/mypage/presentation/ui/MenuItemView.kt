@@ -34,7 +34,7 @@ import com.sesac.common.ui.theme.paddingLarge
 import com.sesac.common.ui.theme.paddingMedium
 import com.sesac.common.ui.theme.paddingMicro
 import com.sesac.common.ui.theme.paddingSmall
-import com.sesac.domain.local.model.MypageMenuItem
+import com.sesac.domain.model.MypageMenuItem
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

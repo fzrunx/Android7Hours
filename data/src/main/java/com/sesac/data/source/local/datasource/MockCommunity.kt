@@ -1,6 +1,6 @@
 package com.sesac.data.source.local.datasource
 
-import com.sesac.domain.local.model.Community
+import com.sesac.domain.model.Community
 import com.sesac.common.R
 
 object MockCommunity {

@@ -1,8 +1,8 @@
 package com.sesac.data.repository
 
 import com.sesac.data.source.local.datasource.MockCommunity
-import com.sesac.domain.local.model.Community
-import com.sesac.domain.local.repository.CommunityRepository
+import com.sesac.domain.model.Community
+import com.sesac.domain.repository.CommunityRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import javax.inject.Inject

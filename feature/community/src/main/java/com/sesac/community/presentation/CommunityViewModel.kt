@@ -6,9 +6,8 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.sesac.community.utils.calculateTimeAgo
-import com.sesac.domain.local.model.Community
-import com.sesac.domain.local.usecase.community.CommunityUseCase
-import com.sesac.domain.local.usecase.community.GetAllCommunityUseCase
+import com.sesac.domain.model.Community
+import com.sesac.domain.usecase.community.CommunityUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted

@@ -4,7 +4,7 @@ import androidx.compose.runtime.snapshots.SnapshotStateMap
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
-import com.sesac.domain.local.model.CommonAuthUiState
+import com.sesac.domain.model.CommonAuthUiState
 import com.sesac.mypage.presentation.ui.MypageFavoriteScreen
 import com.sesac.mypage.presentation.ui.MypageMainScreen
 import com.sesac.mypage.presentation.ui.MypageManageScreen

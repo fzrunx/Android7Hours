@@ -63,7 +63,7 @@ import com.sesac.common.ui.theme.Red500
 import com.sesac.common.ui.theme.paddingLarge
 import com.sesac.common.ui.theme.paddingMedium
 import com.sesac.common.ui.theme.paddingSmall
-import com.sesac.domain.local.model.MypageSchedule
+import com.sesac.domain.model.MypageSchedule
 import com.sesac.mypage.presentation.MypageViewModel
 import org.threeten.bp.Instant
 import org.threeten.bp.LocalDate

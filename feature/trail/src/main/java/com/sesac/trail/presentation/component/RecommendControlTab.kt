@@ -35,7 +35,7 @@ import com.sesac.common.ui.theme.PrimaryGreenLight
 import com.sesac.common.ui.theme.Purple600
 import com.sesac.common.ui.theme.paddingMicro
 import com.sesac.common.ui.theme.paddingSmall
-import com.sesac.domain.local.model.UserPath
+import com.sesac.domain.model.UserPath
 
 
 @Composable
