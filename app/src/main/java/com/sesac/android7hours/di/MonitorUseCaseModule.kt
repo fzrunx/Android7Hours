@@ -1,9 +1,9 @@
 package com.sesac.android7hours.di
 
-import com.sesac.domain.local.repository.MonitorRepository
-import com.sesac.domain.local.usecase.monitor.GetAllDummyLatLngUseCase
-import com.sesac.domain.local.usecase.monitor.GetRandomDummyLatLngUseCase
-import com.sesac.domain.local.usecase.monitor.MonitorUseCase
+import com.sesac.domain.repository.MonitorRepository
+import com.sesac.domain.usecase.monitor.GetAllDummyLatLngUseCase
+import com.sesac.domain.usecase.monitor.GetRandomDummyLatLngUseCase
+import com.sesac.domain.usecase.monitor.MonitorUseCase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn

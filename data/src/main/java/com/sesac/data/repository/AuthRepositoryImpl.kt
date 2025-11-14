@@ -5,10 +5,10 @@ import com.sesac.data.mapper.toAuthDTO
 import com.sesac.data.mapper.toLoginResponse
 import com.sesac.data.mapper.toUserList
 import com.sesac.data.source.api.AuthApi
-import com.sesac.domain.remote.model.Auth
-import com.sesac.domain.remote.model.LoginRequest
-import com.sesac.domain.remote.repository.AuthRepository
-import com.sesac.domain.remote.result.AuthResult
+import com.sesac.domain.model.Auth
+import com.sesac.domain.model.LoginRequest
+import com.sesac.domain.repository.AuthRepository
+import com.sesac.domain.result.AuthResult
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.flow

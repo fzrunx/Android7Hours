@@ -6,7 +6,7 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
-import com.sesac.domain.remote.model.User
+import com.sesac.domain.model.User
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.adapter
 

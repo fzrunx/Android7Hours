@@ -1,10 +1,10 @@
 package com.sesac.android7hours.di
 
-import com.sesac.domain.local.repository.TrailRepository
-import com.sesac.domain.local.usecase.trail.AddMyRecordUseCase
-import com.sesac.domain.local.usecase.trail.GetAllMyRecordUseCase
-import com.sesac.domain.local.usecase.trail.GetAllRecommendedPathsUseCase
-import com.sesac.domain.local.usecase.trail.TrailUseCase
+import com.sesac.domain.repository.TrailRepository
+import com.sesac.domain.usecase.trail.AddMyRecordUseCase
+import com.sesac.domain.usecase.trail.GetAllMyRecordUseCase
+import com.sesac.domain.usecase.trail.GetAllRecommendedPathsUseCase
+import com.sesac.domain.usecase.trail.TrailUseCase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn

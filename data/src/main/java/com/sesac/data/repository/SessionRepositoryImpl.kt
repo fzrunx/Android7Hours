@@ -1,9 +1,9 @@
 package com.sesac.data.repository
 
 import com.sesac.data.datastore.AuthDataStore
-import com.sesac.domain.remote.model.LoginResponse
-import com.sesac.domain.remote.model.User
-import com.sesac.domain.remote.repository.SessionRepository
+import com.sesac.domain.model.LoginResponse
+import com.sesac.domain.model.User
+import com.sesac.domain.repository.SessionRepository
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 import javax.inject.Singleton

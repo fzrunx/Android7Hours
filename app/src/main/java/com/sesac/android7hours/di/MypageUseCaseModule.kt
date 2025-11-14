@@ -1,16 +1,16 @@
 package com.sesac.android7hours.di
 
-import com.sesac.domain.local.repository.MypageRepository
-import com.sesac.domain.local.usecase.mypage.AddScheduleUseCase
-import com.sesac.domain.local.usecase.mypage.DeleteFavoriteCommunityPostUseCase
-import com.sesac.domain.local.usecase.mypage.DeleteFavoriteWalkPathsUseCase
-import com.sesac.domain.local.usecase.mypage.DeleteScheduleUseCase
-import com.sesac.domain.local.usecase.mypage.GetFavoriteCommunityPostsUseCase
-import com.sesac.domain.local.usecase.mypage.GetFavoriteWalkPathsUseCase
-import com.sesac.domain.local.usecase.mypage.GetMypageStatsUseCase
-import com.sesac.domain.local.usecase.mypage.GetSchedulesUseCase
-import com.sesac.domain.local.usecase.mypage.MypageUseCase
-import com.sesac.domain.local.usecase.mypage.UpdatePermissionStatusUseCase
+import com.sesac.domain.repository.MypageRepository
+import com.sesac.domain.usecase.mypage.AddScheduleUseCase
+import com.sesac.domain.usecase.mypage.DeleteFavoriteCommunityPostUseCase
+import com.sesac.domain.usecase.mypage.DeleteFavoriteWalkPathsUseCase
+import com.sesac.domain.usecase.mypage.DeleteScheduleUseCase
+import com.sesac.domain.usecase.mypage.GetFavoriteCommunityPostsUseCase
+import com.sesac.domain.usecase.mypage.GetFavoriteWalkPathsUseCase
+import com.sesac.domain.usecase.mypage.GetMypageStatsUseCase
+import com.sesac.domain.usecase.mypage.GetSchedulesUseCase
+import com.sesac.domain.usecase.mypage.MypageUseCase
+import com.sesac.domain.usecase.mypage.UpdatePermissionStatusUseCase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn

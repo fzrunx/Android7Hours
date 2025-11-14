@@ -2,14 +2,14 @@ package com.sesac.mypage.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.sesac.domain.local.model.FavoriteCommunityPost
-import com.sesac.domain.local.model.FavoriteWalkPath
-import com.sesac.domain.local.model.MypageSchedule
-import com.sesac.domain.local.model.MypageStat
-import com.sesac.domain.local.usecase.mypage.MypageUseCase
-import com.sesac.domain.remote.model.User
-import com.sesac.domain.remote.usecase.auth.AuthUseCase
-import com.sesac.domain.remote.usecase.session.SessionUseCase
+import com.sesac.domain.model.FavoriteCommunityPost
+import com.sesac.domain.model.FavoriteWalkPath
+import com.sesac.domain.model.MypageSchedule
+import com.sesac.domain.model.MypageStat
+import com.sesac.domain.usecase.mypage.MypageUseCase
+import com.sesac.domain.model.User
+import com.sesac.domain.usecase.auth.AuthUseCase
+import com.sesac.domain.usecase.session.SessionUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow

@@ -4,11 +4,11 @@ import com.sesac.data.dto.AuthDTO
 import com.sesac.data.dto.LoginRequestDTO
 import com.sesac.data.dto.LoginResponseDTO
 import com.sesac.data.dto.TokenDTO
-import com.sesac.domain.remote.model.Auth
-import com.sesac.domain.remote.model.LoginRequest
-import com.sesac.domain.remote.model.LoginResponse
-import com.sesac.domain.remote.model.Token
-import com.sesac.domain.remote.model.User
+import com.sesac.domain.model.Auth
+import com.sesac.domain.model.LoginRequest
+import com.sesac.domain.model.LoginResponse
+import com.sesac.domain.model.Token
+import com.sesac.domain.model.User
 
 // User
 fun User.toAuthDTO() = AuthDTO(

@@ -1,11 +1,11 @@
 package com.sesac.android7hours.di
 
-import com.sesac.domain.remote.repository.AuthRepository
-import com.sesac.domain.remote.usecase.auth.AuthUseCase
-import com.sesac.domain.remote.usecase.auth.DeleteUserUseCase
-import com.sesac.domain.remote.usecase.auth.GetAllUsersUseCase
-import com.sesac.domain.remote.usecase.auth.LoginUseCase
-import com.sesac.domain.remote.usecase.auth.PostUserUseCase
+import com.sesac.domain.repository.AuthRepository
+import com.sesac.domain.usecase.auth.AuthUseCase
+import com.sesac.domain.usecase.auth.DeleteUserUseCase
+import com.sesac.domain.usecase.auth.GetAllUsersUseCase
+import com.sesac.domain.usecase.auth.LoginUseCase
+import com.sesac.domain.usecase.auth.PostUserUseCase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn

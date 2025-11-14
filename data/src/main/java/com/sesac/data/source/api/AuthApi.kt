@@ -2,7 +2,7 @@ package com.sesac.data.source.api
 
 import com.sesac.data.dto.AuthDTO
 import com.sesac.data.dto.LoginResponseDTO
-import com.sesac.domain.remote.model.LoginRequest
+import com.sesac.domain.model.LoginRequest
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET

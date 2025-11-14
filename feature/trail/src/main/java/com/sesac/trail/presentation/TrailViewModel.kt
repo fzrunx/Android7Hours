@@ -2,12 +2,9 @@ package com.sesac.trail.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.sesac.domain.local.model.MyRecord
-import com.sesac.domain.local.model.UserPath
-import com.sesac.domain.local.usecase.trail.GetAllMyRecordUseCase
-import com.sesac.domain.local.usecase.trail.GetAllRecommendedPathsUseCase
-import com.sesac.domain.local.usecase.trail.AddMyRecordUseCase
-import com.sesac.domain.local.usecase.trail.TrailUseCase
+import com.sesac.domain.model.MyRecord
+import com.sesac.domain.model.UserPath
+import com.sesac.domain.usecase.trail.TrailUseCase
 import com.sesac.trail.presentation.ui.WalkPathTab
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow

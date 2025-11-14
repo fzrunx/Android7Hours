@@ -2,8 +2,8 @@ package com.sesac.common
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.sesac.domain.local.model.CommonAuthUiState
-import com.sesac.domain.remote.usecase.session.SessionUseCase
+import com.sesac.domain.model.CommonAuthUiState
+import com.sesac.domain.usecase.session.SessionUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow

@@ -66,7 +66,7 @@ import com.sesac.common.ui.theme.permEnabledBg
 import com.sesac.common.ui.theme.permEnabledBorder
 import com.sesac.common.ui.theme.shapeCard
 import com.sesac.common.ui.theme.shapeIcon
-import com.sesac.domain.local.model.MypagePermission
+import com.sesac.domain.model.MypagePermission
 import com.sesac.mypage.presentation.MypageViewModel
 
 val permissions = listOf(
