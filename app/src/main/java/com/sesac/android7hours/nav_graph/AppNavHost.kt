@@ -10,14 +10,13 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import com.sesac.auth.nav_graph.authRoute
+import com.sesac.common.component.CommonMapLifecycle
 import com.sesac.community.nav_graph.communityRoute
 import com.sesac.domain.result.AuthUiState
 import com.sesac.home.nav_graph.homeRoute
 import com.sesac.monitor.nav_graph.monitorRoute
-import com.sesac.monitor.presentation.MonitorMapViewLifecycleHelper
 import com.sesac.mypage.nav_graph.mypageRoute
 import com.sesac.trail.nav_graph.trailRoute
-import com.sesac.trail.presentation.TrailMapViewLifecycleHelper
 import com.sesac.trail.presentation.TrailViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -32,8 +31,7 @@ fun AppNavHost(
     uiState: AuthUiState,
     isSearchOpen: MutableState<Boolean>,
     onStartFollowing: (Any) -> Unit,
-    monitorLifecycleHelper: MonitorMapViewLifecycleHelper,
-    trailLifecycleHelper: TrailMapViewLifecycleHelper,
+    commonMapLifecycle: CommonMapLifecycle,
 //    onSave: () -> Unit,
     permissionState: SnapshotStateMap<String, Boolean>,
     ) {
@@ -55,14 +53,14 @@ fun AppNavHost(
             trailViewModel = trailViewModel,
             navController = navController,
             onStartFollowing = onStartFollowing,
-            trailLifecycleHelper = trailLifecycleHelper,
+            commonMapLifecycle = commonMapLifecycle,
 //            path = ,
 //            onSave = onSave,
             )
         communityRoute(isSearchOpen = isSearchOpen,)
         monitorRoute(
             navController = navController,
-            monitorLifecycleHelper = monitorLifecycleHelper,
+            commonMapLifecycle = commonMapLifecycle,
         )
         mypageRoute(
             navController = navController,

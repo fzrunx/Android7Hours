@@ -1,6 +1,7 @@
 package com.sesac.monitor.presentation.ui
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -10,9 +11,7 @@ import androidx.compose.material.icons.twotone.Videocam
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -20,8 +19,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.naver.maps.map.NaverMap
 import com.sesac.common.component.CommonFilterTabs
+import com.sesac.common.component.CommonMapLifecycle
 import com.sesac.common.ui.theme.paddingMedium
-import com.sesac.monitor.presentation.MonitorMapViewLifecycleHelper
 import com.sesac.monitor.presentation.MonitorViewModel
 import com.sesac.common.R as cR
 
@@ -30,7 +29,7 @@ fun MonitorMainScreen (
     modifier: Modifier = Modifier,
     navController: NavController,
     viewModel: MonitorViewModel = hiltViewModel(),
-    monitorLifecycleHelper: MonitorMapViewLifecycleHelper, // 라이프 사이클 따로 관리하려고 만듬
+    commonMapLifecycle: CommonMapLifecycle,
     onMapReady: ((NaverMap) -> Unit)? = null,
     content: @Composable () -> Unit = {},
     ) {
@@ -44,25 +43,43 @@ fun MonitorMainScreen (
         }
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-    ) {
+    // ⭐ 여기서 공통 정의 (중복 제거 핵심)
+    val filterOptions = listOf(webCam, GPS)
+    val filterIcons = listOf(Icons.TwoTone.Videocam, Icons.Default.Navigation)
+    val tabBar: @Composable (Modifier) -> Unit = { modifierForPosition ->
         CommonFilterTabs(
-            filterOptions = listOf(stringResource(cR.string.monitor_button_webcam), stringResource(cR.string.monitor_button_GPS)),
-            modifier = Modifier.padding(horizontal = paddingMedium),
+            modifier = modifierForPosition.padding(horizontal = paddingMedium),
+            filterOptions = filterOptions,
             selectedFilter = activeTab,
-            fiterIcons = listOf(Icons.TwoTone.Videocam, Icons.Default.Navigation),
-            horizontalArrangement = Arrangement.Center,
-            onFilterSelected = { viewModel.selecteTab(it) },
+            onFilterSelected = viewModel::selecteTab,
+            fiterIcons = filterIcons,
         )
+    }
 
-        when(activeTab) {
-            webCam -> MonitorCamScreen()
-            GPS -> MonitorGpsScreen(
-                monitorLifecycleHelper = monitorLifecycleHelper,
-                onMapReady = null,
-            )
+    when (activeTab) {
+        GPS -> {
+            Box(modifier = Modifier.fillMaxSize()) {
+                MonitorGpsScreen(
+                    commonMapLifecycle = commonMapLifecycle,
+                    onMapReady = null,
+                )
+
+                // ⭐ GPS는 화면 위에 오버레이 → Modifier만 다르게 적용
+                tabBar(
+                    Modifier
+                        .align(Alignment.TopCenter)
+                )
+            }
+        }
+
+        else -> {
+            Column(modifier = Modifier.fillMaxSize()) {
+
+                // ⭐ CAM은 일반 Column 상단에 배치
+                tabBar(Modifier)
+
+                MonitorCamScreen()
+            }
         }
     }
 }

@@ -1,7 +1,6 @@
 package com.sesac.trail.presentation.ui
 
 import android.util.Log
-import android.view.ViewGroup
 import androidx.activity.compose.LocalActivity
 import androidx.compose.runtime.Composable
 import androidx.compose.animation.AnimatedVisibility
@@ -13,21 +12,23 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.BiasAlignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.currentStateAsState
 import androidx.navigation.NavController
 import com.naver.maps.map.LocationTrackingMode
-import com.naver.maps.map.MapView
 import com.naver.maps.map.NaverMap
 import com.naver.maps.map.util.FusedLocationSource
+import com.sesac.common.component.CommonMapLifecycle
+import com.sesac.common.component.CommonMapView
 import com.sesac.common.ui.theme.paddingLarge
 import kotlinx.coroutines.delay
 import com.sesac.common.utils.PathMarker
 import com.sesac.domain.model.UserPath
 import com.sesac.trail.nav_graph.TrailNavigationRoute
-import com.sesac.trail.presentation.TrailMapViewLifecycleHelper
 import com.sesac.trail.presentation.TrailViewModel
 import com.sesac.trail.presentation.component.BottomSheetContent
 import com.sesac.trail.presentation.component.RecordingControls
@@ -40,17 +41,17 @@ enum class WalkPathTab { RECOMMENDED, MY_RECORDS }
 fun TrailMainScreen(
     viewModel: TrailViewModel = hiltViewModel(),
     navController: NavController,
-    trailLifecycleHelper: TrailMapViewLifecycleHelper, // 라이프 사이클 따로 관리하려고 만듬
+    commonMapLifecycle : CommonMapLifecycle,
     onMapReady: ((NaverMap) -> Unit)? = null
 ) {
     val activity = LocalActivity.current
-    val context = LocalContext.current
-
+    val lifecycle = LocalLifecycleOwner.current.lifecycle
+    val lifecycleState by lifecycle.currentStateAsState()
     val recommendedPaths by viewModel.recommendedPaths.collectAsStateWithLifecycle()
     val myRecords by viewModel.myRecords.collectAsStateWithLifecycle()
 
     val isSheetOpen by viewModel.isSheetOpen.collectAsStateWithLifecycle()
-    val isPaused  by viewModel.isPaused.collectAsStateWithLifecycle()
+    val isPaused by viewModel.isPaused.collectAsStateWithLifecycle()
     val isFollowingPath by viewModel.isFollowingPath.collectAsStateWithLifecycle()
     val isRecording by viewModel.isRecoding.collectAsStateWithLifecycle()
     val recordingTime by viewModel.recordingTime.collectAsStateWithLifecycle()
@@ -61,8 +62,6 @@ fun TrailMainScreen(
         activity?.let { FusedLocationSource(it, 1000) }
             ?: throw IllegalStateException("Activity not found for FusedLocationSource")
     }
-    val trailMapView = remember { MapView(context) }
-    val trailLifecycleHelper = remember { TrailMapViewLifecycleHelper(trailMapView) }
 
     // --- 타이머 로직 (녹화 중일 때 시간 증가) ---
     LaunchedEffect(key1 = isRecording, key2 = isPaused) {
@@ -73,49 +72,36 @@ fun TrailMainScreen(
             }
         }
     }
-    // 기록 시작 시 시트 닫기 (React의 useEffect)
-    // -> onClick 핸들러에서 직접 처리하는 것이 Compose 방식
-    // 화면 종료 시 MapView 안전하게 해제
-    DisposableEffect(Unit) {
-        onDispose {
-            val parent = trailMapView.parent as? ViewGroup
-            parent?.removeView(trailMapView) // 부모에서 제거
-            trailLifecycleHelper.onPause()
-            trailLifecycleHelper.onStop()
-            trailLifecycleHelper.onDestroy()
-
-            // 화면 종료 시 Bottom Sheet 상태 초기화
-            viewModel.updateIsSheetOpen(true)
-        }
-    }
 
     Box(
         modifier = Modifier
             .fillMaxSize()
     ) {
-        // ✅ 지도 영역 (AsyncImage → AndroidView 로 대체)
-        AndroidView(
-            modifier = Modifier.fillMaxSize(),
-            factory = { context ->
-                trailLifecycleHelper.trailMapView.apply {
-                    trailLifecycleHelper.onCreate(null)
-                    getMapAsync { naverMap ->
-                        naverMap.locationSource = locationSource
-                        naverMap.locationTrackingMode = LocationTrackingMode.Follow
-                        // ✅ Trail 용 지도 세팅 (기본 위치 / UI 세팅 등)
-                        naverMap.uiSettings.isLocationButtonEnabled = true
-                        naverMap.uiSettings.isZoomControlEnabled = false
-
-                        // ✅ onMapReady 시점에 콜백 실행 가능
-                        Log.d("TrailMainScreen", "지도 준비 완료")
+        // ✅ 지도 영역 (AsyncImage → AndroidView 로 대체) // 🔹 AndroidView 안에서 attach 처리
+        key(lifecycleState) {
+            if (lifecycleState.isAtLeast(Lifecycle.State.CREATED)) {
+                AndroidView(
+                    modifier = Modifier.fillMaxSize(),
+                    factory = { context ->
+                        CommonMapView.getMapView(context).apply {
+                            getMapAsync { naverMap ->
+                                naverMap.locationSource = locationSource
+                                naverMap.locationTrackingMode = LocationTrackingMode.Follow
+                                // ✅ Trail 용 지도 세팅 (기본 위치 / UI 세팅 등)
+                                naverMap.uiSettings.isLocationButtonEnabled = true
+                                naverMap.uiSettings.isZoomControlEnabled = false
+                                onMapReady?.invoke(naverMap) // 🔹 화면마다 콜백 재등록
+                                // ✅ onMapReady 시점에 콜백 실행 가능
+                                Log.d("TrailMainScreen", "지도 준비 완료")
+                            }
+                        }
+                    },
+                    update = {
+                        it.requestLayout()
                     }
-                }
-            },
-            update = {
-                trailMapView ->
-                trailLifecycleHelper.onResume()
+                )
             }
-        )
+        }
         // ✅ 마커 표시
         if (!isRecording) {
             recommendedPaths.forEach { path ->
@@ -204,19 +190,3 @@ fun TrailMainScreen(
         }
     }
 }
-//} 
-
-
-
-
-//@Preview(showBackground = true)
-//@Composable
-//fun TrailMainScreenPreview_Simple() {
-//    val navController = rememberNavController()
-//    val context = LocalContext.current
-//    val lifecycleHelper = remember { MapViewLifecycleHelper(context) }
-//
-//    MaterialTheme {
-//        TrailMainScreen(navController = navController, lifecycleHelper = lifecycleHelper)
-//    }
-//}
