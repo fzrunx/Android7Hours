@@ -3,8 +3,8 @@ package com.sesac.trail.nav_graph
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
+import com.sesac.common.component.CommonMapLifecycle
 import com.sesac.domain.local.model.UserPath
-import com.sesac.trail.presentation.TrailMapViewLifecycleHelper
 import com.sesac.trail.presentation.TrailViewModel
 import com.sesac.trail.presentation.ui.TrailCreateScreen
 import com.sesac.trail.presentation.ui.TrailDetailScreen
@@ -17,13 +17,13 @@ fun NavGraphBuilder.trailRoute(
 //    onSave: () -> Unit,
 //    path: UserPath,
     onStartFollowing: (UserPath) -> Unit,
-    trailLifecycleHelper: TrailMapViewLifecycleHelper,
+    commonMapLifecycle : CommonMapLifecycle,
 ) {
     composable<TrailNavigationRoute.TrailMainTab> {
         TrailMainScreen(
             viewModel = trailViewModel,
             navController = navController,
-            trailLifecycleHelper = trailLifecycleHelper
+            commonMapLifecycle = commonMapLifecycle,
         )
     }
     composable<TrailNavigationRoute.TrailCreateTab> {

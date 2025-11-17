@@ -12,9 +12,9 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
-import androidx.compose.material.icons.automirrored.filled.Login
 import androidx.compose.material.icons.filled.AccountCircle
-import androidx.compose.material.icons.filled.Login
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -24,20 +24,21 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.naver.maps.map.MapView
 import com.sesac.android7hours.common.AppTopBarData
 import com.sesac.android7hours.common.topBarAsRouteName
 import com.sesac.android7hours.nav_graph.AppBottomBarItem
 import com.sesac.android7hours.nav_graph.AppNavHost
 import com.sesac.auth.nav_graph.AuthNavigationRoute
+import com.sesac.common.component.CommonMapLifecycle
+import com.sesac.common.component.CommonMapView
 import com.sesac.common.ui.theme.Android7HoursTheme
 import com.sesac.home.nav_graph.EntryPointScreen
 import com.sesac.home.nav_graph.HomeNavigationRoute
 import com.sesac.home.nav_graph.TopBarAction
-import com.sesac.monitor.presentation.MonitorMapViewLifecycleHelper
-import com.sesac.trail.presentation.TrailMapViewLifecycleHelper
 import com.sesac.trail.presentation.TrailViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import com.sesac.common.R as cR
@@ -54,8 +55,10 @@ class MainActivity : ComponentActivity() {
         setContent {
             val context = LocalContext.current
             val mainUiState by mainViewModel.uiState.collectAsState()
-            val trailMapView = MapView(context)
-            val monitorMapView = MapView(context)
+         // 🔹 공통 MapView + 공통 LifecycleHelper 생성 (앱 전체 공유)
+            val commonMapView = remember { CommonMapView.getMapView(context) }
+            val lifecycle = LocalLifecycleOwner.current.lifecycle
+            val commonMapLifecycle = remember { CommonMapLifecycle(commonMapView, lifecycle) }
             val trailViewModel = hiltViewModel<TrailViewModel>()
             val navController = rememberNavController()
             val startDestination = HomeNavigationRoute.HomeTab
@@ -88,8 +91,6 @@ class MainActivity : ComponentActivity() {
             }
 
             val appBottomBarItem = remember { AppBottomBarItem().fetch() }
-            val trailLifecycleHelper = remember { TrailMapViewLifecycleHelper(trailMapView) }
-            val monitorLifecycleHelper = remember { MonitorMapViewLifecycleHelper(monitorMapView) }
             val isSearchOpen = remember { mutableStateOf(false) }
             val permissionStates = remember { mutableStateMapOf<String, Boolean>() }
             val LocalIsSearchOpen = compositionLocalOf { mutableStateOf(false) }
@@ -121,8 +122,7 @@ class MainActivity : ComponentActivity() {
                             startDestination = startDestination,
                             isSearchOpen = isSearchOpen,
                             onStartFollowing = { UserPath -> Unit },
-                            trailLifecycleHelper = trailLifecycleHelper,
-                            monitorLifecycleHelper = monitorLifecycleHelper,
+                            commonMapLifecycle = commonMapLifecycle,
                             permissionState = permissionStates,
                         )
                     }
