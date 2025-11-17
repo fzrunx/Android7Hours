@@ -22,6 +22,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -29,12 +30,13 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.sesac.common.R
 import com.sesac.common.component.CommonMenuItem
 import com.sesac.common.ui.theme.Android7HoursTheme
 import com.sesac.common.ui.theme.White
 import com.sesac.common.ui.theme.paddingLarge
 import com.sesac.common.ui.theme.paddingSmall
-import com.sesac.domain.model.CommonAuthUiState
+import com.sesac.domain.result.AuthUiState
 import com.sesac.domain.model.MypageMenuItem
 import com.sesac.mypage.nav_graph.MypageNavigationRoute
 import com.sesac.mypage.presentation.MypageViewModel
@@ -52,7 +54,7 @@ fun MypageMainScreen(
     navController: NavController,
     nav2LoginScreen: () -> Unit,
     viewModel: MypageViewModel = hiltViewModel(),
-    uiState: CommonAuthUiState,
+    uiState: AuthUiState,
 ) {
     val stats by viewModel.stats.collectAsStateWithLifecycle()
     Log.d("TAG-MypageMainScreen", "user : $uiState")
@@ -83,7 +85,7 @@ fun MypageMainScreen(
 
         item {
             Text(
-                text = "메뉴",
+                text = stringResource(R.string.common_menu),
                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                 modifier = Modifier.padding(
                     start = paddingLarge,
@@ -109,7 +111,7 @@ fun MypageMainScreen(
             MypageButtonView(
                 onClick = { viewModel.logout() },
                 modifier = Modifier.padding(paddingLarge),
-                text = "로그아웃",
+                text = stringResource(R.string.auth_logout_button),
                 icon = Icons.AutoMirrored.Filled.Logout,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = White,
@@ -123,11 +125,12 @@ fun MypageMainScreen(
             MypageButtonView(
                 onClick = {
                     viewModel.signout(uiState.id)
+                    uiState.reset()
                     viewModel.logout()
                     nav2LoginScreen()
                 },
                 modifier = Modifier.padding(horizontal = paddingLarge),
-                text = "회원 탈퇴",
+                text = stringResource(R.string.auth_signout_button),
                 icon = Icons.Default.Delete,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = White,
@@ -148,7 +151,7 @@ fun MyPageMainScreenPreview() {
         MypageMainScreen(
             navController = rememberNavController(),
             nav2LoginScreen = {},
-            uiState = CommonAuthUiState(),
+            uiState = AuthUiState(),
         )
     }
 }

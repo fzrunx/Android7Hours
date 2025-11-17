@@ -5,9 +5,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.sesac.auth.utils.ValidationUtils
 import com.sesac.domain.model.Auth
+import com.sesac.domain.model.JoinFormState
 import com.sesac.domain.model.LoginRequest
 import com.sesac.domain.model.LoginResponse
 import com.sesac.domain.result.AuthResult
+import com.sesac.domain.result.JoinUiState
 import com.sesac.domain.usecase.auth.AuthUseCase
 import com.sesac.domain.usecase.session.SessionUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -17,30 +19,6 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-
-sealed interface JoinUiState {
-    object Idle : JoinUiState
-    object Loading : JoinUiState
-    data class Success(val message: String) : JoinUiState
-    data class Error(val message: String) : JoinUiState
-}
-
-data class JoinFormState(
-    val email: String = "",
-    val isEmailValid: Boolean = true,
-    val password: String = "",
-    val isPasswordValid: Boolean = true,
-    val passwordConfirm: String = "",
-    val doPasswordsMatch: Boolean = true,
-    val name: String = "",
-    val nickname: String = "",
-    val phone: String = "",
-    val agreeAll: Boolean = false,
-    val agreeAge: Boolean = false,
-    val agreeTerms: Boolean = false,
-    val agreePrivacy: Boolean = false,
-    val showValidationErrors: Boolean = false
-)
 
 @HiltViewModel
 class AuthViewModel @Inject constructor(

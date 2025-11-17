@@ -39,7 +39,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.sesac.auth.presentation.AuthViewModel
-import com.sesac.auth.presentation.JoinUiState
+import com.sesac.domain.result.JoinUiState
 import com.sesac.common.R
 import com.sesac.common.component.CommonLabelledTextField
 import com.sesac.common.ui.theme.Android7HoursTheme
@@ -197,23 +197,6 @@ fun AuthJoinScreen(
             )
         }
 
-        SocialJoinButtonView(
-            text = stringResource(id = R.string.auth_join_google_button),
-            icon = Icons.Default.AccountCircle,
-            tint = Color.Red,
-            onClick = { /* TODO: 구글 가입 */ }
-        )
-        SocialJoinButtonView(
-            text = stringResource(id = R.string.auth_join_naver_button),
-            icon = Icons.Default.AccountCircle,
-            tint = Color.Green,
-            onClick = { /* TODO: 네이버 가입 */ }
-        )
-        SocialJoinButtonView(
-            text = stringResource(id = R.string.auth_join_sso_button),
-            icon = Icons.Default.AccountCircle,
-            onClick = { /* TODO: SSO 가입 */ }
-        )
         SocialJoinButtonView(
             text = stringResource(id = R.string.auth_join_kakao_work_button),
             icon = Icons.Default.AccountCircle,

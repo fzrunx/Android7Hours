@@ -58,12 +58,12 @@
     <string name="trail_button_apply">적용하기</string>
 
     <string name="trail_distance_under_1km">1km 이하</string>
-    <string name="trail_distance_1_to_3km">1-3km</string>
-    <string name="trail_distance_3_to_5km">3-5km</string>
+    <string name="trail_distance_1_to_3km">1–3km</string>
+    <string name="trail_distance_3_to_5km">3–5km</string>
     <string name="trail_distance_over_5km">5km 이상</string>
     <string name="trail_time_under_30min">30분 이하</string>
-    <string name="trail_time_30_to_60min">30-60분</string>
-    <string name="trail_time_1_to_2_hours">1-2시간</string>
+    <string name="trail_time_30_to_60min">30–60분</string>
+    <string name="trail_time_1_to_2_hours">1–2시간</string>
     <string name="trail_time_over_2_hours">2시간 이상</string>
     <string name="trail_level_low">하</string>
     <string name="trail_level_medium">중</string>
@@ -77,7 +77,9 @@
     <string name="mypage_management">일정관리</string>
     <string name="mypage_favorite">즐겨찾기</string>
     <string name="mypage_setting">설정</string>
-    <string name="mypage_myinfo">내 정보</string>
+    <string name="mypage_main">마이페이지</string>
+    <string name="mypage_myinfo">내 프로필</string>
+    <string name="mypage_register_pet">반려견 등록</string>
     <string name="mypage_like">좋아요</string>
     <string name="mypage_create_list">작성목록</string>
     <string name="mypage_stats_title">내 산책 기록</string>
@@ -85,6 +87,7 @@
     <!-- ========= Common ========= -->
     <string name="common_see_all">전체보기</string>
     <string name="common_searchbar_text_default">검색</string>
+    <string name="common_menu">메뉴</string>
     <string name="common_detail">상세</string>
     <string name="common_create">생성</string>
 
@@ -100,6 +103,10 @@
     <string name="auth_join_name_label">이름</string>
     <string name="auth_join_phone_label">전화번호 (선택)</string>
     <string name="auth_join_submit_button">가입하기</string>
+    <string name="auth_login_button">Log in</string>
+    <string name="auth_signup_button">회원 가입</string>
+    <string name="auth_signout_button">회원 탈퇴</string>
+    <string name="auth_logout_button">로그아웃</string>
     <string name="auth_join_or_divider">or</string>
     <string name="auth_join_google_button">구글 계정으로 가입하기</string>
     <string name="auth_join_naver_button">네이버 계정으로 가입하기</string>

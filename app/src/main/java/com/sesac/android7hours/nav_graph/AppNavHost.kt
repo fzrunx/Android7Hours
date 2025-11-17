@@ -11,7 +11,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import com.sesac.auth.nav_graph.authRoute
 import com.sesac.community.nav_graph.communityRoute
-import com.sesac.domain.model.CommonAuthUiState
+import com.sesac.domain.result.AuthUiState
 import com.sesac.home.nav_graph.homeRoute
 import com.sesac.monitor.nav_graph.monitorRoute
 import com.sesac.monitor.presentation.MonitorMapViewLifecycleHelper
@@ -29,7 +29,7 @@ fun AppNavHost(
     nav2Home: () -> Unit,
     nav2LoginScreen: () -> Unit,
     startDestination: Any,
-    uiState: CommonAuthUiState,
+    uiState: AuthUiState,
     isSearchOpen: MutableState<Boolean>,
     onStartFollowing: (Any) -> Unit,
     monitorLifecycleHelper: MonitorMapViewLifecycleHelper,

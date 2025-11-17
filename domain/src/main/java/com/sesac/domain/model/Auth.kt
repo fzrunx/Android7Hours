@@ -18,6 +18,23 @@ data class User(
     val email: String,
 )
 
+data class JoinFormState(
+    val email: String = "",
+    val isEmailValid: Boolean = true,
+    val password: String = "",
+    val isPasswordValid: Boolean = true,
+    val passwordConfirm: String = "",
+    val doPasswordsMatch: Boolean = true,
+    val name: String = "",
+    val nickname: String = "",
+    val phone: String = "",
+    val agreeAll: Boolean = false,
+    val agreeAge: Boolean = false,
+    val agreeTerms: Boolean = false,
+    val agreePrivacy: Boolean = false,
+    val showValidationErrors: Boolean = false
+)
+
 data class Token(
     val refresh: String,
     val access: String,

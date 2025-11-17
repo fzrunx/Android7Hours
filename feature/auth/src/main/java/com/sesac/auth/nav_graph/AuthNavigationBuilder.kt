@@ -25,7 +25,8 @@ fun NavGraphBuilder.authRoute(
         AuthLoginScreen(
             viewModel = authViewModel,
             navController = navController,
-            onLoginSuccess = { navController.popBackStack() }
+//            onLoginSuccess = { navController.popBackStack() },
+            onLoginSuccess = nav2Home,
         )
     }
 }

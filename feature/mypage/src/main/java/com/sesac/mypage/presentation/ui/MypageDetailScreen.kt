@@ -65,7 +65,7 @@ import com.sesac.common.ui.theme.White
 import com.sesac.common.ui.theme.paddingLarge
 import com.sesac.common.ui.theme.paddingMedium
 import com.sesac.common.ui.theme.paddingSmall
-import com.sesac.domain.model.CommonAuthUiState
+import com.sesac.domain.result.AuthUiState
 import com.sesac.domain.model.Pet
 import com.sesac.mypage.nav_graph.MypageNavigationRoute
 import com.sesac.mypage.presentation.MypageViewModel
@@ -75,7 +75,7 @@ import com.sesac.common.R as cR
 fun MypageDetailScreen(
     navController: NavController,
     viewModel: MypageViewModel = hiltViewModel(),
-    uiState: CommonAuthUiState,
+    uiState: AuthUiState,
 ) {
     val pets by viewModel.userPets.collectAsStateWithLifecycle()
 
@@ -215,7 +215,7 @@ fun UserInfoRow(icon: ImageVector, label: String, value: String, iconBgColor: Co
 @Composable
 fun PetInfoSection(
     pets: List<Pet>,
-    uiState: CommonAuthUiState,
+    uiState: AuthUiState,
     onAddPetClicked: () -> Unit,
 ) {
     Column(

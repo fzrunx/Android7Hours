@@ -1,10 +1,8 @@
 package com.sesac.mypage.presentation.ui
 
-import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -47,7 +45,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.sesac.common.ui.theme.Primary
@@ -56,7 +54,7 @@ import com.sesac.common.ui.theme.White
 import com.sesac.common.ui.theme.paddingLarge
 import com.sesac.common.ui.theme.paddingMedium
 import com.sesac.common.ui.theme.paddingSmall
-import com.sesac.domain.model.CommonAuthUiState
+import com.sesac.domain.result.AuthUiState
 import com.sesac.domain.model.Pet
 import com.sesac.mypage.presentation.MypageViewModel
 import java.text.SimpleDateFormat
@@ -68,7 +66,7 @@ import java.util.Locale
 fun AddPetScreen(
     navController: NavController,
     viewModel: MypageViewModel = hiltViewModel(),
-    uiState: CommonAuthUiState,
+    uiState: AuthUiState,
 ) {
     val context = LocalContext.current
     val breeds by viewModel.breeds.collectAsStateWithLifecycle()

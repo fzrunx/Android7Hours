@@ -13,6 +13,7 @@ import androidx.activity.viewModels
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -79,6 +80,14 @@ class MainActivity : ComponentActivity() {
                     )
                 )
             }
+            val loginRequiredScreen = listOf(
+                stringResource(cR.string.mypage_main),
+                stringResource(cR.string.mypage_myinfo),
+                stringResource(cR.string.mypage_management),
+                stringResource(cR.string.mypage_setting),
+                stringResource(cR.string.mypage_favorite),
+                stringResource(cR.string.mypage_register_pet),
+            )
 
             val currentTopBarData = navBackStackEntry?.topBarAsRouteName ?: AppTopBarData()
             val finalTopBarData = if (currentTopBarData is AppTopBarData) {
@@ -95,6 +104,11 @@ class MainActivity : ComponentActivity() {
             val LocalIsSearchOpen = compositionLocalOf { mutableStateOf(false) }
 
             Android7HoursTheme {
+                LaunchedEffect(uiState) {
+                    if (!uiState.isLoggedIn && loginRequiredScreen.contains(finalTopBarData.title)){
+                        navController.navigate(AuthNavigationRoute.LoginTab)
+                    }
+                }
                 EntryPointScreen(
                     navController = navController,
                     startDestination = startDestination,
@@ -107,8 +121,8 @@ class MainActivity : ComponentActivity() {
                         stringResource(cR.string.mypage_setting),
                         stringResource(cR.string.trail_create_page),
                         stringResource(cR.string.trail_detail_page),
-                        "내 정보",
-                        "반려견 추가",
+                        stringResource(cR.string.mypage_myinfo),
+                        stringResource(cR.string.mypage_register_pet),
                     ),
                     appTopBarData = finalTopBarData,
                     appBottomBarItem = appBottomBarItem,
