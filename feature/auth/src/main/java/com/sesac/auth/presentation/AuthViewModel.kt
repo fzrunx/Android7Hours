@@ -19,6 +19,8 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import android.util.Log
+import kotlinx.coroutines.delay
 
 @HiltViewModel
 class AuthViewModel @Inject constructor(
@@ -35,6 +37,8 @@ class AuthViewModel @Inject constructor(
     // State for Login Screen
     val loginEmail = mutableStateOf("")
     val loginPassword = mutableStateOf("")
+
+    // ... (onEmailChange ~ onJoinClick 함수는 변경 없음) ...
 
     fun onEmailChange(email: String) {
         val isValid = if (email.isNotEmpty()) ValidationUtils.isValidEmail(email) else true
@@ -163,8 +167,9 @@ class AuthViewModel @Inject constructor(
                 .collectLatest { result ->
                     when (result) {
                         is AuthResult.Success -> {
-                            val loginResponse = LoginResponse(result.resultData.access, result.resultData.refresh, result.resultData.user)
-                            sessionUseCase.saveSession(loginResponse)
+                            // [참고] result.resultData가 이미 LoginResponse 타입이므로
+                            // val loginResponse = LoginResponse(...) 코드는 생략 가능합니다.
+                            sessionUseCase.saveSession(result.resultData)
                             _joinUiState.value = JoinUiState.Success("Login successful!")
                         }
                         is AuthResult.NetworkError -> {
@@ -181,7 +186,39 @@ class AuthViewModel @Inject constructor(
         }
     }
 
+    // --- [수정] onKakaoLoginSuccess 함수 ---
+    fun onKakaoLoginSuccess(accessToken: String) {
+        Log.d("AuthViewModel", "Received Kakao Access Token: $accessToken")
+        _joinUiState.value = JoinUiState.Loading
+
+        viewModelScope.launch {
+            // [수정] 이제 AuthUseCase에 실제로 존재하는 함수를 호출합니다
+            // (물론, 3단계에 걸쳐 이 함수를 Domain, Data 계층에 만들어야 합니다)
+            authUseCase.loginWithKakao(accessToken)
+                .collectLatest { result ->
+                    when (result) {
+                        // [수정] onLoginClick과 동일한 로직을 사용합니다
+                        is AuthResult.Success -> {
+                            sessionUseCase.saveSession(result.resultData)
+                            _joinUiState.value = JoinUiState.Success("Login successful!")
+                        }
+                        is AuthResult.NetworkError -> {
+                            _joinUiState.value = JoinUiState.Error(result.exception.message ?: "Network Error")
+                        }
+                        is AuthResult.Loading -> {
+                            _joinUiState.value = JoinUiState.Loading
+                        }
+                        else -> {
+                            // Not handled state
+                        }
+                    }
+                }
+        }
+    }
+    // ---
+
     fun resetUiState() {
         _joinUiState.value = JoinUiState.Idle
     }
+
 }

@@ -9,6 +9,8 @@ import coil3.disk.directory
 import coil3.memory.MemoryCache
 import dagger.hilt.android.HiltAndroidApp
 import com.jakewharton.threetenabp.AndroidThreeTen
+import com.kakao.sdk.common.KakaoSdk
+import com.sesac.android7hours.R // app 모듈의 R 클래스
 
 //Default Memory Size = 0.15 ~ 0.2
 const val COIL_MEMORY_CACHE_SIZE_PERCENT = 0.3
@@ -24,7 +26,7 @@ class A7HApplication(): Application(), SingletonImageLoader.Factory {
         super.onCreate()
         // ✅ ThreeTenABP 초기화 (LocalDate 등 사용 가능하게 함)
         AndroidThreeTen.init(this)
-
+        KakaoSdk.init(this, getString(R.string.kakao_native_app_key))
         // ✅ 기존 전역 참조 유지
         a7HApp = this
     }

@@ -39,6 +39,20 @@
             android:name="com.naver.maps.map.NCP_KEY_ID"
             android:value="${NAVER_MAPS_API_KEY}" />
 
+        <activity
+            android:name="com.kakao.sdk.auth.AuthCodeHandlerActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data
+                    android:host="oauth"
+                    android:scheme="kakaoed184dc28ad9ddca367ba81671a4c137" />
+            </intent-filter>
+        </activity>
+
+
     </application>
 
 </manifest>

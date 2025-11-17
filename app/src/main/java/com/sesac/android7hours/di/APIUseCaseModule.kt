@@ -5,6 +5,7 @@ import com.sesac.domain.usecase.auth.AuthUseCase
 import com.sesac.domain.usecase.auth.DeleteUserUseCase
 import com.sesac.domain.usecase.auth.GetAllUsersUseCase
 import com.sesac.domain.usecase.auth.LoginUseCase
+import com.sesac.domain.usecase.auth.LoginWithKakaoUseCase
 import com.sesac.domain.usecase.auth.PostUserUseCase
 import dagger.Module
 import dagger.Provides
@@ -23,6 +24,7 @@ object APIUseCaseModule {
             postUser = PostUserUseCase(repository),
             deleteUserUseCase = DeleteUserUseCase(repository),
             login = LoginUseCase(repository),
+            loginWithKakao = LoginWithKakaoUseCase(repository)
         )
     }
 

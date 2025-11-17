@@ -85,3 +85,14 @@ object NetworkModule {
     ): PetsApi =
         retrofit.create(PetsApi::class.java)
 }
+
+//@Module
+//@InstallIn(SingletonComponent::class)
+//object KakaoLoginModule {
+//
+//    @Provides
+//    @Singleton
+//    fun provideAuthApiService(retrofit: Retrofit): AuthApiService {
+//        return retrofit.create(AuthApiService::class.java)
+//    }
+//}

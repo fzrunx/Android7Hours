@@ -12,4 +12,5 @@ interface AuthRepository {
     suspend fun postUser(user: Auth): Flow<AuthResult<Unit>>
     suspend fun deleteUser(id: Int): Flow<AuthResult<Unit>>
     suspend fun login(loginRequest: LoginRequest): Flow<AuthResult<LoginResponse>>
+    fun loginWithKakao(accessToken: String): Flow<AuthResult<LoginResponse>>
 }
