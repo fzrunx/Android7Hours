@@ -1,6 +1,7 @@
 package com.sesac.trail.presentation.ui
 
 import android.util.Log
+import android.view.ViewGroup
 import androidx.activity.compose.LocalActivity
 import androidx.compose.runtime.Composable
 import androidx.compose.animation.AnimatedVisibility
@@ -27,6 +28,7 @@ import com.sesac.common.component.CommonMapView
 import com.sesac.common.ui.theme.paddingLarge
 import kotlinx.coroutines.delay
 import com.sesac.common.utils.PathMarker
+import com.sesac.common.utils.effectPauseStop
 import com.sesac.domain.model.UserPath
 import com.sesac.trail.nav_graph.TrailNavigationRoute
 import com.sesac.trail.presentation.TrailViewModel
@@ -46,33 +48,42 @@ fun TrailMainScreen(
 ) {
     val activity = LocalActivity.current
     val lifecycle = LocalLifecycleOwner.current.lifecycle
+    // 현재 화면의 라이프사이클 상태 (RESUMED, PAUSED 등)
     val lifecycleState by lifecycle.currentStateAsState()
+    // ViewModel State 들
     val recommendedPaths by viewModel.recommendedPaths.collectAsStateWithLifecycle()
     val myRecords by viewModel.myRecords.collectAsStateWithLifecycle()
-
     val isSheetOpen by viewModel.isSheetOpen.collectAsStateWithLifecycle()
     val isPaused by viewModel.isPaused.collectAsStateWithLifecycle()
     val isFollowingPath by viewModel.isFollowingPath.collectAsStateWithLifecycle()
     val isRecording by viewModel.isRecoding.collectAsStateWithLifecycle()
     val recordingTime by viewModel.recordingTime.collectAsStateWithLifecycle()
     val activeTab by viewModel.activeTab.collectAsStateWithLifecycle()
-//    var showCreatePage by remember { mutableStateOf(false) }
-
+    // 네이버 지도 위치 소스
     val locationSource = remember {
         activity?.let { FusedLocationSource(it, 1000) }
             ?: throw IllegalStateException("Activity not found for FusedLocationSource")
     }
 
     // --- 타이머 로직 (녹화 중일 때 시간 증가) ---
-    LaunchedEffect(key1 = isRecording, key2 = isPaused) {
-        if (isRecording && !isPaused) {
-            while (true) {
+    LaunchedEffect(lifecycleState, isRecording, isPaused) {
+        if (isRecording && !isPaused && lifecycleState == Lifecycle.State.RESUMED) {
+
+            while (isRecording && !isPaused && lifecycleState == Lifecycle.State.RESUMED) {
                 delay(1000)
                 viewModel.updateRecordingTime(1)
             }
+
+            Log.d("effectPauseStop", "타이머 자동 정지됨 (lifecycle or paused)")
         }
     }
-
+    // 🔴 effectPauseStop 적용
+    // 화면 Pause/Stop 시 MapView도 같이 pause/stop 호출
+    lifecycle.effectPauseStop {
+        commonMapLifecycle.mapView?.onPause()
+        commonMapLifecycle.mapView?.onStop()
+        Log.d("TrailMainScreen", "📌 Trail Pause/Stop → MapView pause/stop 호출됨")
+    }
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -83,8 +94,18 @@ fun TrailMainScreen(
                 AndroidView(
                     modifier = Modifier.fillMaxSize(),
                     factory = { context ->
-                        CommonMapView.getMapView(context).apply {
-                            getMapAsync { naverMap ->
+                        // 🔹 1. MapView 가져오기
+                        val mapView = commonMapLifecycle.mapView ?: CommonMapView.getMapView(context).also {
+                            commonMapLifecycle.setMapView(it)
+                        }
+
+                        // 🔹 2. 이미 부모가 있으면 제거 (IllegalStateException 방지)
+                        (mapView.parent as? ViewGroup)?.removeView(mapView)
+
+                        // 🔹 3. MapView start/resume
+                        mapView.onStart()
+                        mapView.onResume()
+                        mapView.getMapAsync{ naverMap ->
                                 naverMap.locationSource = locationSource
                                 naverMap.locationTrackingMode = LocationTrackingMode.Follow
                                 // ✅ Trail 용 지도 세팅 (기본 위치 / UI 세팅 등)
@@ -93,8 +114,8 @@ fun TrailMainScreen(
                                 onMapReady?.invoke(naverMap) // 🔹 화면마다 콜백 재등록
                                 // ✅ onMapReady 시점에 콜백 실행 가능
                                 Log.d("TrailMainScreen", "지도 준비 완료")
-                            }
                         }
+                        mapView
                     },
                     update = {
                         it.requestLayout()

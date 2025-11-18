@@ -6,37 +6,40 @@ import androidx.lifecycle.LifecycleOwner
 import com.naver.maps.map.MapView
 
 class CommonMapLifecycle(
-    private val mapView: MapView,
     lifecycle: Lifecycle
 ) : DefaultLifecycleObserver {
+    private var _mapView: MapView? = null
+    val mapView: MapView?
+        get() = _mapView
 
     init {
         lifecycle.addObserver(this)
     }
-
+    fun setMapView(view: MapView) {
+        _mapView = view
+    }
     override fun onCreate(owner: LifecycleOwner) {
-        mapView.onCreate(null)
+        _mapView?.onCreate(null)
     }
 
     override fun onStart(owner: LifecycleOwner) {
-        mapView.onStart()
+        _mapView?.onStart()
     }
 
     override fun onResume(owner: LifecycleOwner) {
-        mapView.onResume()
+        _mapView?.onResume()
     }
 
     override fun onPause(owner: LifecycleOwner) {
-        mapView.onPause()
+        _mapView?.onPause()
     }
 
     override fun onStop(owner: LifecycleOwner) {
-        mapView.onStop()
+        _mapView?.onStop()
     }
 
     override fun onDestroy(owner: LifecycleOwner) {
-        mapView.onDestroy()
-        // 화면이 완전히 종료될 때만 MapView 삭제
+        _mapView?.onDestroy()
         CommonMapView.clear()
     }
 }

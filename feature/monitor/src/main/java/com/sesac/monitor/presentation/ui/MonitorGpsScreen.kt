@@ -1,6 +1,7 @@
 package com.sesac.monitor.presentation.ui
 
 import android.util.Log
+import android.view.ViewGroup
 import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -23,6 +24,7 @@ import com.naver.maps.map.overlay.Marker
 import com.naver.maps.map.util.FusedLocationSource
 import com.sesac.common.component.CommonMapLifecycle   // 🔧 공유 lifecycle 관리
 import com.sesac.common.component.CommonMapView
+import com.sesac.common.utils.effectPauseStop
 import com.sesac.monitor.presentation.MonitorViewModel
 import com.sesac.monitor.presentation.utils.LatLngPoint2LatLng
 import kotlinx.coroutines.launch
@@ -51,7 +53,12 @@ fun MonitorGpsScreen (
             Log.d("Tag-MonitorGpsScreen", "${latLngPointRandom}")
         }
     }
-
+    // 🔴 중요!! 화면이 Pause 또는 Stop 될 때 MapView 반응하도록 설정
+    lifecycle.effectPauseStop {
+        commonMapLifecycle.mapView?.onPause()
+        commonMapLifecycle.mapView?.onStop()
+        Log.d("Tag-MonitorGpsScreen", "📌 Monitor GPS Paused → MapView pause/stop 호출됨")
+    }
     Box(
         modifier = Modifier.fillMaxSize()
     ) {
@@ -61,12 +68,25 @@ fun MonitorGpsScreen (
                     modifier = modifier.fillMaxSize(),
                     factory = { context ->
                         CommonMapView.getMapView(context).apply {
+                            // 🔹 이미 부모가 붙어있다면 제거
+                            (parent as? ViewGroup)?.removeView(this)
+
+                            // 🔵 MapView 공유 객체에 등록
+                            commonMapLifecycle.setMapView(this)
+
+                            // 🔵 Compose에서 MapView 재사용 시 resume/start 호출
+                            this.onStart()
+                            this.onResume()
+
                             getMapAsync { naverMap ->
+                                // 위치 설정
                                 naverMap.locationSource = locationSource
                                 naverMap.locationTrackingMode = LocationTrackingMode.Follow
-                                // ✅ Trail 용 지도 세팅 (기본 위치 / UI 세팅 등)
+
+                                // UI
                                 naverMap.uiSettings.isLocationButtonEnabled = true
                                 naverMap.uiSettings.isZoomControlEnabled = false
+
 
                                 //✅ 지도 준비 완료 시 마커 생성
                                 val marker = Marker().apply {
@@ -83,8 +103,8 @@ fun MonitorGpsScreen (
                             }
                         }
                     },
-                    update = {
-                        it.requestLayout()
+                    update = { view ->
+                        view.requestLayout()
                     }
                 )
             }
