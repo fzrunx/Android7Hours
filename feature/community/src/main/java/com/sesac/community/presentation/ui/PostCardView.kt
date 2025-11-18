@@ -27,7 +27,8 @@ import com.sesac.common.ui.theme.paddingLarge
 import com.sesac.common.ui.theme.paddingMedium
 import com.sesac.common.ui.theme.paddingMicro
 import com.sesac.common.ui.theme.paddingSmall
-import com.sesac.community.presentation.Post
+import com.sesac.domain.model.Post
+
 
 @Composable
 fun PostCardView(

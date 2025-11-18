@@ -37,7 +37,7 @@ import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import com.sesac.common.ui.theme.paddingLarge
 import com.sesac.common.ui.theme.paddingSmall
-import com.sesac.community.presentation.Post
+import com.sesac.domain.model.Post
 
 
 @OptIn(ExperimentalMaterial3Api::class)

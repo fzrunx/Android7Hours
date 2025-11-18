@@ -12,6 +12,14 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import com.sesac.domain.model.Comment
+import com.sesac.domain.model.Post
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.update
+import java.util.Date
 
 
 @HiltViewModel
@@ -39,6 +47,7 @@ class TrailViewModel @Inject constructor(
 
     private val _selectedPath = MutableStateFlow<UserPath?>(null)
     val selectedPath get() = _selectedPath.asStateFlow()
+
 
     init {
         getRecommendedPaths()
@@ -119,4 +128,66 @@ class TrailViewModel @Inject constructor(
         return !isLiked
     }
 
+    // 댓글 상태
+    private val _comments = MutableStateFlow<List<Comment>>(emptyList())
+    val comments: StateFlow<List<Comment>> get() = _comments.asStateFlow()
+
+    // 선택된 게시물
+    var selectedPostForComments by mutableStateOf<Post?>(null)
+        private set
+
+    // 댓글 시트 열림 여부
+    var isCommentsOpen by mutableStateOf(false)
+        private set
+
+    // 새 댓글 내용
+    var newCommentContent by mutableStateOf("")
+
+    fun handleOpenComments(path: UserPath) {
+        // Create a synthetic Post object from the UserPath
+        selectedPostForComments = Post(
+            id = path.id.toLong(),
+            author = path.uploader,
+            authorImage = "", // No author image in UserPath
+            timeAgo = "", // No time info in UserPath
+            content = path.name, // Use path name as content
+            image = null, // No image in UserPath
+            likes = path.likes,
+            comments = 0, // We'll get comments from _comments
+            isLiked = false, // Assuming not liked by default
+            category = "", // No category in UserPath
+            createdAt = Date() // Placeholder
+        )
+        isCommentsOpen = true
+    }
+
+    fun handleCloseComments() {
+        isCommentsOpen = false
+        selectedPostForComments = null
+    }
+
+    fun handleAddComment(): Boolean {
+        val post = selectedPostForComments ?: return false
+        if (newCommentContent.isBlank()) return false
+
+        val newComment = Comment(
+            id = System.currentTimeMillis(),
+            postId = post.id.toInt(),
+            author = "나", // TODO: Replace with actual user info
+            authorImage = "https://picsum.photos/seed/me/200", // TODO: Replace with actual user profile
+            timeAgo = "방금 전",
+            content = newCommentContent
+        )
+
+        // Update comments list
+        _comments.update { it + newComment }
+
+        // We don't need to update a list of posts here, as we only have one "post"
+        // But we could update the comment count on the selectedPostForComments
+        selectedPostForComments = selectedPostForComments?.copy(comments = selectedPostForComments!!.comments + 1)
+
+
+        newCommentContent = ""
+        return true
+    }
 }

@@ -2,28 +2,19 @@ package com.sesac.community.presentation.ui
 
 import android.annotation.SuppressLint
 import android.widget.Toast
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Send
 import androidx.compose.material3.*
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.sesac.common.component.CommonFilterTabs
@@ -31,9 +22,8 @@ import com.sesac.common.component.CommonSearchBarContent
 import com.sesac.common.ui.theme.Gray400
 import com.sesac.common.ui.theme.Primary
 import com.sesac.community.presentation.CommunityViewModel
-import com.sesac.community.presentation.Post
-import com.sesac.community.presentation.Comment
-import coil3.compose.rememberAsyncImagePainter
+import com.sesac.common.component.CommonCommentSheetContent
+import com.sesac.domain.model.Post
 import kotlinx.coroutines.launch
 import com.sesac.common.R as cR
 
@@ -176,81 +166,20 @@ fun CommunityMainScreen(
 
     // -------------------- 댓글 BottomSheet --------------------
     if (viewModel.selectedPostForComments != null) {
+        val context = LocalContext.current
+        val comments by viewModel.comments.collectAsStateWithLifecycle()
+
         ModalBottomSheet(
             onDismissRequest = { viewModel.handleCloseComments() },
             sheetState = modalSheetState
         ) {
-            CommentSheetContent(
+            CommonCommentSheetContent(
+                modifier = Modifier.fillMaxHeight(0.9f),
                 post = viewModel.selectedPostForComments!!,
-                viewModel = viewModel,
-                onClose = { viewModel.handleCloseComments() }
-            )
-        }
-    }
-}
-
-// -------------------- 댓글 관련 Composable --------------------
-@Composable
-fun CommentSheetContent(
-    post: Post,
-    viewModel: CommunityViewModel,
-    onClose: () -> Unit
-) {
-    val context = LocalContext.current
-    val comments by viewModel.comments.collectAsStateWithLifecycle()
-    val postComments by remember(post, comments) {
-        derivedStateOf { comments.filter { it.postId == post.id.toInt() } }
-    }
-
-    Column(
-        modifier = Modifier
-            .fillMaxHeight(0.9f)
-            .padding(16.dp)
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = "댓글 (${postComments.size})",
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold
-            )
-            IconButton(onClick = onClose) {
-                Icon(Icons.Default.Close, contentDescription = "닫기")
-            }
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        LazyColumn(
-            modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            items(postComments, key = { it.id }) { comment ->
-                CommentItem(comment)
-            }
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            TextField(
-                value = viewModel.newCommentContent,
-                onValueChange = { viewModel.newCommentContent = it },
-                placeholder = { Text("댓글 달기...") },
-                modifier = Modifier.weight(1f),
-                shape = RoundedCornerShape(24.dp)
-            )
-
-            Spacer(modifier = Modifier.width(8.dp))
-
-            IconButton(
-                onClick = {
+                comments = comments,
+                newCommentContent = viewModel.newCommentContent,
+                onNewCommentChange = { viewModel.newCommentContent = it },
+                onAddComment = {
                     val success = viewModel.handleAddComment()
                     Toast.makeText(
                         context,
@@ -258,41 +187,7 @@ fun CommentSheetContent(
                         Toast.LENGTH_SHORT
                     ).show()
                 },
-                enabled = viewModel.newCommentContent.isNotBlank()
-            ) {
-                Icon(
-                    Icons.Default.Send,
-                    contentDescription = "댓글 작성",
-                    tint = if (viewModel.newCommentContent.isNotBlank())
-                        MaterialTheme.colorScheme.primary else Color.Gray
-                )
-            }
-        }
-    }
-}
-
-@Composable
-fun CommentItem(comment: Comment) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.Top
-    ) {
-        Image(
-            painter = rememberAsyncImagePainter(comment.authorImage),
-            contentDescription = "댓글 작성자 프로필",
-            modifier = Modifier
-                .size(32.dp)
-                .clip(CircleShape),
-        )
-        Spacer(modifier = Modifier.width(12.dp))
-        Column {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(text = comment.author, fontWeight = FontWeight.Bold, fontSize = 14.sp)
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(text = comment.timeAgo, fontSize = 12.sp, color = Color.Gray)
-            }
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(text = comment.content, fontSize = 14.sp)
+            )
         }
     }
 }
