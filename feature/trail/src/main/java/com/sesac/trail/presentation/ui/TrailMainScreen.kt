@@ -1,6 +1,7 @@
 package com.sesac.trail.presentation.ui
 
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.compose.LocalActivity
 import androidx.compose.runtime.Composable
 import androidx.compose.animation.AnimatedVisibility
@@ -8,10 +9,11 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.*
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.BiasAlignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -26,8 +28,10 @@ import com.sesac.common.component.CommonMapLifecycle
 import com.sesac.common.component.CommonMapView
 import com.sesac.common.ui.theme.paddingLarge
 import kotlinx.coroutines.delay
-import com.sesac.common.utils.PathMarker
+import com.sesac.domain.model.Coord
 import com.sesac.domain.model.UserPath
+import com.sesac.domain.result.AuthResult
+import com.sesac.domain.result.AuthUiState
 import com.sesac.trail.nav_graph.TrailNavigationRoute
 import com.sesac.trail.presentation.TrailViewModel
 import com.sesac.trail.presentation.component.BottomSheetContent
@@ -41,26 +45,39 @@ enum class WalkPathTab { RECOMMENDED, MY_RECORDS }
 fun TrailMainScreen(
     viewModel: TrailViewModel = hiltViewModel(),
     navController: NavController,
+    uiState: AuthUiState,
     commonMapLifecycle : CommonMapLifecycle,
     onMapReady: ((NaverMap) -> Unit)? = null
 ) {
     val activity = LocalActivity.current
+    val context = LocalContext.current
     val lifecycle = LocalLifecycleOwner.current.lifecycle
     val lifecycleState by lifecycle.currentStateAsState()
     val recommendedPaths by viewModel.recommendedPaths.collectAsStateWithLifecycle()
-    val myRecords by viewModel.myRecords.collectAsStateWithLifecycle()
+    val myPaths by viewModel.myPaths.collectAsStateWithLifecycle()
 
     val isSheetOpen by viewModel.isSheetOpen.collectAsStateWithLifecycle()
     val isPaused by viewModel.isPaused.collectAsStateWithLifecycle()
     val isFollowingPath by viewModel.isFollowingPath.collectAsStateWithLifecycle()
     val isRecording by viewModel.isRecoding.collectAsStateWithLifecycle()
     val recordingTime by viewModel.recordingTime.collectAsStateWithLifecycle()
+    val isEditMode by viewModel.isEditMode.collectAsStateWithLifecycle()
     val activeTab by viewModel.activeTab.collectAsStateWithLifecycle()
 //    var showCreatePage by remember { mutableStateOf(false) }
 
     val locationSource = remember {
         activity?.let { FusedLocationSource(it, 1000) }
             ?: throw IllegalStateException("Activity not found for FusedLocationSource")
+    }
+
+    LaunchedEffect(Unit) {
+        viewModel.getRecommendedPaths(Coord.DEFAULT, 10000f)
+    }
+
+    LaunchedEffect(uiState) {
+        uiState.token?.let {
+            viewModel.getMyPaths(it)
+        }
     }
 
     // --- 타이머 로직 (녹화 중일 때 시간 증가) ---
@@ -104,17 +121,31 @@ fun TrailMainScreen(
         }
         // ✅ 마커 표시
         if (!isRecording) {
-            recommendedPaths.forEach { path ->
-                val hBias = (path.latLngPoint!!.longitude * 2) - 1f
-                val vBias = (path.latLngPoint!!.latitude * 2) - 1f
+            when (recommendedPaths) {
+                is AuthResult.Loading -> CircularProgressIndicator()
+                is AuthResult.Success -> {
+                    (recommendedPaths as AuthResult.Success<List<UserPath>>).resultData.forEach { path ->
+                        path.coord?.forEach {
+                            val hBias = (it.longitude * 2) - 1f
+                            val vBias = (it.latitude * 2) - 1f
 
-                PathMarker(
-                    modifier = Modifier.align(BiasAlignment(hBias.toFloat(), vBias.toFloat())),
-                    onClick = {
-                        viewModel.updateSelectedPath(path)
-                        navController.navigate(TrailNavigationRoute.TrailDetailTab)
+//                            PathMarker(
+//                                modifier = Modifier.align(BiasAlignment(hBias.toFloat(), vBias.toFloat())),
+//                                onClick = {
+//                                    viewModel.updateSelectedPath(path)
+//                                    navController.navigate(TrailNavigationRoute.TrailDetailTab)
+//                                }
+//                            )
+                        }
+
                     }
-                )
+                }
+                is AuthResult.NetworkError -> Toast.makeText(
+                    context,
+                    (recommendedPaths as AuthResult.NetworkError).exception.message,
+                    Toast.LENGTH_SHORT
+                ).show()
+                else -> { }
             }
         }
         // ✅ 하단 Bottom Sheet
@@ -127,11 +158,13 @@ fun TrailMainScreen(
                 animationSpec = tween(durationMillis = 0) // 0ms로 즉시 사라지도록
             )
         ) {
+            // ToDo : NetworkError, 경로 없음 -> 빈화면 혹은 오류 화면 출력
             BottomSheetContent(
                 viewModel = viewModel,
                 activeTab = activeTab,
-                recommendedPaths = recommendedPaths,
-                myRecords = myRecords,
+                recommendedPaths = if (recommendedPaths is AuthResult.Success) (recommendedPaths as AuthResult.Success<List<UserPath>>).resultData else listOf(),
+                myPaths = if (myPaths is AuthResult.Success) (myPaths as AuthResult.Success<List<UserPath>>).resultData else listOf(),
+                isEditMode = isEditMode,
                 onSheetOpenToggle = { viewModel.updateIsSheetOpen(null) },
                 onStartRecording = {
                     viewModel.updateIsFollowingPath(false)
@@ -153,7 +186,13 @@ fun TrailMainScreen(
                 onRegisterClick = {
                     viewModel.updateIsSheetOpen(false)
                     navController.navigate(TrailNavigationRoute.TrailCreateTab)
-                }
+                },
+                onEditModeToggle = { viewModel.updateIsEditMode() },
+                onModifyClick = {
+                    viewModel.updateSelectedPath(it)
+                    navController.navigate(TrailNavigationRoute.TrailCreateTab)
+                },
+                onDeleteClick = { viewModel.deletePath(uiState.token, it) }
             )
         }
 

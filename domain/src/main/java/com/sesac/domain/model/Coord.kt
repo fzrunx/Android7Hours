@@ -1,0 +1,16 @@
+package com.sesac.domain.model
+
+data class Coord(
+    val latitude: Double = 0.0,
+    val longitude: Double = 0.0,
+    val altitude: Double? = null,
+) {
+    companion object {
+        val DEFAULT = Coord(
+//            latitude = 37.52952,
+//            longitude = 126.9645,
+            latitude = 37.6632,
+            longitude = 126.4651,
+        )
+    }
+}

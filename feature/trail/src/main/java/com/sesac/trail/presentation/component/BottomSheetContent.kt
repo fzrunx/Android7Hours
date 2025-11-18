@@ -40,7 +40,6 @@ import com.sesac.common.ui.theme.SheetHandleWidth
 import com.sesac.common.ui.theme.paddingLarge
 import com.sesac.common.ui.theme.paddingMicro
 import com.sesac.common.ui.theme.paddingSmall
-import com.sesac.domain.model.MyRecord
 import com.sesac.domain.model.UserPath
 import com.sesac.trail.presentation.TrailViewModel
 import com.sesac.trail.presentation.ui.WalkPathTab
@@ -50,13 +49,17 @@ fun BottomSheetContent(
     viewModel: TrailViewModel,
     activeTab: WalkPathTab,
     recommendedPaths: List<UserPath?>,
-    myRecords: List<MyRecord?>,
+    myPaths: List<UserPath?>,
+    isEditMode: Boolean,
     onSheetOpenToggle: () -> Unit,
     onStartRecording: () -> Unit,
     onTabChange: (WalkPathTab) -> Unit,
     onPathClick: (UserPath) -> Unit,
     onFollowClick: (UserPath) -> Unit,
-    onRegisterClick: () -> Unit
+    onRegisterClick: () -> Unit,
+    onEditModeToggle: () -> Unit,
+    onModifyClick: (UserPath) -> Unit,
+    onDeleteClick: (Int) -> Unit
 ) {
     Surface(
         shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
@@ -137,9 +140,14 @@ fun BottomSheetContent(
                     )
                     WalkPathTab.MY_RECORDS -> MyRecordsTabContent(
                         viewModel = viewModel,
-                        records = myRecords.filterNotNull(),
+                        myPaths = myPaths.filterNotNull(),
+                        isEditMode = isEditMode,
+                        onPathClick = onPathClick,
                         onFollowClick = { /* MyRecord에서 UserPath로 변환 필요 */ },
-                        onRegisterClick = onRegisterClick
+                        onRegisterClick = onRegisterClick,
+                        onEditModeToggle = onEditModeToggle,
+                        onModifyClick = onModifyClick,
+                        onDeleteClick = onDeleteClick,
                     )
                 }
             }

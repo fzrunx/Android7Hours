@@ -52,10 +52,9 @@ fun AppNavHost(
         trailRoute(
             trailViewModel = trailViewModel,
             navController = navController,
+            uiState = uiState,
             onStartFollowing = onStartFollowing,
             commonMapLifecycle = commonMapLifecycle,
-//            path = ,
-//            onSave = onSave,
             )
         communityRoute(isSearchOpen = isSearchOpen,)
         monitorRoute(

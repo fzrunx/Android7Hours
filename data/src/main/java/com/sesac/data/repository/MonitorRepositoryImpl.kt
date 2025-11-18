@@ -1,18 +1,18 @@
 package com.sesac.data.repository
 
 import com.sesac.data.source.local.datasource.MockMonitor
-import com.sesac.domain.model.LatLngPoint
+import com.sesac.domain.model.Coord
 import com.sesac.domain.repository.MonitorRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import javax.inject.Inject
 
 class MonitorRepositoryImpl @Inject constructor(): MonitorRepository {
-    override suspend fun getAllDummyLatLng(): Flow<List<LatLngPoint?>> = flow {
-        emit(MockMonitor.latLngPointList)
+    override suspend fun getAllDummyLatLng(): Flow<List<Coord?>> = flow {
+        emit(MockMonitor.coordList)
     }
 
-    override suspend fun getRandomDummyLatLng(): Flow<LatLngPoint?> = flow {
-        emit(MockMonitor.latLngPointList.random())
+    override suspend fun getRandomDummyLatLng(): Flow<Coord?> = flow {
+        emit(MockMonitor.coordList.random())
     }
 }

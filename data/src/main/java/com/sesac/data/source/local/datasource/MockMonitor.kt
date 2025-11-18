@@ -1,22 +1,22 @@
 package com.sesac.data.source.local.datasource
 
-import com.sesac.domain.model.LatLngPoint
+import com.sesac.domain.model.Coord
 
 object MockMonitor {
-    val latLngPointList = mutableListOf<LatLngPoint?>()
+    val coordList = mutableListOf<Coord?>()
 
     init {
-        with(latLngPointList) {
+        with(coordList) {
             add(
-                LatLngPoint(37.527297, 126.929143)
+                Coord(37.527297, 126.929143)
             )
 
             add(
-                LatLngPoint(38.298815, 128.535902)
+                Coord(38.298815, 128.535902)
             )
 
             add(
-                LatLngPoint(33.499936, 126.489461)
+                Coord(33.499936, 126.489461)
             )
         }
     }

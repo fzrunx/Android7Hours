@@ -1,5 +1,6 @@
 package com.sesac.trail.presentation.ui
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.Arrangement.spacedBy
@@ -18,6 +19,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -29,7 +31,7 @@ import androidx.navigation.compose.rememberNavController
 import coil3.compose.AsyncImage
 import kotlinx.coroutines.launch
 import com.sesac.common.ui.theme.*
-import com.sesac.domain.model.LatLngPoint
+import com.sesac.domain.model.Coord
 import com.sesac.domain.model.UserPath
 import com.sesac.trail.presentation.TrailViewModel
 import com.sesac.trail.presentation.component.TagFlow
@@ -44,10 +46,11 @@ fun TrailDetailScreen(
     navController: NavController,
     onStartFollowing: (UserPath) -> Unit
 ) {
-    var isLiked by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+    var isFavorite by remember { mutableStateOf(false) }
 //    var likeCount by remember { mutableStateOf(path.likes) }
     val selectedDetailPath by viewModel.selectedPath.collectAsStateWithLifecycle()
-    var isFavorite by remember { mutableStateOf(false) }
+//    var isFavorite by remember { mutableStateOf(false) }
 
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
@@ -55,14 +58,16 @@ fun TrailDetailScreen(
     val handleLike = {
 //        if (isLiked) likeCount-- else likeCount++
 //        isLiked = !isLiked
-        isLiked = viewModel.updateSelectedPathLikes(isLiked)
+        isFavorite = viewModel.updateSelectedPathLikes(isFavorite)
     }
 
     val handleFavorite: () -> Unit = {
-        isFavorite = !isFavorite
+//        isFavorite = !isFavorite
         scope.launch {
+//            val message = if (isFavorite) "즐겨찾기에 추가되었습니다" else "즐겨찾기에서 제거되었습니다"
             val message = if (isFavorite) "즐겨찾기에 추가되었습니다" else "즐겨찾기에서 제거되었습니다"
-            snackbarHostState.showSnackbar(message)
+            isFavorite = viewModel.updateSelectedPathLikes(isFavorite)
+            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -76,8 +81,8 @@ fun TrailDetailScreen(
         ) {
             PathImageHeader(
                 pathName = it.name,
-                isLiked = isLiked,
-                onLikeClick = handleLike
+                isFavorite = isFavorite,
+                onFavoriteClick = handleFavorite
             )
 
             Column(
@@ -116,12 +121,12 @@ fun TrailDetailScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(52.dp),
-                    shape = RoundedCornerShape(16.dp),
+                    shape = MaterialTheme.shapes.large,
                     colors = ButtonDefaults.buttonColors(containerColor = Purple600)
                 ) {
                     Icon(Icons.Filled.Navigation, contentDescription = null)
                     Spacer(Modifier.width(paddingMicro))
-                    Text("이 산책로 따라가기", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                    Text("이 산책로 따라가기", fontWeight = FontWeight.Bold, color = White)
                 }
 
                 // Stats Grid
@@ -174,11 +179,7 @@ fun TrailDetailScreen(
                 // Description
                 PathSection(title = "산책로 소개") {
                     Text(
-                        text = "이 산책로는 ${ selectedDetailPath!!.uploader}님이 공유한 멋진 코스입니다. " +
-                                "도심 속에서 자연을 느낄 수 있는 특별한 장소로, " +
-                                "반려견과 함께 걷기에 최적화되어 있습니다. " +
-                                "적당한 난이도로 누구나 쉽게 즐길 수 있으며, " +
-                                "주변 경관이 아름다워 사진 촬영 명소로도 유명합니다.",
+                        text = it.description ?: "소개글이 없습니다.",
                         style = MaterialTheme.typography.bodyMedium,
                         color = GrayTabText,
                         lineHeight = 24.sp
@@ -213,8 +214,8 @@ fun TrailDetailScreen(
 @Composable
 fun PathImageHeader(
     pathName: String,
-    isLiked: Boolean,
-    onLikeClick: () -> Unit,
+    isFavorite: Boolean,
+    onFavoriteClick: () -> Unit,
     imageUrl: String = "https://images.unsplash.com/photo-1675435842943-7d7385e9a835?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHx3YWxraW5nJTIwcGF0aCUyMHBhcmt8ZW58MXx8fHwxNzYxODExNTY0fDA&ixlib=rb-4.1.0&q=80&w=1080"
 ) {
     Box(
@@ -229,16 +230,16 @@ fun PathImageHeader(
             contentScale = ContentScale.Crop
         )
         FloatingActionButton(
-            onClick = onLikeClick,
+            onClick = onFavoriteClick,
             modifier = Modifier
                 .align(Alignment.TopEnd)
                 .padding(paddingLarge),
-            containerColor = if (isLiked) Purple600 else MaterialTheme.colorScheme.surface,
-            contentColor = if (isLiked) Color.White else GrayTabText,
+            containerColor = if (isFavorite) Purple600 else MaterialTheme.colorScheme.surface,
+            contentColor = if (isFavorite) Color.White else GrayTabText,
             shape = CircleShape
         ) {
             Icon(
-                imageVector = if (isLiked) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
+                imageVector = if (isFavorite) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
                 contentDescription = "좋아요"
             )
         }
@@ -315,31 +316,31 @@ fun ReviewItem(userName: String, date: String, review: String) {
         }
     }
 }
-@Preview(showBackground = true)
-@Composable
-fun WalkPathDetailPagePreview() {
-    val dummyPosition = LatLngPoint(
-        latitude = 0.5,
-        longitude = 0.5,
-    )
-    val mockPath = UserPath(
-        id = 1,
-        name = "강남역 주변 산책로",
-        uploader = "산책왕123",
-        distance = 1.5f,
-        time = 15,
-        likes = 45,
-        distanceFromMe = 0.3f,
-        latLngPoint = dummyPosition,
-        tags = listOf("🌳 자연 친화적", "🐕 반려견 동반 가능", "🌸 꽃길","👨‍👩‍👧‍👦 가족 동반")
-    )
-
-    val navController = rememberNavController()
-    Android7HoursTheme {
-        TrailDetailScreen(
-//            path = mockPath,
-            navController = navController,
-            onStartFollowing = {}
-        )
-    }
-}
+//@Preview(showBackground = true)
+//@Composable
+//fun WalkPathDetailPagePreview() {
+//    val dummyPosition = Coord(
+//        latitude = 0.5,
+//        longitude = 0.5,
+//    )
+//    val mockPath = UserPath(
+//        id = 1,
+//        name = "강남역 주변 산책로",
+//        userId = -1,
+//        distance = 1.5f,
+//        time = 15,
+//        likes = 45,
+//        distanceFromMe = 0.3f,
+//        coord = listOf(dummyPosition),
+//        tags = listOf("🌳 자연 친화적", "🐕 반려견 동반 가능", "🌸 꽃길","👨‍👩‍👧‍👦 가족 동반")
+//    )
+//
+//    val navController = rememberNavController()
+//    Android7HoursTheme {
+//        TrailDetailScreen(
+////            path = mockPath,
+//            navController = navController,
+//            onStartFollowing = {}
+//        )
+//    }
+//}

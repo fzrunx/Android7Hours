@@ -33,6 +33,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.sesac.common.ui.theme.PrimaryGreenLight
 import com.sesac.common.ui.theme.Purple600
+import com.sesac.common.ui.theme.White
 import com.sesac.common.ui.theme.paddingMicro
 import com.sesac.common.ui.theme.paddingSmall
 import com.sesac.domain.model.UserPath
@@ -66,7 +67,7 @@ fun RecommendedPathItem(
 ) {
     Card(
         modifier = Modifier.fillMaxWidth().clickable { onPathClick(path) },
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = White),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
         Row(

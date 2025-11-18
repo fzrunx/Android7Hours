@@ -2,7 +2,7 @@ package com.sesac.monitor.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.sesac.domain.model.LatLngPoint
+import com.sesac.domain.model.Coord
 import com.sesac.domain.usecase.monitor.MonitorUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -15,15 +15,15 @@ class MonitorViewModel @Inject constructor (
     private val monitorUseCase: MonitorUseCase,
 ): ViewModel() {
     val _activeTab = MutableStateFlow<String>("")
-    val _latLngPointList = MutableStateFlow<List<LatLngPoint?>>(emptyList())
-    val _latLngPointRandom = MutableStateFlow<LatLngPoint?>(LatLngPoint())
+    val _coordList = MutableStateFlow<List<Coord?>>(emptyList())
+    val _coordRandom = MutableStateFlow<Coord?>(Coord())
     val activeTab get() = _activeTab.asStateFlow()
-    val latLngList get() = _latLngPointList.asStateFlow()
-    val latLngRandom get() = _latLngPointRandom.asStateFlow()
+    val latLngList get() = _coordList.asStateFlow()
+    val latLngRandom get() = _coordRandom.asStateFlow()
 
     init {
         viewModelScope.launch {
-            monitorUseCase.getRandomDummyLatLngUseCase().collect { _latLngPointRandom.value = it }
+            monitorUseCase.getRandomDummyLatLngUseCase().collect { _coordRandom.value = it }
         }
     }
 
@@ -35,13 +35,13 @@ class MonitorViewModel @Inject constructor (
 
     suspend fun getLatLngRandom() {
         viewModelScope.launch {
-            monitorUseCase.getRandomDummyLatLngUseCase().collect { _latLngPointRandom.value = it }
+            monitorUseCase.getRandomDummyLatLngUseCase().collect { _coordRandom.value = it }
         }
     }
 
     suspend fun getLatLngList() {
         viewModelScope.launch {
-            monitorUseCase.getAllDummyLatLngUseCase().collect { _latLngPointList.value = it }
+            monitorUseCase.getAllDummyLatLngUseCase().collect { _coordList.value = it }
         }
     }
 }

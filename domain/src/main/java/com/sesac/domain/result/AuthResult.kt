@@ -1,5 +1,7 @@
 package com.sesac.domain.result
 
+import com.sesac.domain.model.MyRecord
+
 sealed class AuthResult<out T> {
     data object NoConstructor : AuthResult<Nothing>()
     data object Loading : AuthResult<Nothing>()
@@ -7,5 +9,5 @@ sealed class AuthResult<out T> {
     data class Success<T>(val resultData: T) : AuthResult<T>()
 
     data class NetworkError(val exception: Throwable) : AuthResult<Nothing>()
-    data class RoomDBError(val exception: Throwable) : AuthResult<Nothing>()
+//    data class RoomDBError(val exception: Throwable) : AuthResult<Nothing>()
 }

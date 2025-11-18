@@ -147,7 +147,7 @@ fun AuthLoginScreen(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text("Login", style = MaterialTheme.typography.headlineMedium)
+        Text(stringResource(R.string.auth_login_button), style = MaterialTheme.typography.headlineMedium)
         Spacer(modifier = Modifier.height(paddingLarge))
         OutlinedTextField(
             value = email,

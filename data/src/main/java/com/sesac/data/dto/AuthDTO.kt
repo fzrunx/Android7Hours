@@ -3,6 +3,7 @@ package com.sesac.data.dto
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
 
+// 회원 가입에 필요한 유저 정보
 @JsonClass(generateAdapter = true)
 data class AuthDTO(
     val id: Int = -1,

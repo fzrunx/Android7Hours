@@ -19,6 +19,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.sesac.common.ui.theme.paddingMedium
+import com.sesac.common.ui.theme.paddingSmall
 
 /**
  * 재사용 가능한 소셜 가입 버튼
@@ -34,19 +36,19 @@ fun SocialJoinButtonView(
     OutlinedButton(
         onClick = onClick,
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(8.dp),
+        shape = RoundedCornerShape(paddingSmall),
         border = BorderStroke(1.dp, Color.LightGray),
         colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.Black)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = 8.dp),
+                .padding(vertical = paddingSmall),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center
         ) {
             Icon(imageVector = icon, contentDescription = text, tint = tint)
-            Spacer(modifier = Modifier.width(8.dp))
+            Spacer(modifier = Modifier.width(paddingSmall))
             Text(text, textAlign = TextAlign.Center)
         }
     }

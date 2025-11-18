@@ -6,6 +6,7 @@ data class Community(
     val postId: Int,
     var title: String = "",
     val userName: String,
+    val isActive: Boolean = false,
     var content: String = "",
     val imageResList: List<Int>? = null,
     var likes: Int = 0,

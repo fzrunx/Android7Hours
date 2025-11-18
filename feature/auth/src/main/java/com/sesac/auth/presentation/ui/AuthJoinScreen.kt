@@ -43,6 +43,10 @@ import com.sesac.domain.result.JoinUiState
 import com.sesac.common.R
 import com.sesac.common.component.CommonLabelledTextField
 import com.sesac.common.ui.theme.Android7HoursTheme
+import com.sesac.common.ui.theme.iconSizeLarge
+import com.sesac.common.ui.theme.paddingLarge
+import com.sesac.common.ui.theme.paddingMedium
+import com.sesac.common.ui.theme.paddingSmall
 
 @Composable
 fun AuthJoinScreen(
@@ -64,7 +68,7 @@ fun AuthJoinScreen(
             .verticalScroll(rememberScrollState())
             .padding(horizontal = 24.dp, vertical = 32.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+        verticalArrangement = Arrangement.spacedBy(paddingLarge)
     ) {
 
         Text(
@@ -78,7 +82,7 @@ fun AuthJoinScreen(
             color = Color.Gray
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(paddingLarge))
 
         val showError = formState.showValidationErrors
         CommonLabelledTextField(
@@ -134,7 +138,7 @@ fun AuthJoinScreen(
             }
         }
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(paddingSmall))
 
         AgreementSectionView(
             agreeAll = formState.agreeAll,
@@ -147,12 +151,12 @@ fun AuthJoinScreen(
             onAgreePrivacyChange = viewModel::onAgreePrivacyChange
         )
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(paddingSmall))
 
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(48.dp),
+                .height(iconSizeLarge),
             contentAlignment = Alignment.Center
         ) {
             when (joinUiState) {
@@ -160,12 +164,11 @@ fun AuthJoinScreen(
                 else -> Button(
                     onClick = viewModel::onJoinClick,
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(8.dp)
+                    shape = MaterialTheme.shapes.medium
                 ) {
                     Text(
                         text = stringResource(id = R.string.auth_join_submit_button),
-                        modifier = Modifier.padding(vertical = 8.dp),
-                        fontSize = 16.sp
+                        modifier = Modifier.padding(vertical = paddingSmall),
                     )
                 }
             }
@@ -178,7 +181,7 @@ fun AuthJoinScreen(
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
+            horizontalArrangement = Arrangement.spacedBy(paddingLarge)
         ) {
             HorizontalDivider(
                 modifier = Modifier.weight(1f),
@@ -188,7 +191,7 @@ fun AuthJoinScreen(
             Text(
                 text = stringResource(id = R.string.auth_join_or_divider),
                 color = Color.Gray,
-                fontSize = 12.sp
+                fontSize = MaterialTheme.typography.bodySmall.fontSize
             )
             HorizontalDivider(
                 modifier = Modifier.weight(1f),
@@ -203,7 +206,7 @@ fun AuthJoinScreen(
             tint = Color.Yellow,
             onClick = { /* TODO: 카카오워크 가입 */ }
         )
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(paddingLarge))
     }
 }
 

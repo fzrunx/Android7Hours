@@ -73,7 +73,7 @@ dependencies {
     implementation(libs.map.sdk)
 
     // --- Lifecycle & ViewModel Compose ---
-    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.6.3")
+    implementation(libs.androidx.lifecycle.viewmodel.compose)
 
     // --- Test ---
     testImplementation(libs.junit)

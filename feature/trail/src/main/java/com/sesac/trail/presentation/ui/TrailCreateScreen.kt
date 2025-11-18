@@ -1,6 +1,7 @@
 package com.sesac.trail.presentation.ui
 
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -54,6 +55,7 @@ import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawOutline
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
@@ -72,10 +74,15 @@ import com.sesac.common.ui.theme.Red500
 import com.sesac.common.ui.theme.SheetHandle
 import com.sesac.common.ui.theme.paddingLarge
 import com.sesac.common.ui.theme.paddingMicro
+import com.sesac.common.ui.theme.paddingNone
 import com.sesac.common.ui.theme.paddingSmall
+import com.sesac.domain.model.Coord
+import com.sesac.domain.model.UiEvent
+import com.sesac.domain.result.AuthUiState
 import com.sesac.trail.nav_graph.TrailNavigationRoute
 import com.sesac.trail.presentation.TrailViewModel
 import com.sesac.trail.presentation.component.TagFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
 // --- 데이터 클래스 ---
@@ -101,14 +108,22 @@ data class ValidationState(
 @Composable
 fun TrailCreateScreen(
     viewModel: TrailViewModel = hiltViewModel(),
-    navController: NavController
+    navController: NavController,
+    uiState: AuthUiState,
 ) {
+    val context = LocalContext.current
     val path by viewModel.selectedPath.collectAsStateWithLifecycle()
     Log.d("Tag-TrailCreateScreen", "selectedCreatePath = $path")
 
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     var validationState by remember { mutableStateOf(ValidationState()) }
+
+    LaunchedEffect(Unit) {
+        viewModel.invalidToken.collectLatest { event ->
+            if (event is UiEvent.ToastEvent) Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
+        }
+    }
 
     Scaffold(
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
@@ -173,11 +188,16 @@ fun TrailCreateScreen(
                         return@launch
                     }
 
-                    Log.d("Tag-TrailCreateScreen", "New path created: $path")
-                    viewModel.savePath()
-                    snackbarHostState.showSnackbar("산책로가 등록되었습니다!")
-                    viewModel.updateSelectedPath(path)
-                    navController.navigate(TrailNavigationRoute.TrailDetailTab)
+                    if (it.id != -1) {
+                        Log.d("TrailCreateScreen", "Updating path: $path")
+                        viewModel.updatePath(uiState.token)
+                        snackbarHostState.showSnackbar("산책로가 수정되었습니다!")
+                    } else {
+                        Log.d("Tag-TrailCreateScreen", "New path created: $path")
+                        viewModel.savePath(uiState.token, Coord.DEFAULT)
+                        snackbarHostState.showSnackbar("산책로가 등록되었습니다!")
+                    }
+                    navController.popBackStack()
                 }
             }
         }
@@ -254,7 +274,8 @@ fun TrailCreateScreen(
                 },
                 onSave = {
                     handleSave()
-                }
+                },
+                isEditing = path?.id != -1
             )
         }
     }
@@ -266,7 +287,8 @@ fun TrailCreateScreen(
 @Composable
 fun CreateBottomActions(
     onCancel: () -> Unit,
-    onSave: () -> Unit
+    onSave: () -> Unit,
+    isEditing: Boolean
 ) {
     Surface(
         color = Color.Transparent,
@@ -299,7 +321,7 @@ fun CreateBottomActions(
                     .weight(1f)
                     .height(48.dp)
             ) {
-                Text("등록하기")
+                Text(if (isEditing) "수정하기" else "등록하기")
             }
         }
     }
@@ -477,7 +499,7 @@ fun DistanceTimeInputs(
             isRequired = true,
             isError = isDistanceError,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-            modifier = Modifier.width(0.dp).weight(1f, fill = true)
+            modifier = Modifier.width(paddingNone).weight(1f, fill = true)
         )
         FormTextField(
             label = "예상 시간 (분)",
@@ -487,20 +509,20 @@ fun DistanceTimeInputs(
             isRequired = true,
             isError = isTimeError,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-            modifier = Modifier.width(0.dp).weight(1f, fill = true)
+            modifier = Modifier.width(paddingNone).weight(1f, fill = true)
         )
     }
 }
 
 // --- Preview ---
 
-@Preview(showBackground = true, device = "id:pixel_5")
-@Composable
-fun WalkPathCreatePagePreview() {
-    MaterialTheme {
-        TrailCreateScreen(
-            navController = rememberNavController(),
-//            onSave = { }, // ✅ 타입 명시
-        )
-    }
-}
+//@Preview(showBackground = true, device = "id:pixel_5")
+//@Composable
+//fun WalkPathCreatePagePreview() {
+//    MaterialTheme {
+//        TrailCreateScreen(
+//            navController = rememberNavController(),
+////            onSave = { }, // ✅ 타입 명시
+//        )
+//    }
+//}
