@@ -20,6 +20,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import android.util.Log
+import com.sesac.auth.utils.validate
 import kotlinx.coroutines.delay
 
 @HiltViewModel
@@ -102,17 +103,24 @@ class AuthViewModel @Inject constructor(
     }
 
     private fun validateForm(): Boolean {
-        val form = _joinFormState.value
-        return form.email.isNotBlank() &&
-                form.isEmailValid &&
-                form.password.isNotBlank() &&
-                form.isPasswordValid &&
-                form.passwordConfirm.isNotBlank() &&
-                form.doPasswordsMatch &&
-                form.name.isNotBlank() &&
-                form.nickname.isNotBlank() &&
-                form.agreeAge && form.agreeTerms && form.agreePrivacy
+        val validationResult = _joinFormState.value.validate()
+
+        // 디버깅용: 유효하지 않은 필드 로그
+        if (!validationResult.isValid) {
+            Log.d("Validation", "Invalid fields: ${validationResult.invalidFields}")
+        }
+
+        return validationResult.isValid
     }
+
+//    fun onSubmit() {
+//        _joinFormState.update { it.copy(showValidationErrors = true) }
+//
+//        if (validateForm()) {
+//            // 폼 제출 로직
+//            submitJoinForm()
+//        }
+//    }
 
     fun onJoinClick() {
         _joinFormState.update { it.copy(showValidationErrors = true) }
