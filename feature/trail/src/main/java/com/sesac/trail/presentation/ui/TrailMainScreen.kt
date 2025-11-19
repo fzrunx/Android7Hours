@@ -1,8 +1,15 @@
 package com.sesac.trail.presentation.ui
 
+import android.Manifest
+import android.annotation.SuppressLint
+import android.content.pm.PackageManager
+import android.location.Location
+import android.os.Looper
 import android.util.Log
 import android.view.ViewGroup
 import androidx.activity.compose.LocalActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
@@ -16,16 +23,22 @@ import androidx.compose.ui.BiasAlignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.content.ContextCompat
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.currentStateAsState
 import androidx.navigation.NavController
+import com.google.android.gms.location.LocationCallback
+import com.google.android.gms.location.LocationRequest
+import com.google.android.gms.location.LocationResult
+import com.google.android.gms.location.Priority
 import com.naver.maps.geometry.LatLng
 import com.naver.maps.map.LocationTrackingMode
 import com.naver.maps.map.NaverMap
 import com.naver.maps.map.overlay.Marker
+import com.naver.maps.map.overlay.PolylineOverlay
 import com.naver.maps.map.util.FusedLocationSource
 import com.sesac.common.component.CommonMapLifecycle
 import com.sesac.common.component.CommonMapView
@@ -41,6 +54,7 @@ import com.sesac.trail.presentation.component.MemoDialog
 import com.sesac.trail.presentation.component.RecordingControls
 import com.sesac.trail.presentation.component.ReopenSheetButton
 import com.sesac.trail.presentation.component.addMemoMarker
+import androidx.compose.runtime.DisposableEffect
 
 enum class WalkPathTab { RECOMMENDED, MY_RECORDS }
 
@@ -52,8 +66,12 @@ fun TrailMainScreen(
     commonMapLifecycle : CommonMapLifecycle,
     onMapReady: ((NaverMap) -> Unit)? = null
 ) {
+
+    val context = LocalContext.current
     val activity = LocalActivity.current
     val lifecycle = LocalLifecycleOwner.current.lifecycle
+    var lastRawLocation by remember { mutableStateOf<android.location.Location?>(null) }
+    var lastSmoothedLocation by remember { mutableStateOf<android.location.Location?>(null) }
     // 현재 화면의 라이프사이클 상태 (RESUMED, PAUSED 등)
     val lifecycleState by lifecycle.currentStateAsState()
     // ViewModel State 들
@@ -65,10 +83,34 @@ fun TrailMainScreen(
     val isRecording by viewModel.isRecoding.collectAsStateWithLifecycle()
     val recordingTime by viewModel.recordingTime.collectAsStateWithLifecycle()
     val activeTab by viewModel.activeTab.collectAsStateWithLifecycle()
+    // GPS 기록 좌표
+    val pathCoords = remember { mutableStateListOf<LatLng>() }
+    val polylineRef = remember { mutableStateOf<PolylineOverlay?>(null) }
+    var isTracking by remember { mutableStateOf(false) }
     // 네이버 지도 위치 소스
     val locationSource = remember {
         activity?.let { FusedLocationSource(it, 1000) }
             ?: throw IllegalStateException("Activity not found for FusedLocationSource")
+    }
+    // 위치 권한 상태 추적
+    var hasLocationPermission by remember {
+        mutableStateOf(
+            ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED &&
+            ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
+        )
+    }
+
+    // 위치 권한 요청
+    val locationPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        hasLocationPermission = permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true &&
+                                permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true
+        if (hasLocationPermission) isTracking = true
+    }
+
+    val fusedLocationClient = remember {
+        com.google.android.gms.location.LocationServices.getFusedLocationProviderClient(context)
     }
     // 메모 입력용 상태
     var showMemoDialog by remember { mutableStateOf(false) }
@@ -81,8 +123,96 @@ fun TrailMainScreen(
     // 마커 관리 리스트/맵
     val markers = remember { mutableStateListOf<Marker>() }
     val infoWindowStates = remember { mutableStateMapOf<Marker, Boolean>() }
-    val context = LocalContext.current
 
+    // 위치 콜백
+    val locationCallback = remember {
+        object : LocationCallback() {
+            override fun onLocationResult(result: LocationResult) {
+                result.locations.forEach { loc ->
+
+                    // 🔥 1) accuracy 필터링
+                    if (loc.accuracy > 25f) {
+                        Log.d("GPS", "무시됨: accuracy=${loc.accuracy}")
+                        return@forEach
+                    }
+
+                    // 🔥 2) smoothing 적용
+                    val smoothLoc = smooth(lastSmoothedLocation, loc)
+
+                    lastRawLocation = loc
+                    lastSmoothedLocation = smoothLoc
+
+                    val newPoint = LatLng(smoothLoc.latitude, smoothLoc.longitude)
+
+                    // 🔥 3) 최소 이동거리 필터 (정지시 지그재그 방지)
+                    val lastPoint = pathCoords.lastOrNull()
+                    if (lastPoint != null) {
+                        val diff = lastPoint.distanceTo(newPoint)
+                        if (diff < 5) {
+                            Log.d("GPS", "5m 미만이라 무시됨: 이동거리=$diff")
+                            return@forEach
+                        }
+                    }
+
+                    // 🔥 4) 최종 추가
+                    pathCoords.add(newPoint)
+                    Log.d("GPS", "추가됨: ${newPoint.latitude}, ${newPoint.longitude}")
+                }
+            }
+        }
+    }
+
+
+    // ⭐⭐ 폴리라인 좌표 업데이트
+    LaunchedEffect(pathCoords.size, isRecording) {
+        val currentPolyline = polylineRef.value
+
+        if (isRecording && pathCoords.size >= 2) {
+            currentPolyline?.coords = pathCoords.toList()
+            currentPolyline?.map = currentNaverMap
+            Log.d("TrailMainScreen", "📊 폴리라인 업데이트: ${pathCoords.size}개 좌표")
+        } else {
+            currentPolyline?.map = null
+            Log.d("TrailMainScreen", "❌ 폴리라인 지도에서 제거")
+        }
+    }
+
+// ⭐ 녹화 종료 시 초기화
+    LaunchedEffect(isRecording) {
+        if (!isRecording) {
+            pathCoords.clear()
+            polylineRef.value?.let {
+                it.map = null
+                polylineRef.value?.map = null
+            }
+
+            markers.forEach { it.map = null }
+            markers.clear()
+            infoWindowStates.clear()
+
+            Log.d("TrailMainScreen", "🧹 폴리라인 및 마커 초기화")
+        }
+    }
+
+// ⭐⭐ 화면 복귀 시 강제 초기화
+    LaunchedEffect(lifecycleState) {
+        if (lifecycleState == Lifecycle.State.RESUMED && !isRecording) {
+            delay(200)
+
+            Log.d("TrailMainScreen", "🔄 화면 복귀 - 초기화 실행")
+
+            polylineRef.value?.map = null
+            pathCoords.clear()
+
+            pathCoords.clear()
+
+            markers.forEach { it.map = null }
+            markers.clear()
+            infoWindowStates.clear()
+
+            Log.d("TrailMainScreen", "🧹 화면 복귀 시 초기화 완료")
+        }
+    }
     // --- 타이머 로직 (녹화 중일 때 시간 증가) ---
     LaunchedEffect(lifecycleState, isRecording, isPaused) {
         if (isRecording && !isPaused && lifecycleState == Lifecycle.State.RESUMED) {
@@ -99,6 +229,46 @@ fun TrailMainScreen(
         commonMapLifecycle.mapView?.onStop()
         Log.d("TrailMainScreen", "📌 Trail Pause/Stop → MapView pause/stop 호출됨")
     }
+
+    // --- 위치 업데이트 시작/중지 ---
+    LaunchedEffect(isRecording, isPaused, hasLocationPermission) {  // ⭐ hasLocationPermission 추가
+        val locationRequest = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 2000L)
+            .setWaitForAccurateLocation(false)
+            .setMinUpdateIntervalMillis(500L)
+            .setMaxUpdateDelayMillis(1000L)
+            .build()
+
+        if (isRecording && !isPaused) {
+            if (hasLocationPermission) {  // ⭐ state 사용
+                @SuppressLint("MissingPermission")
+                fusedLocationClient.requestLocationUpdates(
+                    locationRequest,
+                    locationCallback,
+                    Looper.getMainLooper()
+                )
+                Log.d("TrailMainScreen", "📍 위치 업데이트 시작")
+            } else {
+                // 권한 요청
+                locationPermissionLauncher.launch(
+                    arrayOf(
+                        Manifest.permission.ACCESS_FINE_LOCATION,
+                        Manifest.permission.ACCESS_COARSE_LOCATION
+                    )
+                )
+            }
+        } else {
+            fusedLocationClient.removeLocationUpdates(locationCallback)
+            Log.d("TrailMainScreen", "📍 위치 업데이트 중지")
+        }
+    }
+        DisposableEffect(Unit) {
+            onDispose {
+                fusedLocationClient.removeLocationUpdates(locationCallback)
+                currentNaverMap?.locationSource = null // NaverMap에서 locationSource 해제
+                locationSource.deactivate() // FusedLocationSource 비활성화
+                Log.d("TrailMainScreen", "📍 화면 사라짐, 위치 업데이트 중지 및 NaverMap locationSource 해제")
+            }
+        }
     Box(
         modifier = Modifier.fillMaxSize()
     ) {
@@ -129,11 +299,22 @@ fun TrailMainScreen(
                             onMapReady?.invoke(naverMap) // 🔹 화면마다 콜백 재등록
                             // ✅ onMapReady 시점에 콜백 실행 가능
                             Log.d("TrailMainScreen", "지도 준비 완료")
+                            // ⭐⭐⭐ 폴리라인 생성 지점 추가됨
+                            val polyline = PolylineOverlay().apply {
+                                color = 0xFF0000FF.toInt()
+                                width = 10
+                                capType = PolylineOverlay.LineCap.Round
+                                joinType = PolylineOverlay.LineJoin.Round
+                                map = naverMap         // ⭐ 반드시 지도 할당!
+                            }
+                            polylineRef.value = polyline  // ⭐ 저장
                             // 롱 클릭: 메모 입력
                             naverMap.setOnMapLongClickListener { _, coord ->
-                                selectedCoord = coord
-                                memoText = ""
-                                showMemoDialog = true
+                                if (isRecording) {
+                                    selectedCoord = coord
+                                    memoText = ""
+                                    showMemoDialog = true
+                                }
                             }
                         }
                         mapView
@@ -254,4 +435,21 @@ fun TrailMainScreen(
             }
         )
     }
+}
+
+fun smooth(old: Location?, new: Location): Location {
+    if (old == null) return new
+
+    val alpha = 0.2f // 0~1 (0에 가까울수록 더 부드러움)
+
+    val smoothed = Location(new).apply {
+        latitude = old.latitude + alpha * (new.latitude - old.latitude)
+        longitude = old.longitude + alpha * (new.longitude - old.longitude)
+        accuracy = new.accuracy
+        bearing = new.bearing
+        speed = new.speed
+        time = new.time
+    }
+
+    return smoothed
 }
