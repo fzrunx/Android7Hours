@@ -85,7 +85,7 @@ fun TrailMainScreen(
     val activeTab by viewModel.activeTab.collectAsStateWithLifecycle()
     // GPS 기록 좌표
     val pathCoords = remember { mutableStateListOf<LatLng>() }
-    val polylineRef = remember { mutableStateOf<PolylineOverlay?>(null) }
+    val polylineFromVM by viewModel.polylineOverlay.collectAsStateWithLifecycle()
     var isTracking by remember { mutableStateOf(false) }
     // 네이버 지도 위치 소스
     val locationSource = remember {
@@ -121,7 +121,7 @@ fun TrailMainScreen(
     var currentNaverMap by remember { mutableStateOf<NaverMap?>(null) }
 
     // 마커 관리 리스트/맵
-    val markers = remember { mutableStateListOf<Marker>() }
+    val currentMarkers = viewModel.currentMarkers
     val infoWindowStates = remember { mutableStateMapOf<Marker, Boolean>() }
 
     // 위치 콜백
@@ -165,7 +165,7 @@ fun TrailMainScreen(
 
     // ⭐⭐ 폴리라인 좌표 업데이트
     LaunchedEffect(pathCoords.size, isRecording) {
-        val currentPolyline = polylineRef.value
+        val currentPolyline = polylineFromVM
 
         if (isRecording && pathCoords.size >= 2) {
             currentPolyline?.coords = pathCoords.toList()
@@ -180,39 +180,25 @@ fun TrailMainScreen(
 // ⭐ 녹화 종료 시 초기화
     LaunchedEffect(isRecording) {
         if (!isRecording) {
+            //  기록 좌표 초기화
             pathCoords.clear()
-            polylineRef.value?.let {
-                it.map = null
-                polylineRef.value?.map = null
+
+            Log.d("TrailMainScreen", "🧹 녹화 중지 시 폴리라인, 마커, 좌표 초기화 완료")
+        } else {
+
+        }
+    }
+
+    LaunchedEffect(lifecycleState, isRecording, isPaused) {
+        if (isRecording && !isPaused && lifecycleState == Lifecycle.State.RESUMED) {
+            while (isRecording && !isPaused && lifecycleState == Lifecycle.State.RESUMED) {
+                delay(1000)
+                viewModel.updateRecordingTime(1)
             }
-
-            markers.forEach { it.map = null }
-            markers.clear()
-            infoWindowStates.clear()
-
-            Log.d("TrailMainScreen", "🧹 폴리라인 및 마커 초기화")
+            Log.d("effectPauseStop", "타이머 자동 정지됨 (lifecycle or paused)")
         }
     }
 
-// ⭐⭐ 화면 복귀 시 강제 초기화
-    LaunchedEffect(lifecycleState) {
-        if (lifecycleState == Lifecycle.State.RESUMED && !isRecording) {
-            delay(200)
-
-            Log.d("TrailMainScreen", "🔄 화면 복귀 - 초기화 실행")
-
-            polylineRef.value?.map = null
-            pathCoords.clear()
-
-            pathCoords.clear()
-
-            markers.forEach { it.map = null }
-            markers.clear()
-            infoWindowStates.clear()
-
-            Log.d("TrailMainScreen", "🧹 화면 복귀 시 초기화 완료")
-        }
-    }
     // --- 타이머 로직 (녹화 중일 때 시간 증가) ---
     LaunchedEffect(lifecycleState, isRecording, isPaused) {
         if (isRecording && !isPaused && lifecycleState == Lifecycle.State.RESUMED) {
@@ -299,15 +285,16 @@ fun TrailMainScreen(
                             onMapReady?.invoke(naverMap) // 🔹 화면마다 콜백 재등록
                             // ✅ onMapReady 시점에 콜백 실행 가능
                             Log.d("TrailMainScreen", "지도 준비 완료")
-                            // ⭐⭐⭐ 폴리라인 생성 지점 추가됨
-                            val polyline = PolylineOverlay().apply {
+
+                            // 지도에 연결하는 것은 LaunchedEffect(pathCoords.size, isRecording)에서 관리합니다.
+                            val newPolyline = PolylineOverlay().apply {
                                 color = 0xFF0000FF.toInt()
                                 width = 10
                                 capType = PolylineOverlay.LineCap.Round
                                 joinType = PolylineOverlay.LineJoin.Round
-                                map = naverMap         // ⭐ 반드시 지도 할당!
                             }
-                            polylineRef.value = polyline  // ⭐ 저장
+                            viewModel.setPolylineInstance(newPolyline)  // ⭐ 항상 새로운 폴리라인 객체로 갱신
+
                             // 롱 클릭: 메모 입력
                             naverMap.setOnMapLongClickListener { _, coord ->
                                 if (isRecording) {
@@ -407,6 +394,12 @@ fun TrailMainScreen(
                     viewModel.updateRecordingTime(0)
                     viewModel.updateIsFollowingPath(false)
                     viewModel.updateIsPaused(false)
+                    viewModel.clearAllMapObjects(currentNaverMap)
+
+                    pathCoords.clear()
+
+                    currentNaverMap?.locationTrackingMode = LocationTrackingMode.Follow
+
                     navController.navigate(TrailNavigationRoute.TrailCreateTab)
                 }
             )
@@ -426,7 +419,7 @@ fun TrailMainScreen(
                         naverMap = map,
                         coord = coord,
                         memo = memoText,
-                        markers = markers,
+                        markers = currentMarkers,
                         infoWindowStates = infoWindowStates
                     )
                 }
