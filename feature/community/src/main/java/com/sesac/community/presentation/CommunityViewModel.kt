@@ -6,7 +6,9 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.sesac.community.utils.calculateTimeAgo
+import com.sesac.domain.model.Comment
 import com.sesac.domain.model.Community
+import com.sesac.domain.model.Post
 import com.sesac.domain.usecase.community.CommunityUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -20,29 +22,6 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.util.Date
 import javax.inject.Inject
-
-// Presentation Layer Model
-data class Post(
-    val id: Long,
-    val author: String,
-    val authorImage: String,
-    val timeAgo: String,
-    val content: String,
-    val image: String?,
-    val likes: Int,
-    val comments: Int,
-    val isLiked: Boolean,
-    val category: String,
-    val createdAt: Date = Date(System.currentTimeMillis())
-)
-data class Comment(
-    val id: Long,
-    val postId: Int,
-    val author: String,
-    val content: String,
-    val timeAgo: String,
-    val authorImage: String
-)
 
 @HiltViewModel
 class CommunityViewModel @Inject constructor(
