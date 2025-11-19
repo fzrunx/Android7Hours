@@ -46,8 +46,7 @@ import com.sesac.common.component.CommonMapView
 import com.sesac.common.ui.theme.paddingLarge
 import kotlinx.coroutines.delay
 import com.sesac.domain.model.Coord
-import com.sesac.common.utils.PathMarker
-import com.sesac.common.utils.effectPauseStop
+import com.sesac.common.utils.EffectPauseStop
 import com.sesac.domain.model.UserPath
 import com.sesac.domain.result.AuthResult
 import com.sesac.domain.result.AuthUiState
@@ -227,7 +226,7 @@ fun TrailMainScreen(
         }
     }
     // 🔴 effectPauseStop 적용  // 화면 Pause/Stop 시 MapView도 같이 pause/stop 호출
-    lifecycle.effectPauseStop {
+    lifecycle.EffectPauseStop {
         commonMapLifecycle.mapView?.onPause()
         commonMapLifecycle.mapView?.onStop()
         Log.d("TrailMainScreen", "📌 Trail Pause/Stop → MapView pause/stop 호출됨")

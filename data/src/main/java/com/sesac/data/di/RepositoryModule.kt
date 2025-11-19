@@ -19,49 +19,56 @@ import com.sesac.domain.repository.SessionRepository
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
+import dagger.hilt.android.components.ActivityRetainedComponent
+import dagger.hilt.android.scopes.ActivityRetainedScoped
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
 @Module
-@InstallIn(SingletonComponent::class)
+@InstallIn(ActivityRetainedComponent::class)
 abstract class RepositoryModule {
 
     @Binds
-    @Singleton
+    @ActivityRetainedScoped
     abstract fun bindCommunityRepository(
         communityRepositoryImpl: CommunityRepositoryImpl
     ): CommunityRepository
 
     @Binds
-    @Singleton
+    @ActivityRetainedScoped
     abstract fun bindHomeRepository(
         homeRepositoryImpl: HomeRepositoryImpl
     ): HomeRepository
 
     @Binds
-    @Singleton
+    @ActivityRetainedScoped
     abstract fun bindTrailRepository(
         trailRepositoryImpl: TrailRepositoryImpl
     ): TrailRepository
 
     @Binds
-    @Singleton
+    @ActivityRetainedScoped
     abstract fun bindMonitorRepository(
         monitorRepositoryImpl: MonitorRepositoryImpl
     ): MonitorRepository
 
     @Binds
-    @Singleton
+    @ActivityRetainedScoped
     abstract fun bindMypageRepository(
         mypageRepositoryImpl: MypageRepositoryImpl
     ): MypageRepository
 
     @Binds
-    @Singleton
+    @ActivityRetainedScoped
     abstract fun bindPetRepository(
         petRepositoryImpl: PetRepositoryImpl
     ): PetRepository
 
+}
+
+@Module
+@InstallIn(SingletonComponent::class)
+abstract class SingletonRepositoryModule {
     @Binds
     @Singleton
     abstract fun bindAuthRepository(

@@ -38,6 +38,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.sesac.auth.presentation.AuthViewModel
 import com.sesac.domain.result.JoinUiState
 import com.sesac.common.R
@@ -53,8 +54,8 @@ fun AuthJoinScreen(
     nav2Home: () -> Unit,
     viewModel: AuthViewModel = hiltViewModel(),
 ) {
-    val formState by viewModel.joinFormState.collectAsState()
-    val joinUiState by viewModel.joinUiState.collectAsState()
+    val formState by viewModel.joinFormState.collectAsStateWithLifecycle()
+    val joinUiState by viewModel.joinUiState.collectAsStateWithLifecycle()
 
     LaunchedEffect(joinUiState) {
         if (joinUiState is JoinUiState.Success) {

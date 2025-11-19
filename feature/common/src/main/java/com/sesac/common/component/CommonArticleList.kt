@@ -59,27 +59,6 @@ fun <T> CommonArticleList(
     }
 }
 
-@Composable
-fun <T> CommonArticleList(
-    modifier: Modifier = Modifier,
-    items: List<T>,
-    articleHorrPadding: Dp = dimensionResource(R.dimen.tail_chip_text_horr_padding),
-    articleVerticalSpaceBy: Dp = dimensionResource(R.dimen.article_ver_arrangement),
-    content: @Composable (T) -> Unit,
-) {
-
-    Column(
-        modifier = modifier
-            .padding(horizontal = articleHorrPadding, vertical = articleHorrPadding/2),
-        verticalArrangement = Arrangement.spacedBy(articleVerticalSpaceBy)
-    ) {
-        items.forEach { item ->
-            content(item)
-        }
-
-    }
-}
-
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

@@ -24,7 +24,7 @@ import com.naver.maps.map.overlay.Marker
 import com.naver.maps.map.util.FusedLocationSource
 import com.sesac.common.component.CommonMapLifecycle   // 🔧 공유 lifecycle 관리
 import com.sesac.common.component.CommonMapView
-import com.sesac.common.utils.effectPauseStop
+import com.sesac.common.utils.EffectPauseStop
 import com.sesac.monitor.presentation.MonitorViewModel
 import com.sesac.monitor.presentation.utils.LatLngPoint2LatLng
 import kotlinx.coroutines.launch
@@ -54,7 +54,7 @@ fun MonitorGpsScreen (
         }
     }
     // 🔴 중요!! 화면이 Pause 또는 Stop 될 때 MapView 반응하도록 설정
-    lifecycle.effectPauseStop {
+    lifecycle.EffectPauseStop {
         commonMapLifecycle.mapView?.onPause()
         commonMapLifecycle.mapView?.onStop()
         Log.d("Tag-MonitorGpsScreen", "📌 Monitor GPS Paused → MapView pause/stop 호출됨")

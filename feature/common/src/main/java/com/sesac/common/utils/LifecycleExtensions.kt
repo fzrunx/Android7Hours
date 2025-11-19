@@ -6,7 +6,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 
 @Composable
-fun Lifecycle.effectPauseStop(onEvent: () -> Unit) {
+fun Lifecycle.EffectPauseStop(onEvent: () -> Unit) {
     DisposableEffect(this) {
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_PAUSE ||
@@ -16,10 +16,10 @@ fun Lifecycle.effectPauseStop(onEvent: () -> Unit) {
             }
         }
 
-        this@effectPauseStop.addObserver(observer)
+        this@EffectPauseStop.addObserver(observer)
 
         onDispose {
-            this@effectPauseStop.removeObserver(observer)
+            this@EffectPauseStop.removeObserver(observer)
         }
     }
 }

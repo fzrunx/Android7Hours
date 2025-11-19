@@ -135,7 +135,7 @@ class AuthViewModel @Inject constructor(
             )
 
             authUseCase.postUser(userToPost)
-                .collect { result ->
+                .collectLatest { result ->
                     when (result) {
                         is AuthResult.Success -> {
                             _joinUiState.value = JoinUiState.Success("Join successful!")
