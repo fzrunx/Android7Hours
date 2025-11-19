@@ -61,7 +61,7 @@ class MainActivity : ComponentActivity() {
          // 🔹 공통 MapView + 공통 LifecycleHelper 생성 (앱 전체 공유)
             val commonMapView = remember { CommonMapView.getMapView(context) }
             val lifecycle = LocalLifecycleOwner.current.lifecycle
-            val commonMapLifecycle = remember { CommonMapLifecycle(commonMapView, lifecycle) }
+            val commonMapLifecycle = remember { CommonMapLifecycle(lifecycle) }
             val trailViewModel = hiltViewModel<TrailViewModel>()
             val navController = rememberNavController()
             val startDestination = HomeNavigationRoute.HomeTab

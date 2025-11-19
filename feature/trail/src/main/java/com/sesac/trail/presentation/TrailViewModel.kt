@@ -17,6 +17,9 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import com.naver.maps.map.NaverMap // ⭐ 추가
+import com.naver.maps.map.overlay.Marker // ⭐ 추가
+import com.naver.maps.map.overlay.PolylineOverlay // ⭐ 추가
 
 
 @HiltViewModel
@@ -27,6 +30,33 @@ class TrailViewModel @Inject constructor(
     val invalidToken = _invalidToken.receiveAsFlow()
     private val _recommendedPaths = MutableStateFlow<AuthResult<List<UserPath>>>(AuthResult.NoConstructor)
     val recommendedPaths = _recommendedPaths.asStateFlow()
+    // 폴리라인 인스턴스를 ViewModel State로 관리
+    private val _polylineOverlay = MutableStateFlow<PolylineOverlay?>(null)
+    val polylineOverlay = _polylineOverlay.asStateFlow()
+
+    // 마커 리스트를 ViewModel 내부의 MutableList로 관리
+    val currentMarkers: MutableList<Marker> = mutableListOf()
+
+    fun clearAllMapObjects(naverMap: NaverMap?) {
+        if (naverMap == null) return
+
+        // 1. 폴리라인 제거 및 초기화
+        _polylineOverlay.value?.map = null // 지도에서 명시적으로 제거
+        _polylineOverlay.value = null      // ViewModel 상태 초기화
+
+        // 2. 마커 제거 및 초기화
+        currentMarkers.forEach { marker ->
+            marker.map = null // 지도에서 명시적으로 제거
+        }
+        currentMarkers.clear() // 리스트 비우기
+
+        // 디버깅 용
+        println("🧹 TrailViewModel: 지도 객체 (폴리라인/마커) 초기화 완료")
+    }
+
+    fun setPolylineInstance(polyline: PolylineOverlay) {
+        _polylineOverlay.value = polyline
+    }
 
     private val _myPaths = MutableStateFlow<AuthResult<List<UserPath>>>(AuthResult.NoConstructor)
     val myPaths = _myPaths.asStateFlow()
@@ -37,7 +67,7 @@ class TrailViewModel @Inject constructor(
     val isPaused = _isPaused.asStateFlow()
     private val _isRecording = MutableStateFlow(false)
     private val _isFollowingPath = MutableStateFlow(false)
-    val isFollowingPath get() = _isRecording.asStateFlow()
+    val isFollowingPath get() = _isFollowingPath.asStateFlow()
     val isRecoding get() = _isRecording.asStateFlow()
     private val _recordingTime = MutableStateFlow<Long>(0L)
     val recordingTime = _recordingTime.asStateFlow()
