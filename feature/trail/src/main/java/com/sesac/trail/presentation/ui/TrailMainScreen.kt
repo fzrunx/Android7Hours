@@ -10,9 +10,11 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.BiasAlignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -20,8 +22,10 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.currentStateAsState
 import androidx.navigation.NavController
+import com.naver.maps.geometry.LatLng
 import com.naver.maps.map.LocationTrackingMode
 import com.naver.maps.map.NaverMap
+import com.naver.maps.map.overlay.Marker
 import com.naver.maps.map.util.FusedLocationSource
 import com.sesac.common.component.CommonMapLifecycle
 import com.sesac.common.component.CommonMapView
@@ -33,8 +37,10 @@ import com.sesac.domain.model.UserPath
 import com.sesac.trail.nav_graph.TrailNavigationRoute
 import com.sesac.trail.presentation.TrailViewModel
 import com.sesac.trail.presentation.component.BottomSheetContent
+import com.sesac.trail.presentation.component.MemoDialog
 import com.sesac.trail.presentation.component.RecordingControls
 import com.sesac.trail.presentation.component.ReopenSheetButton
+import com.sesac.trail.presentation.component.addMemoMarker
 
 enum class WalkPathTab { RECOMMENDED, MY_RECORDS }
 
@@ -64,29 +70,37 @@ fun TrailMainScreen(
         activity?.let { FusedLocationSource(it, 1000) }
             ?: throw IllegalStateException("Activity not found for FusedLocationSource")
     }
+    // 메모 입력용 상태
+    var showMemoDialog by remember { mutableStateOf(false) }
+    var selectedCoord by remember { mutableStateOf<LatLng?>(null) }
+    var memoText by remember { mutableStateOf("") }
+
+    // NaverMap 저장 위한 변수
+    var currentNaverMap by remember { mutableStateOf<NaverMap?>(null) }
+
+    // 마커 관리 리스트/맵
+    val markers = remember { mutableStateListOf<Marker>() }
+    val infoWindowStates = remember { mutableStateMapOf<Marker, Boolean>() }
+    val context = LocalContext.current
 
     // --- 타이머 로직 (녹화 중일 때 시간 증가) ---
     LaunchedEffect(lifecycleState, isRecording, isPaused) {
         if (isRecording && !isPaused && lifecycleState == Lifecycle.State.RESUMED) {
-
             while (isRecording && !isPaused && lifecycleState == Lifecycle.State.RESUMED) {
                 delay(1000)
                 viewModel.updateRecordingTime(1)
             }
-
             Log.d("effectPauseStop", "타이머 자동 정지됨 (lifecycle or paused)")
         }
     }
-    // 🔴 effectPauseStop 적용
-    // 화면 Pause/Stop 시 MapView도 같이 pause/stop 호출
+    // 🔴 effectPauseStop 적용  // 화면 Pause/Stop 시 MapView도 같이 pause/stop 호출
     lifecycle.effectPauseStop {
         commonMapLifecycle.mapView?.onPause()
         commonMapLifecycle.mapView?.onStop()
         Log.d("TrailMainScreen", "📌 Trail Pause/Stop → MapView pause/stop 호출됨")
     }
     Box(
-        modifier = Modifier
-            .fillMaxSize()
+        modifier = Modifier.fillMaxSize()
     ) {
         // ✅ 지도 영역 (AsyncImage → AndroidView 로 대체) // 🔹 AndroidView 안에서 attach 처리
         key(lifecycleState) {
@@ -106,14 +120,21 @@ fun TrailMainScreen(
                         mapView.onStart()
                         mapView.onResume()
                         mapView.getMapAsync{ naverMap ->
-                                naverMap.locationSource = locationSource
-                                naverMap.locationTrackingMode = LocationTrackingMode.Follow
-                                // ✅ Trail 용 지도 세팅 (기본 위치 / UI 세팅 등)
-                                naverMap.uiSettings.isLocationButtonEnabled = true
-                                naverMap.uiSettings.isZoomControlEnabled = false
-                                onMapReady?.invoke(naverMap) // 🔹 화면마다 콜백 재등록
-                                // ✅ onMapReady 시점에 콜백 실행 가능
-                                Log.d("TrailMainScreen", "지도 준비 완료")
+                            currentNaverMap = naverMap   // ready 된 지도 저장!!
+                            naverMap.locationSource = locationSource
+                            naverMap.locationTrackingMode = LocationTrackingMode.Follow
+                            // ✅ Trail 용 지도 세팅 (기본 위치 / UI 세팅 등)
+                            naverMap.uiSettings.isLocationButtonEnabled = true
+                            naverMap.uiSettings.isZoomControlEnabled = false
+                            onMapReady?.invoke(naverMap) // 🔹 화면마다 콜백 재등록
+                            // ✅ onMapReady 시점에 콜백 실행 가능
+                            Log.d("TrailMainScreen", "지도 준비 완료")
+                            // 롱 클릭: 메모 입력
+                            naverMap.setOnMapLongClickListener { _, coord ->
+                                selectedCoord = coord
+                                memoText = ""
+                                showMemoDialog = true
+                            }
                         }
                         mapView
                     },
@@ -209,5 +230,28 @@ fun TrailMainScreen(
                 }
             )
         }
+        MemoDialog(
+            show = showMemoDialog,
+            memoText = memoText,
+            onTextChange = { memoText = it },
+            onCancel = { showMemoDialog = false },
+            onConfirm = {
+                val coord = selectedCoord
+                val map = currentNaverMap
+
+                if (coord != null && map != null) {
+                    addMemoMarker(
+                        context = context,
+                        naverMap = map,
+                        coord = coord,
+                        memo = memoText,
+                        markers = markers,
+                        infoWindowStates = infoWindowStates
+                    )
+                }
+
+                showMemoDialog = false
+            }
+        )
     }
 }
