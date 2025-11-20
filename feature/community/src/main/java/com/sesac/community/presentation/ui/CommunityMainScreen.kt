@@ -7,31 +7,35 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.sesac.common.component.CommonCommentSheetContent
 import com.sesac.common.component.CommonFilterTabs
 import com.sesac.common.component.CommonSearchBarContent
+import com.sesac.common.component.LocalIsSearchOpen
 import com.sesac.common.ui.theme.Gray400
 import com.sesac.common.ui.theme.Primary
 import com.sesac.community.presentation.CommunityViewModel
-import com.sesac.common.component.CommonCommentSheetContent
 import com.sesac.domain.model.Post
 import kotlinx.coroutines.launch
 import com.sesac.common.R as cR
+
 
 @SuppressLint("UnrememberedMutableState")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CommunityMainScreen(
-    isSearchOpen: MutableState<Boolean>,
     viewModel: CommunityViewModel = hiltViewModel()
 ) {
     val coroutineScope = rememberCoroutineScope()
@@ -50,19 +54,28 @@ fun CommunityMainScreen(
     val searchQuery by viewModel.searchQuery.collectAsStateWithLifecycle()
     val activeFilter by viewModel.activeFilter.collectAsState()
 
+    val isSearchOpenState = LocalIsSearchOpen.current
+    val isSearchOpen = LocalIsSearchOpen.current.value
+    val onSearchOpenChange: (Boolean) -> Unit = { newValue ->
+        isSearchOpenState.value = newValue
+    }
+
     val postDeleteMessage = stringResource(cR.string.community_snackbar_post_delecte)
     val postCreateMessage = stringResource(cR.string.community_snackbar_post_create)
     val postUpdateMessage = stringResource(cR.string.community_snackbar_post_update)
     val postEditorCategories = listOf("산책후기", "정보공유", "질문")
 
-    // BottomSheet와 ViewModel 상태 동기화
+    /* BottomSheet와 ViewModel 상태 동기화 */
     LaunchedEffect(viewModel.isCommentsOpen) {
         if (viewModel.isCommentsOpen) modalSheetState.show()
         else modalSheetState.hide()
     }
 
+    val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
+
     // -------------------- UI --------------------
     Scaffold(
+        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         floatingActionButton = {
             FloatingActionButton(
                 onClick = { isCreateDialogOpen = true },
@@ -72,7 +85,64 @@ fun CommunityMainScreen(
                 Icon(Icons.Default.Add, contentDescription = "새 게시글 작성")
             }
         },
-        snackbarHost = { SnackbarHost(snackbarHostState) }
+        snackbarHost = { SnackbarHost(snackbarHostState) },
+        topBar = {
+            Column {
+                // 상태에 따라 TopBar 교체
+                if (isSearchOpen) {
+                    // 1️⃣ 검색 모드
+                    TopAppBar(
+                        title = {
+                            CommonSearchBarContent(
+                                isSearchOpen = true,
+                                query = searchQuery,
+                                onQueryChange = viewModel::onSearchQueryChange
+                            )
+                        },
+                        navigationIcon = {
+                            IconButton(onClick = { onSearchOpenChange(false) }) {
+                                // Icons.Default -> Icons.Filled 로 변경
+                                Icon(Icons.Filled.Close, contentDescription = "검색 닫기")
+                            }
+                        },
+                        scrollBehavior = scrollBehavior,
+                        colors = TopAppBarDefaults.topAppBarColors(
+                            containerColor = MaterialTheme.colorScheme.primaryContainer,
+                            scrolledContainerColor = MaterialTheme.colorScheme.primaryContainer
+                        )
+                    )
+                } else {
+                    // 2️⃣ 평상시 모드
+                    CenterAlignedTopAppBar(
+                        title = { Text("커뮤니티", fontWeight = FontWeight.Bold) },
+                        navigationIcon = {
+                            IconButton(onClick = { /* 커뮤니티 홈 로직 */ }) {
+                                // Icons.Default -> Icons.Filled 로 변경
+                                Icon(Icons.Filled.Search, contentDescription = "커뮤니티 홈")
+                            }
+                        },
+                        actions = {
+                            IconButton(onClick = { onSearchOpenChange(true) }) {
+                                // Icons.Default -> Icons.Filled 로 변경
+                                Icon(Icons.Filled.Search, contentDescription = "검색 열기")
+                            }
+                        },
+                        scrollBehavior = scrollBehavior,
+                        colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                            containerColor = MaterialTheme.colorScheme.primaryContainer,
+                            scrolledContainerColor = MaterialTheme.colorScheme.primaryContainer
+                        )
+                    )
+                }
+
+                // 필터 탭
+                CommonFilterTabs(
+                    filterOptions = listOf("전체", "인기글", "산책후기", "정보공유"),
+                    selectedFilter = activeFilter,
+                    onFilterSelected = viewModel::onFilterChange
+                )
+            }
+        }
     ) { paddingValues ->
 
         Column(
@@ -80,17 +150,6 @@ fun CommunityMainScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-            // 검색바 & 필터
-            CommonSearchBarContent(
-                isSearchOpen = isSearchOpen.value,
-                query = searchQuery,
-                onQueryChange = viewModel::onSearchQueryChange
-            )
-            CommonFilterTabs(
-                filterOptions = listOf("전체", "인기글", "산책후기", "정보공유"),
-                selectedFilter = activeFilter,
-                onFilterSelected = viewModel::onFilterChange
-            )
 
             // 게시물 목록
             if (filteredPosts.isEmpty()) {

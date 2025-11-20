@@ -12,6 +12,7 @@ import androidx.navigation.compose.NavHost
 import com.sesac.auth.nav_graph.authRoute
 import com.sesac.common.component.CommonMapLifecycle
 import com.sesac.community.nav_graph.communityRoute
+import com.sesac.community.presentation.CommunityViewModel
 import com.sesac.domain.result.AuthUiState
 import com.sesac.home.nav_graph.homeRoute
 import com.sesac.monitor.nav_graph.monitorRoute
@@ -24,6 +25,7 @@ import com.sesac.trail.presentation.TrailViewModel
 fun AppNavHost(
     paddingValues: PaddingValues,
     trailViewModel: TrailViewModel,
+    communityViewModel: CommunityViewModel,
     navController: NavHostController,
     nav2Home: () -> Unit,
     nav2LoginScreen: () -> Unit,
@@ -56,7 +58,7 @@ fun AppNavHost(
             onStartFollowing = onStartFollowing,
             commonMapLifecycle = commonMapLifecycle,
             )
-        communityRoute(isSearchOpen = isSearchOpen,)
+        communityRoute(viewModel = communityViewModel,)
         monitorRoute(
             navController = navController,
             commonMapLifecycle = commonMapLifecycle,
