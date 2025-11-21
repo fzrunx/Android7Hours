@@ -34,10 +34,10 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -58,20 +58,21 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import coil3.compose.AsyncImage
+import com.sesac.common.ui.theme.Border
 import com.sesac.common.ui.theme.GrayTabText
 import com.sesac.common.ui.theme.NoteBox
 import com.sesac.common.ui.theme.PaddingSection
+import com.sesac.common.ui.theme.Primary
 import com.sesac.common.ui.theme.PrimaryPurpleLight
 import com.sesac.common.ui.theme.Purple600
 import com.sesac.common.ui.theme.Red500
 import com.sesac.common.ui.theme.SheetHandle
+import com.sesac.common.ui.theme.White
 import com.sesac.common.ui.theme.paddingLarge
 import com.sesac.common.ui.theme.paddingMicro
 import com.sesac.common.ui.theme.paddingNone
@@ -79,7 +80,6 @@ import com.sesac.common.ui.theme.paddingSmall
 import com.sesac.domain.model.Coord
 import com.sesac.domain.model.UiEvent
 import com.sesac.domain.result.AuthUiState
-import com.sesac.trail.nav_graph.TrailNavigationRoute
 import com.sesac.trail.presentation.TrailViewModel
 import com.sesac.trail.presentation.component.TagFlow
 import kotlinx.coroutines.flow.collectLatest
@@ -115,7 +115,6 @@ fun TrailCreateScreen(
     val path by viewModel.selectedPath.collectAsStateWithLifecycle()
     Log.d("Tag-TrailCreateScreen", "selectedCreatePath = $path")
 
-    val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     var validationState by remember { mutableStateOf(ValidationState()) }
 
@@ -125,87 +124,83 @@ fun TrailCreateScreen(
         }
     }
 
-    Scaffold(
-        snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
-    ) { paddingValues ->
-        if (path == null) {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator()
-            }
-            return@Scaffold
+    if (path == null) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            CircularProgressIndicator()
         }
+    }
 
-        var uploadedImageUri by remember { mutableStateOf<String?>(null) }
-        var distanceString by remember { mutableStateOf(path?.distance?.takeIf { it > 0f }?.toString() ?: "") }
-        var timeString by remember { mutableStateOf(path?.time?.takeIf { it > 0 }?.toString() ?: "") }
+    var uploadedImageUri by remember { mutableStateOf<String?>(null) }
+    var distanceString by remember { mutableStateOf(path?.distance?.takeIf { it > 0f }?.toString() ?: "") }
+    var timeString by remember { mutableStateOf(path?.time?.takeIf { it > 0 }?.toString() ?: "") }
 
-        LaunchedEffect(path) {
-            distanceString = path?.distance?.takeIf { it > 0f }?.toString() ?: ""
-            timeString = path?.time?.takeIf { it > 0 }?.toString() ?: ""
+    LaunchedEffect(path) {
+        distanceString = path?.distance?.takeIf { it > 0f }?.toString() ?: ""
+        timeString = path?.time?.takeIf { it > 0 }?.toString() ?: ""
+    }
+
+    val imagePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri ->
+        if (uri != null) {
+            uploadedImageUri = uri.toString()
+            scope.launch{ Toast.makeText(context, "이미지가 업로드되었습니다", Toast.LENGTH_SHORT).show() }
         }
+    }
 
-        val imagePickerLauncher = rememberLauncherForActivityResult(
-            contract = ActivityResultContracts.GetContent()
-        ) { uri ->
-            if (uri != null) {
-                uploadedImageUri = uri.toString()
-                scope.launch { snackbarHostState.showSnackbar("이미지가 업로드되었습니다") }
-            }
-        }
-
-        val handleTagToggle: (String) -> Unit = { tag ->
-            path?.let {
-                val newTags = if (it.tags.contains(tag)) {
-                    it.tags - tag
+    val handleTagToggle: (String) -> Unit = { tag ->
+        path?.let {
+            val newTags = if (it.tags.contains(tag)) {
+                it.tags - tag
+            } else {
+                if (it.tags.size < 5) {
+                    it.tags + tag
                 } else {
-                    if (it.tags.size < 5) {
-                        it.tags + tag
-                    } else {
-                        scope.launch {
-                            snackbarHostState.showSnackbar("태그는 최대 5개까지 선택 가능합니다")
-                        }
-                        it.tags
+                    scope.launch {
+                        Toast.makeText(context, "태그는 최대 5개까지 선택 가능합니다", Toast.LENGTH_SHORT).show()
                     }
-                }
-                viewModel.updateSelectedPath(it.copy(tags = newTags))
-            }
-        }
-
-        fun handleSave() {
-            scope.launch {
-                path?.let {
-                    val isNameInvalid = it.name.isBlank()
-                    val isDistanceInvalid = it.distance <= 0f
-                    val isTimeInvalid = it.time <= 0
-
-                    validationState = ValidationState(
-                        isNameInvalid = isNameInvalid,
-                        isDistanceInvalid = isDistanceInvalid,
-                        isTimeInvalid = isTimeInvalid
-                    )
-
-                    if (isNameInvalid || isDistanceInvalid || isTimeInvalid) {
-                        return@launch
-                    }
-
-                    if (it.id != -1) {
-                        Log.d("TrailCreateScreen", "Updating path: $path")
-                        viewModel.updatePath(uiState.token)
-                        snackbarHostState.showSnackbar("산책로가 수정되었습니다!")
-                    } else {
-                        Log.d("Tag-TrailCreateScreen", "New path created: $path")
-                        viewModel.savePath(uiState.token, Coord.DEFAULT)
-                        snackbarHostState.showSnackbar("산책로가 등록되었습니다!")
-                    }
-                    navController.popBackStack()
+                    it.tags
                 }
             }
+            viewModel.updateSelectedPath(it.copy(tags = newTags))
         }
+    }
 
+    fun handleSave() {
+        scope.launch {
+            path?.let {
+                val isNameInvalid = it.name.isBlank()
+                val isDistanceInvalid = it.distance <= 0f
+                val isTimeInvalid = it.time <= 0
+
+                validationState = ValidationState(
+                    isNameInvalid = isNameInvalid,
+                    isDistanceInvalid = isDistanceInvalid,
+                    isTimeInvalid = isTimeInvalid
+                )
+
+                if (isNameInvalid || isDistanceInvalid || isTimeInvalid) {
+                    return@launch
+                }
+
+                if (it.id != -1) {
+                    Log.d("TrailCreateScreen", "Updating path: $path")
+                    viewModel.updatePath(uiState.token)
+                    Toast.makeText(context, "산책로가 수정되었습니다!", Toast.LENGTH_SHORT).show()
+                } else {
+                    Log.d("Tag-TrailCreateScreen", "New path created: $path")
+                    viewModel.savePath(uiState.token, Coord.DEFAULT)
+                    Toast.makeText(context, "산책로가 등록되었습니다!", Toast.LENGTH_SHORT).show()
+                }
+                navController.popBackStack()
+            }
+        }
+    }
+
+    path?.let { pathContent ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues)
                 .verticalScroll(rememberScrollState())
                 .padding(paddingLarge),
             verticalArrangement = Arrangement.spacedBy(PaddingSection)
@@ -216,18 +211,37 @@ fun TrailCreateScreen(
                 onRemoveClick = { uploadedImageUri = null }
             )
 
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text("추천 산책로 등록")
+                Spacer(modifier = Modifier.fillMaxSize(0.8f))
+                Switch(
+                    checked = !pathContent.isPrivate,
+                    onCheckedChange = { newIsPrivate -> viewModel.updateSelectedPath(pathContent.copy(isPrivate = !newIsPrivate)) },
+                    colors = SwitchDefaults.colors(
+                        checkedThumbColor = White,
+                        checkedTrackColor = Primary,
+                        uncheckedThumbColor = White,
+                        uncheckedTrackColor = Border
+                    )
+                )
+            }
+
             FormTextField(
                 label = "산책로 이름",
-                value = path?.name ?: "",
-                onValueChange = { newValue -> path?.let { viewModel.updateSelectedPath(it.copy(name = newValue)) } },
+                value = pathContent.name,
+                onValueChange = { newValue -> viewModel.updateSelectedPath(pathContent.copy(name = newValue)) },
                 placeholder = "예: 한강공원 벚꽃길",
                 isRequired = true,
                 isError = validationState.isNameInvalid
             )
 
             DifficultySelector(
-                selectedLevel = path?.difiiculty ?: "초급",
-                onLevelSelect = { newDifficulty -> path?.let { viewModel.updateSelectedPath(it.copy(difiiculty = newDifficulty)) } }
+                selectedLevel = pathContent.difiiculty ?: "초급",
+                onLevelSelect = { newDifficulty -> viewModel.updateSelectedPath(pathContent.copy(difiiculty = newDifficulty)) }
             )
 
             DistanceTimeInputs(
@@ -235,9 +249,7 @@ fun TrailCreateScreen(
                 onDistanceChange = { newString ->
                     if (newString.matches(Regex("^\\d*\\.?\\d*\$"))) {
                         distanceString = newString
-                        path?.let {
-                            viewModel.updateSelectedPath(it.copy(distance = newString.toFloatOrNull() ?: 0f))
-                        }
+                        viewModel.updateSelectedPath(pathContent.copy(distance = newString.toFloatOrNull() ?: 0f))
                     }
                 },
                 isDistanceError = validationState.isDistanceInvalid,
@@ -245,9 +257,7 @@ fun TrailCreateScreen(
                 onTimeChange = { newString ->
                     if (newString.matches(Regex("^\\d*\$"))) {
                         timeString = newString
-                        path?.let {
-                            viewModel.updateSelectedPath(it.copy(time = newString.toIntOrNull() ?: 0))
-                        }
+                        viewModel.updateSelectedPath(pathContent.copy(time = newString.toIntOrNull() ?: 0))
                     }
                 },
                 isTimeError = validationState.isTimeInvalid
@@ -255,14 +265,14 @@ fun TrailCreateScreen(
 
             FormTextField(
                 label = "산책로 소개",
-                value = path?.description ?: "",
-                onValueChange = { newDescription -> path?.let { viewModel.updateSelectedPath(it.copy(description = newDescription)) } },
+                value = pathContent.description ?: "",
+                onValueChange = { newDescription -> viewModel.updateSelectedPath(pathContent.copy(description = newDescription)) },
                 placeholder = "이 산책로의 특징이나 추천 이유를 작성해주세요...",
                 minLines = 4
             )
 
             TagFlow(
-                selectedTags = path?.tags ?: emptyList(),
+                selectedTags = pathContent.tags,
                 onTagToggle = handleTagToggle,
                 editable = true
             )
@@ -275,9 +285,10 @@ fun TrailCreateScreen(
                 onSave = {
                     handleSave()
                 },
-                isEditing = path?.id != -1
+                isEditing = pathContent.id != -1
             )
         }
+
     }
 }
 
@@ -499,7 +510,9 @@ fun DistanceTimeInputs(
             isRequired = true,
             isError = isDistanceError,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-            modifier = Modifier.width(paddingNone).weight(1f, fill = true)
+            modifier = Modifier
+                .width(paddingNone)
+                .weight(1f, fill = true)
         )
         FormTextField(
             label = "예상 시간 (분)",
@@ -509,7 +522,9 @@ fun DistanceTimeInputs(
             isRequired = true,
             isError = isTimeError,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-            modifier = Modifier.width(paddingNone).weight(1f, fill = true)
+            modifier = Modifier
+                .width(paddingNone)
+                .weight(1f, fill = true)
         )
     }
 }

@@ -28,10 +28,11 @@ import com.sesac.common.ui.theme.cardHeight
 import com.sesac.common.ui.theme.cardRound
 import com.sesac.common.ui.theme.paddingMedium
 import com.sesac.domain.model.HomeCardData
+import com.sesac.domain.model.UserPath
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ContentCardView(data: HomeCardData?, onClick: () -> Unit, modifier: Modifier = Modifier) {
+fun ContentCardView(data: UserPath?, onClick: () -> Unit, modifier: Modifier = Modifier) {
     val context = LocalContext.current
     Card(
         onClick = onClick,
@@ -41,7 +42,7 @@ fun ContentCardView(data: HomeCardData?, onClick: () -> Unit, modifier: Modifier
         Box(modifier = Modifier.fillMaxSize()) {
             AsyncImage(
                 model = ImageRequest.Builder(context)
-                    .data(data?.image)
+                    .data(data?.thumbnail)
                     .crossfade(true)
                     .scale(Scale.FILL)
                     .build(),
