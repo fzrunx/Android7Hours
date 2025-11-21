@@ -12,8 +12,8 @@ data class Coord(
         val DEFAULT = Coord(
 //            latitude = 37.52952,
 //            longitude = 126.9645,
-            latitude = 37.6632,
-            longitude = 126.4651,
+            latitude = 35.0996,
+            longitude = 129.1237,
         )
     }
 }

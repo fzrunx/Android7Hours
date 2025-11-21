@@ -5,7 +5,7 @@ import com.sesac.data.type.DraftStatus
 import com.sesac.domain.model.UserPath
 
 fun UserPath.toPathEntity() = PathEntity(
-    id = this.id,
+    id = if (this.id == -1) 0 else this.id,
     pathName = this.name,
     pathComment = this.description,
     level = when (this.difiiculty) {

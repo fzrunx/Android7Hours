@@ -199,7 +199,7 @@ fun TrailMainScreen(
     }
 
     LaunchedEffect(Unit) {
-        viewModel.getRecommendedPaths(Coord.DEFAULT, 10000f)
+        viewModel.getRecommendedPaths(Coord.DEFAULT, 50000f)
     }
 
     LaunchedEffect(uiState) {
@@ -424,6 +424,8 @@ fun TrailMainScreen(
 
                     // 새로운 UserPath 객체를 생성하되, 기록된 좌표를 포함시킴
                     val newPath = UserPath.EMPTY.copy(coord = recordedCoords)
+
+                    viewModel.saveDraftAsync(newPath)
 
                     // ViewModel에 새로 생성된 경로를 업데이트
                     viewModel.updateSelectedPath(newPath)

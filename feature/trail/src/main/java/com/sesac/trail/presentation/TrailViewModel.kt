@@ -282,6 +282,12 @@ class TrailViewModel @Inject constructor(
         }
     }
 
+    fun saveDraftAsync(draft: UserPath) {
+        viewModelScope.launch {
+            saveDraft(draft)
+        }
+    }
+
 
     // 댓글 상태
     private val _comments = MutableStateFlow<List<Comment>>(emptyList())
