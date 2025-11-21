@@ -54,7 +54,7 @@ fun MyRecordsTabContent(
     isEditMode: Boolean,
     onPathClick: (UserPath) -> Unit,
     onFollowClick: () -> Unit,
-    onRegisterClick: () -> Unit,
+//    onRegisterClick: () -> Unit,
     onEditModeToggle: () -> Unit,
 //    onModifyClick: (UserPath) -> Unit,
     onDeleteClick: (Int) -> Unit,
@@ -80,7 +80,7 @@ fun MyRecordsTabContent(
                     isEditMode = isEditMode,
                     onPathClick = onPathClick,
                     onFollowClick = onFollowClick,
-                    onRegisterClick = onRegisterClick,
+//                    onRegisterClick = onRegisterClick,
 //                    onModifyClick = onModifyClick,
                     onDeleteClick = onDeleteClick
                 )
@@ -96,7 +96,7 @@ fun MyRecordItem(
     isEditMode: Boolean,
     onPathClick: (UserPath) -> Unit,
     onFollowClick: () -> Unit,
-    onRegisterClick: () -> Unit,
+//    onRegisterClick: () -> Unit,
 //    onModifyClick: (UserPath) -> Unit,
     onDeleteClick: (Int) -> Unit
 ) {
@@ -165,15 +165,15 @@ fun MyRecordItem(
                         colors = ButtonDefaults.buttonColors(containerColor = Purple600),
                         contentPadding = PaddingValues(horizontal = paddingSmall, vertical = paddingMicro)
                     ) { Text("따라가기", color = White) }
-                    Button(
-                        onClick = {
-                            viewModel.updateSelectedPath(myPath)
-                            Log.d("Tag-MyRecordControlTab", "record = $myPath")
-                            onRegisterClick()
-                        },
-                        colors = ButtonDefaults.buttonColors(containerColor = PrimaryGreenDark),
-                        contentPadding = PaddingValues(horizontal = paddingSmall, vertical = paddingMicro)
-                    ) { Text("등록하기", color = White) }
+//                    Button(
+//                        onClick = {
+//                            viewModel.updateSelectedPath(myPath)
+//                            Log.d("Tag-MyRecordControlTab", "record = $myPath")
+//                            onRegisterClick()
+//                        },
+//                        colors = ButtonDefaults.buttonColors(containerColor = PrimaryGreenDark),
+//                        contentPadding = PaddingValues(horizontal = paddingSmall, vertical = paddingMicro)
+//                    ) { Text("등록하기", color = White) }
                 }
             }
         }
