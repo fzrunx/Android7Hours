@@ -17,12 +17,14 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Pets
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -37,6 +39,7 @@ import com.sesac.common.ui.theme.Gray200
 import com.sesac.common.ui.theme.Primary
 import com.sesac.common.ui.theme.PrimaryGreenDark
 import com.sesac.common.ui.theme.Purple600
+import com.sesac.common.ui.theme.Red500
 import com.sesac.common.ui.theme.White
 import com.sesac.common.ui.theme.paddingMicro
 import com.sesac.common.ui.theme.paddingSmall
@@ -53,7 +56,7 @@ fun MyRecordsTabContent(
     onFollowClick: () -> Unit,
     onRegisterClick: () -> Unit,
     onEditModeToggle: () -> Unit,
-    onModifyClick: (UserPath) -> Unit,
+//    onModifyClick: (UserPath) -> Unit,
     onDeleteClick: (Int) -> Unit,
 ) {
     Column {
@@ -78,7 +81,7 @@ fun MyRecordsTabContent(
                     onPathClick = onPathClick,
                     onFollowClick = onFollowClick,
                     onRegisterClick = onRegisterClick,
-                    onModifyClick = onModifyClick,
+//                    onModifyClick = onModifyClick,
                     onDeleteClick = onDeleteClick
                 )
             }
@@ -94,7 +97,7 @@ fun MyRecordItem(
     onPathClick: (UserPath) -> Unit,
     onFollowClick: () -> Unit,
     onRegisterClick: () -> Unit,
-    onModifyClick: (UserPath) -> Unit,
+//    onModifyClick: (UserPath) -> Unit,
     onDeleteClick: (Int) -> Unit
 ) {
     Card(
@@ -134,16 +137,26 @@ fun MyRecordItem(
             Spacer(Modifier.width(paddingSmall))
             if (isEditMode) {
                 Column(verticalArrangement = Arrangement.spacedBy(paddingMicro)) {
-                    Button(
-                        onClick = { onModifyClick(myPath) },
-                        colors = ButtonDefaults.buttonColors(containerColor = Purple600),
-                        contentPadding = PaddingValues(horizontal = paddingSmall, vertical = paddingMicro)
-                    ) { Text("수정") }
-                    Button(
+//                    Button(
+//                        onClick = { onModifyClick(myPath) },
+//                        colors = ButtonDefaults.buttonColors(containerColor = Purple600),
+//                        contentPadding = PaddingValues(horizontal = paddingSmall, vertical = paddingMicro)
+//                    ) { Text("수정") }
+                    IconButton(
                         onClick = { onDeleteClick(myPath.id) },
-                        colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
-                        contentPadding = PaddingValues(horizontal = paddingSmall, vertical = paddingMicro)
-                    ) { Text("삭제") }
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Delete,
+                            contentDescription = "삭제",
+                            tint = MaterialTheme.colorScheme.error
+                        )
+                    }
+
+//                    Button(
+//                        onClick = { onDeleteClick(myPath.id) },
+//                        colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
+//                        contentPadding = PaddingValues(horizontal = paddingSmall, vertical = paddingMicro)
+//                    ) { Text("삭제") }
                 }
             } else {
                 Column(verticalArrangement = Arrangement.spacedBy(paddingMicro)) {
@@ -151,7 +164,7 @@ fun MyRecordItem(
                         onClick = onFollowClick,
                         colors = ButtonDefaults.buttonColors(containerColor = Purple600),
                         contentPadding = PaddingValues(horizontal = paddingSmall, vertical = paddingMicro)
-                    ) { Text("따라가기") }
+                    ) { Text("따라가기", color = White) }
                     Button(
                         onClick = {
                             viewModel.updateSelectedPath(myPath)
@@ -160,7 +173,7 @@ fun MyRecordItem(
                         },
                         colors = ButtonDefaults.buttonColors(containerColor = PrimaryGreenDark),
                         contentPadding = PaddingValues(horizontal = paddingSmall, vertical = paddingMicro)
-                    ) { Text("등록하기") }
+                    ) { Text("등록하기", color = White) }
                 }
             }
         }

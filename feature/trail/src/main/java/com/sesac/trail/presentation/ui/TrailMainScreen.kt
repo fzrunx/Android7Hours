@@ -195,18 +195,6 @@ fun TrailMainScreen(
             pathCoords.clear()
 
             Log.d("TrailMainScreen", "🧹 녹화 중지 시 폴리라인, 마커, 좌표 초기화 완료")
-        } else {
-
-        }
-    }
-
-    LaunchedEffect(lifecycleState, isRecording, isPaused) {
-        if (isRecording && !isPaused && lifecycleState == Lifecycle.State.RESUMED) {
-            while (isRecording && !isPaused && lifecycleState == Lifecycle.State.RESUMED) {
-                delay(1000)
-                viewModel.updateRecordingTime(1)
-            }
-            Log.d("effectPauseStop", "타이머 자동 정지됨 (lifecycle or paused)")
         }
     }
 
@@ -222,13 +210,11 @@ fun TrailMainScreen(
 
     // --- 타이머 로직 (녹화 중일 때 시간 증가) ---
     LaunchedEffect(lifecycleState, isRecording, isPaused) {
-        if (isRecording && !isPaused && lifecycleState == Lifecycle.State.RESUMED) {
-            while (isRecording && !isPaused && lifecycleState == Lifecycle.State.RESUMED) {
-                delay(1000)
-                viewModel.updateRecordingTime(1)
-            }
-            Log.d("effectPauseStop", "타이머 자동 정지됨 (lifecycle or paused)")
+        while (isRecording && !isPaused && lifecycleState == Lifecycle.State.RESUMED) {
+            delay(1000)
+            viewModel.updateRecordingTime(1)
         }
+        Log.d("effectPauseStop", "타이머 자동 정지됨 (lifecycle or paused)")
     }
     // 🔴 effectPauseStop 적용  // 화면 Pause/Stop 시 MapView도 같이 pause/stop 호출
     lifecycle.EffectPauseStop {

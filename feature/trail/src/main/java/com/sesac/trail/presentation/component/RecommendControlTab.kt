@@ -97,7 +97,7 @@ fun RecommendedPathItem(
                 colors = ButtonDefaults.buttonColors(containerColor = Purple600),
                 contentPadding = PaddingValues(horizontal = paddingSmall, vertical = paddingMicro)
             ) {
-                Text("따라가기")
+                Text("따라가기", color = White)
             }
         }
     }

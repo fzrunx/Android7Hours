@@ -6,12 +6,12 @@ import com.sesac.domain.model.BannerData
 import com.sesac.domain.model.Community
 import com.sesac.domain.model.DogCafe
 import com.sesac.domain.model.TravelDestination
-import com.sesac.domain.model.WalkPath
 import com.sesac.domain.usecase.community.CommunityUseCase
 import com.sesac.domain.usecase.home.HomeUseCase
 import com.sesac.domain.model.User
+import com.sesac.domain.model.UserPath
 import com.sesac.domain.result.AuthResult
-import com.sesac.domain.usecase.auth.AuthUseCase
+import com.sesac.domain.usecase.trail.TrailUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -21,38 +21,29 @@ import javax.inject.Inject
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
+    private val trailUseCase: TrailUseCase,
     private val homeUseCase: HomeUseCase,
     private val communityUseCase: CommunityUseCase,
-    private val authUseCase: AuthUseCase,
 ): ViewModel() {
+    private val _recommendPathList = MutableStateFlow<AuthResult<List<UserPath?>>>(AuthResult.NoConstructor)
+    val recommendPathList get() = _recommendPathList.asStateFlow()
     private val _bannerList = MutableStateFlow<List<BannerData?>>(emptyList())
-    private val _dogCafelist = MutableStateFlow<List<DogCafe?>>(emptyList())
-    private val _travelDestinationList = MutableStateFlow<List<TravelDestination?>>(emptyList())
-    private val _walkPathDestinationList = MutableStateFlow<List<WalkPath?>>(emptyList())
-    private val _communityList = MutableStateFlow<List<Community?>>(emptyList())
-    private val _userAPIList = MutableStateFlow<AuthResult<List<User>>>(AuthResult.NoConstructor)
-
     val bannerList get() = _bannerList.asStateFlow()
-    val dogCafeList get() = _dogCafelist.asStateFlow()
-    val travelDestinationList get() = _travelDestinationList.asStateFlow()
-    val walkPathList get() = _walkPathDestinationList.asStateFlow()
+    private val _communityList = MutableStateFlow<List<Community?>>(emptyList())
     val communityList get() = _communityList.asStateFlow()
-    val userList get() = _userAPIList.asStateFlow()
 
     init {
         viewModelScope.launch {
-//            authUseCase.getAllUsers().collectLatest { _userAPIList.value = it }
             homeUseCase.getAllBannersUseCase().collectLatest { _bannerList.value = it }
-            homeUseCase.getAllDogCafeUseCase().collectLatest { _dogCafelist.value = it }
-            homeUseCase.getAllTravelDestinationUseCase().collectLatest { _travelDestinationList.value = it }
-            homeUseCase.getAllWalkPathUseCase().collectLatest { _walkPathDestinationList.value = it }
+            getRecommendedPaths()
             communityUseCase.getAllCommunityUseCase().collectLatest { _communityList.value = it }
         }
     }
 
-    fun getAllUser() {
+    fun getRecommendedPaths() {
         viewModelScope.launch {
-            authUseCase.getAllUsers().collectLatest { _userAPIList.value = it }
+            trailUseCase.getAllRecommendedPathsUseCase(null, null).collectLatest { _recommendPathList.value = it }
         }
     }
+
 }
