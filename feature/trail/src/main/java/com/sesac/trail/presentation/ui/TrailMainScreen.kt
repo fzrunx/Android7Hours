@@ -197,10 +197,8 @@ fun TrailMainScreen(
         viewModel.getRecommendedPaths(Coord.DEFAULT, 10000f)
     }
 
-    LaunchedEffect(uiState) {
-        uiState.token?.let {
-            viewModel.getMyPaths(it)
-        }
+    LaunchedEffect(Unit, uiState) {
+        viewModel.getMyPaths(uiState.token)
     }
 
     // --- 타이머 로직 (녹화 중일 때 시간 증가) ---

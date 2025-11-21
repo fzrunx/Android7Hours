@@ -1,5 +1,6 @@
 package com.sesac.trail.presentation
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.sesac.domain.model.Coord
@@ -103,10 +104,14 @@ class TrailViewModel @Inject constructor(
         }
     }
 
-    fun getMyPaths(token: String) {
+    fun getMyPaths(token: String?) {
         viewModelScope.launch {
-            trailUseCase.getMyPaths(token).collectLatest { paths ->
-                if (paths is AuthResult.Success) { _myPaths.value = paths }
+            token?.let {
+                trailUseCase.getMyPaths(it).collectLatest { paths ->
+                    if (paths is AuthResult.Success) { _myPaths.value = paths }
+                }
+            } ?: run {
+                _myPaths.value = AuthResult.NoConstructor
             }
         }
     }
@@ -234,19 +239,7 @@ class TrailViewModel @Inject constructor(
 
     fun handleOpenComments(path: UserPath) {
         // Create a synthetic Post object from the UserPath
-        selectedPostForComments = Post(
-            id = path.id.toLong(),
-            author = path.uploader,
-            authorImage = "", // No author image in UserPath
-            timeAgo = "", // No time info in UserPath
-            content = path.name, // Use path name as content
-            image = null, // No image in UserPath
-            likes = path.likes,
-            comments = 0, // We'll get comments from _comments
-            isLiked = false, // Assuming not liked by default
-            category = "", // No category in UserPath
-            createdAt = Date() // Placeholder
-        )
+        selectedPostForComments = Post.EMPTY
         isCommentsOpen = true
     }
 
@@ -273,7 +266,7 @@ class TrailViewModel @Inject constructor(
 
         // We don't need to update a list of posts here, as we only have one "post"
         // But we could update the comment count on the selectedPostForComments
-        selectedPostForComments = selectedPostForComments?.copy(comments = selectedPostForComments!!.comments + 1)
+        selectedPostForComments = selectedPostForComments?.copy(commentsCount = selectedPostForComments!!.commentsCount + 1)
 
 
         newCommentContent = ""
