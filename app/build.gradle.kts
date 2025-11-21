@@ -101,4 +101,11 @@ dependencies {
     implementation(libs.threetenabp) // localDate 사용하려면 sdk 26 이하에서는 이렇게 써야됨
     implementation(libs.bundles.kakao) // (libs.versions.toml에 정의된)
     ksp("com.squareup.moshi:moshi-kotlin-codegen:1.15.0")
+
+    // MinIO Client
+    implementation("io.minio:minio:8.5.10")
+    // Coroutines
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.7.0")
+
 }

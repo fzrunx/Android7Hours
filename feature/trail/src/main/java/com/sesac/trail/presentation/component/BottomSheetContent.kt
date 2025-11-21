@@ -56,7 +56,7 @@ fun BottomSheetContent(
     onTabChange: (WalkPathTab) -> Unit,
     onPathClick: (UserPath) -> Unit,
     onFollowClick: (UserPath) -> Unit,
-    onRegisterClick: () -> Unit,
+//    onRegisterClick: () -> Unit,
     onEditModeToggle: () -> Unit,
     onModifyClick: (UserPath) -> Unit,
     onDeleteClick: (Int) -> Unit
@@ -144,7 +144,7 @@ fun BottomSheetContent(
                         isEditMode = isEditMode,
                         onPathClick = onPathClick,
                         onFollowClick = { /* MyRecord에서 UserPath로 변환 필요 */ },
-                        onRegisterClick = onRegisterClick,
+//                        onRegisterClick = onRegisterClick,
                         onEditModeToggle = onEditModeToggle,
 //                        onModifyClick = onModifyClick,
                         onDeleteClick = onDeleteClick,

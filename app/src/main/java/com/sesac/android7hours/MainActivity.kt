@@ -14,10 +14,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.compositionLocalOf
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
@@ -25,9 +22,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import androidx.navigation.NavController
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.sesac.android7hours.common.AppTopBarData
@@ -39,6 +35,7 @@ import com.sesac.common.CommonViewModel
 import com.sesac.common.component.CommonMapLifecycle
 import com.sesac.common.component.CommonMapView
 import com.sesac.common.ui.theme.Android7HoursTheme
+import com.sesac.community.presentation.CommunityViewModel
 import com.sesac.home.nav_graph.EntryPointScreen
 import com.sesac.home.nav_graph.HomeNavigationRoute
 import com.sesac.home.nav_graph.TopBarAction
@@ -62,6 +59,7 @@ class MainActivity : ComponentActivity() {
             val commonMapView = remember { CommonMapView.getMapView(context) }
             val lifecycle = LocalLifecycleOwner.current.lifecycle
             val commonMapLifecycle = remember { CommonMapLifecycle(lifecycle) }
+            val communityViewModel = hiltViewModel<CommunityViewModel>()
             val trailViewModel = hiltViewModel<TrailViewModel>()
             val navController = rememberNavController()
             val startDestination = HomeNavigationRoute.HomeTab
@@ -130,10 +128,10 @@ class MainActivity : ComponentActivity() {
                     appTopBarData = finalTopBarData,
                     appBottomBarItem = appBottomBarItem,
                     isSearchOpen = isSearchOpen,
-                    LocalIsSearchOpen = LocalIsSearchOpen,
                     navHost = { paddingValues ->
                         AppNavHost(
                             trailViewModel = trailViewModel,
+                            communityViewModel = communityViewModel,
                             paddingValues = paddingValues,
                             navController = navController,
                             nav2Home = { navController.navigate(HomeNavigationRoute.HomeTab) },

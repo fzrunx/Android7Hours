@@ -320,18 +320,19 @@ fun CreateBottomActions(
                 .padding(paddingLarge),
             horizontalArrangement = Arrangement.spacedBy(paddingSmall)
         ) {
-            Button(
-                onClick = onCancel,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = NoteBox,
-                    contentColor = GrayTabText
-                ),
-                modifier = Modifier
-                    .weight(1f)
-                    .height(48.dp)
-            ) {
-                Text("나중에 하기")
-            }
+//          ---  임시저장 기능 ---
+//            Button(
+//                onClick = onCancel,
+//                colors = ButtonDefaults.buttonColors(
+//                    containerColor = NoteBox,
+//                    contentColor = GrayTabText
+//                ),
+//                modifier = Modifier
+//                    .weight(1f)
+//                    .height(48.dp)
+//            ) {
+//                Text("나중에 하기")
+//            }
             Button(
                 onClick = onSave,
                 colors = ButtonDefaults.buttonColors(

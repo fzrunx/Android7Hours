@@ -384,10 +384,10 @@ fun TrailMainScreen(
                     viewModel.updateIsSheetOpen(false)
                     Log.d("Tag-TrailMainScree", "Following path: ${path.name}")
                 },
-                onRegisterClick = {
-                    viewModel.updateIsSheetOpen(false)
-                    navController.navigate(TrailNavigationRoute.TrailCreateTab)
-                },
+//                onRegisterClick = {
+//                    viewModel.updateIsSheetOpen(false)
+//                    navController.navigate(TrailNavigationRoute.TrailCreateTab)
+//                },
                 onEditModeToggle = { viewModel.updateIsEditMode() },
                 onModifyClick = {
                     viewModel.updateSelectedPath(it)
@@ -497,3 +497,4 @@ fun smooth(old: Location?, new: Location): Location {
 
     return smoothed
 }
+
