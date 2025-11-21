@@ -40,6 +40,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -188,15 +189,10 @@ fun TrailCreateScreen(
                         return@launch
                     }
 
-                    if (it.id != -1) {
-                        Log.d("TrailCreateScreen", "Updating path: $path")
-                        viewModel.updatePath(uiState.token)
-                        snackbarHostState.showSnackbar("산책로가 수정되었습니다!")
-                    } else {
-                        Log.d("Tag-TrailCreateScreen", "New path created: $path")
-                        viewModel.savePath(uiState.token, Coord.DEFAULT)
-                        snackbarHostState.showSnackbar("산책로가 등록되었습니다!")
-                    }
+                    // 서버 저장이 아닌 RoomDB에 임시 저장
+                    viewModel.saveDraft(it)
+                    snackbarHostState.showSnackbar("산책로가 임시 저장되었습니다.")
+
                     navController.popBackStack()
                 }
             }
@@ -269,8 +265,11 @@ fun TrailCreateScreen(
 
             CreateBottomActions(
                 onCancel = {
-                    viewModel.clearSelectedPath()
-                    navController.popBackStack()
+                    scope.launch {
+                        viewModel.saveDraftIfNotEmpty()
+                        viewModel.clearSelectedPath()
+                        navController.popBackStack()
+                    }
                 },
                 onSave = {
                     handleSave()

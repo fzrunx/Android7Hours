@@ -7,4 +7,9 @@ data class TrailUseCase(
     val deletePathUseCase: DeletePathUseCase,
     val getAllRecommendedPathsUseCase: GetAllRecommendedPathsUseCase,
     val getMyPaths: GetMyPaths,
+    // ⭐ Draft 관련 UseCase 추가
+    val saveDraftUseCase: SaveDraftUseCase,
+    val getAllDraftsUseCase: GetAllDraftsUseCase,
+    val deleteDraftUseCase: DeleteDraftUseCase,
+    val clearAllDraftsUseCase: ClearAllDraftsUseCase
 )

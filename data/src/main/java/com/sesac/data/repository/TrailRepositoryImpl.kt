@@ -1,7 +1,9 @@
 package com.sesac.data.repository
 
 import android.util.Log
+import com.sesac.data.dao.PathDao
 import com.sesac.data.mapper.toPathCreateRequestDTO
+import com.sesac.data.mapper.toPathEntity
 import com.sesac.data.mapper.toPathUpdateRequestDTO
 import com.sesac.data.mapper.toUserPath
 import com.sesac.data.mapper.toUserPathList
@@ -18,8 +20,10 @@ import kotlinx.coroutines.flow.flow
 import javax.inject.Inject
 
 class TrailRepositoryImpl @Inject constructor(
-    private val pathApi: PathApi
+    private val pathApi: PathApi,
+    private val pathDao: PathDao
 ): TrailRepository {
+    // Remote API 코드
     override suspend fun getAllRecommendedPaths(coord: Coord, radius: Float?): Flow<AuthResult<List<UserPath>>> = flow {
         emit(AuthResult.Loading)
         val paths = pathApi.getPaths(
@@ -79,6 +83,28 @@ class TrailRepositoryImpl @Inject constructor(
 
     override suspend fun addMyRecord(newRecord: MyRecord): Flow<Boolean> = flow {
         MockTrail.myRecord.add(newRecord)
+        emit(true)
+    }
+    // ⭐ Local(Room)
+    override suspend fun saveDraft(draft: UserPath): Flow<Boolean> = flow {
+        val entity = draft.toPathEntity()  // Mapper 필요
+        pathDao.insertDraft(entity)
+        emit(true)
+    }
+
+    override suspend fun getAllDrafts(): Flow<List<UserPath>> = flow {
+        val entities = pathDao.getDraftsByStatus()
+        emit(entities.map { it.toUserPath() }) // Mapper 필요
+    }
+
+    override suspend fun deleteDraft(draft: UserPath): Flow<Boolean> = flow {
+        val entity = draft.toPathEntity()
+        pathDao.deleteDraft(entity)
+        emit(true)
+    }
+
+    override suspend fun clearAllDrafts(): Flow<Boolean> = flow {
+        pathDao.clearAllDrafts()
         emit(true)
     }
 

@@ -26,6 +26,7 @@ import androidx.compose.runtime.setValue
 import com.sesac.domain.model.Comment
 import com.sesac.domain.model.Post
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import java.util.Date
 
@@ -36,8 +37,10 @@ class TrailViewModel @Inject constructor(
 ): ViewModel() {
     private val _invalidToken = Channel<UiEvent>()
     val invalidToken = _invalidToken.receiveAsFlow()
-    private val _recommendedPaths = MutableStateFlow<AuthResult<List<UserPath>>>(AuthResult.NoConstructor)
+    private val _recommendedPaths =
+        MutableStateFlow<AuthResult<List<UserPath>>>(AuthResult.NoConstructor)
     val recommendedPaths = _recommendedPaths.asStateFlow()
+
     // 폴리라인 인스턴스를 ViewModel State로 관리
     private val _polylineOverlay = MutableStateFlow<PolylineOverlay?>(null)
     val polylineOverlay = _polylineOverlay.asStateFlow()
@@ -106,7 +109,9 @@ class TrailViewModel @Inject constructor(
     fun getMyPaths(token: String) {
         viewModelScope.launch {
             trailUseCase.getMyPaths(token).collectLatest { paths ->
-                if (paths is AuthResult.Success) { _myPaths.value = paths }
+                if (paths is AuthResult.Success) {
+                    _myPaths.value = paths
+                }
             }
         }
     }
@@ -121,14 +126,16 @@ class TrailViewModel @Inject constructor(
 
     fun savePath(token: String?, currentCoord: Coord?, radius: Float = 5000f) {
         viewModelScope.launch {
-            if (token.isNullOrEmpty()) { _invalidToken.send(UiEvent.ToastEvent("유저 정보가 없습니다.")) }
-            else{
+            if (token.isNullOrEmpty()) {
+                _invalidToken.send(UiEvent.ToastEvent("유저 정보가 없습니다."))
+            } else {
                 _selectedPath.value?.let { path ->
                     trailUseCase.createPathUseCase(token, path).collectLatest { createdPath ->
                         // You might want to refresh the list or navigate
                         // For now, just update the selected path with the created one
                         if (createdPath is AuthResult.Success) {
-                            val coord = currentCoord ?: createdPath.resultData.coord?.first() ?: Coord.DEFAULT
+                            val coord = currentCoord ?: createdPath.resultData.coord?.first()
+                            ?: Coord.DEFAULT
                             _selectedPath.value = createdPath.resultData
                             getRecommendedPaths(coord, radius) // Refresh recommended paths
                         }
@@ -217,6 +224,65 @@ class TrailViewModel @Inject constructor(
     fun updateIsEditMode(isEditing: Boolean? = null) {
         _isEditMode.value = isEditing ?: !_isEditMode.value
     }
+
+    // ⭐ Draft 기능 관련 StateFlow 추가
+    private val _drafts = MutableStateFlow<List<UserPath>>(emptyList())
+    val drafts: StateFlow<List<UserPath>> get() = _drafts.asStateFlow()
+
+    // Draft 목록 불러오기 (suspend)
+    suspend fun loadDrafts(): List<UserPath> {
+        return try {
+            val list = trailUseCase.getAllDraftsUseCase().first() // Flow -> 단일값 추출
+            _drafts.value = list
+            list
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
+
+    // Draft 저장 (suspend)
+    suspend fun saveDraft(draft: UserPath): Boolean {
+        return try {
+            val success = trailUseCase.saveDraftUseCase(draft).first() // Flow -> 단일값
+            if (success) loadDrafts()
+            success
+        } catch (e: Exception) {
+            false
+        }
+    }
+
+    // Draft 삭제 (suspend)
+    suspend fun deleteDraft(draft: UserPath): Boolean {
+        return try {
+            val success = trailUseCase.deleteDraftUseCase(draft).first() // Flow -> 단일값
+            if (success) loadDrafts() // 삭제 후 목록 갱신
+            success
+        } catch (e: Exception) {
+            false
+        }
+    }
+
+    // Draft 전체 삭제 (suspend)
+    suspend fun clearAllDrafts(): Boolean {
+        return try {
+            val success = trailUseCase.clearAllDraftsUseCase().first() // Flow -> 단일값
+            if (success) _drafts.value = emptyList()
+            success
+        } catch (e: Exception) {
+            false
+        }
+    }
+
+    // UI에서 화면 나가기 직전에 호출할 임시 저장 함수
+    suspend fun saveDraftIfNotEmpty() {
+        _selectedPath.value?.let {
+            if (it.id == -1 && (it.coord?.isNotEmpty() == true || it.description?.let { d -> d.trim().isNotEmpty() } == true)) {
+                saveDraft(it)
+            }
+        }
+    }
+
+
     // 댓글 상태
     private val _comments = MutableStateFlow<List<Comment>>(emptyList())
     val comments: StateFlow<List<Comment>> get() = _comments.asStateFlow()
@@ -273,7 +339,8 @@ class TrailViewModel @Inject constructor(
 
         // We don't need to update a list of posts here, as we only have one "post"
         // But we could update the comment count on the selectedPostForComments
-        selectedPostForComments = selectedPostForComments?.copy(comments = selectedPostForComments!!.comments + 1)
+        selectedPostForComments =
+            selectedPostForComments?.copy(comments = selectedPostForComments!!.comments + 1)
 
 
         newCommentContent = ""

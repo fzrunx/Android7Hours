@@ -69,3 +69,4 @@ fun List<UserPath>.toPathCreateRequestDTOList() =
 
 fun List<UserPath>.toPathUpdateRequestDTOList() =
     this.map { it.toPathUpdateRequestDTO() }.toList()
+

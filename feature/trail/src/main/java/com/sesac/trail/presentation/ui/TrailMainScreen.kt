@@ -81,6 +81,7 @@ fun TrailMainScreen(
     // ViewModel State 들
     val recommendedPaths by viewModel.recommendedPaths.collectAsStateWithLifecycle()
     val myPaths by viewModel.myPaths.collectAsStateWithLifecycle()
+    val drafts by viewModel.drafts.collectAsStateWithLifecycle()
 
     val isSheetOpen by viewModel.isSheetOpen.collectAsStateWithLifecycle()
     val isPaused by viewModel.isPaused.collectAsStateWithLifecycle()
@@ -181,6 +182,10 @@ fun TrailMainScreen(
             currentPolyline?.map = null
             Log.d("TrailMainScreen", "❌ 폴리라인 지도에서 제거")
         }
+    }
+    // ⭐ Draft 목록 초기화
+    LaunchedEffect(Unit) {
+        viewModel.loadDrafts() // suspend 호출, drafts StateFlow 갱신
     }
 
 // ⭐ 녹화 종료 시 초기화
@@ -402,7 +407,7 @@ fun TrailMainScreen(
                     viewModel.updateSelectedPath(it)
                     navController.navigate(TrailNavigationRoute.TrailCreateTab)
                 },
-                onDeleteClick = { viewModel.deletePath(uiState.token, it) }
+                onDeleteClick = { viewModel.deletePath(uiState.token, it) },
             )
         }
 
@@ -428,17 +433,25 @@ fun TrailMainScreen(
                 recordingTime = recordingTime,
                 onPauseToggle = { viewModel.updateIsPaused(null) },
                 onStopRecording = {
-                    viewModel.updateSelectedPath(UserPath.EMPTY)
+                    // 현재 기록된 좌표(LatLng)를 도메인 모델의 Coord로 변환
+                    val recordedCoords = pathCoords.map { latLng -> Coord(latLng.latitude, latLng.longitude) }
+
+                    // 새로운 UserPath 객체를 생성하되, 기록된 좌표를 포함시킴
+                    val newPath = UserPath.EMPTY.copy(coord = recordedCoords)
+
+                    // ViewModel에 새로 생성된 경로를 업데이트
+                    viewModel.updateSelectedPath(newPath)
+
+                    // 녹화 관련 상태 초기화
                     viewModel.updateIsRecording(false)
                     viewModel.updateRecordingTime(0)
                     viewModel.updateIsFollowingPath(false)
                     viewModel.updateIsPaused(false)
-                    viewModel.clearAllMapObjects(currentNaverMap)
-
                     pathCoords.clear()
-
+                    viewModel.clearAllMapObjects(currentNaverMap)
                     currentNaverMap?.locationTrackingMode = LocationTrackingMode.Follow
 
+                    // 화면 이동
                     navController.navigate(TrailNavigationRoute.TrailCreateTab)
                 }
             )
@@ -461,6 +474,17 @@ fun TrailMainScreen(
                         markers = currentMarkers,
                         infoWindowStates = infoWindowStates
                     )
+                }
+
+                // Append the memo to the description in the ViewModel
+                viewModel.selectedPath.value?.let { currentPath ->
+                    val currentDescription = currentPath.description ?: ""
+                    val newDescription = if (currentDescription.isEmpty()) {
+                        memoText
+                    } else {
+                        "$currentDescription\n\n$memoText"
+                    }
+                    viewModel.updateSelectedPath(currentPath.copy(description = newDescription))
                 }
 
                 showMemoDialog = false

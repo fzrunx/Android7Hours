@@ -100,4 +100,5 @@ dependencies {
     implementation(libs.play.services.location)
     implementation(libs.threetenabp) // localDate 사용하려면 sdk 26 이하에서는 이렇게 써야됨
     implementation(libs.bundles.kakao) // (libs.versions.toml에 정의된)
+    ksp("com.squareup.moshi:moshi-kotlin-codegen:1.15.0")
 }
