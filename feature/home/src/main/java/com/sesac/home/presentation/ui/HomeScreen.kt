@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.Card
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -36,6 +37,8 @@ import com.sesac.common.ui.theme.bannerHeight
 import com.sesac.common.ui.theme.cardWidth
 import com.sesac.common.ui.theme.paddingLarge
 import com.sesac.common.ui.theme.paddingMedium
+import com.sesac.domain.model.UserPath
+import com.sesac.domain.result.AuthResult
 import com.sesac.home.presentation.HomeViewModel
 import com.sesac.common.R as cR
 
@@ -49,9 +52,7 @@ fun HomeScreen(
     onNavigateToCommunity: () -> Unit = {},
 ) {
     val banners by viewModel.bannerList.collectAsStateWithLifecycle()
-    val dogCafeList by viewModel.dogCafeList.collectAsStateWithLifecycle()
-    val travelDestinationList by viewModel.travelDestinationList.collectAsStateWithLifecycle()
-    val walkPathList by viewModel.walkPathList.collectAsStateWithLifecycle()
+    val pathList by viewModel.recommendPathList.collectAsStateWithLifecycle()
     val communityList by viewModel.communityList.collectAsStateWithLifecycle()
 
     Column(
@@ -61,26 +62,34 @@ fun HomeScreen(
     ) {
         LazyColumn(modifier = Modifier.fillMaxSize()) {
             item { BannerSectionView(banners = banners, modifier = Modifier.padding(top = paddingMedium)) }
-            item {
-                CommonLazyRow(
-                    title = "산책로 추천",
-                    items = walkPathList,
-                ) { item ->
-                    ContentCardView(
-                        data = item,
-                        onClick = onNavigateToWalkPath,
-                        modifier = Modifier.width(cardWidth)
-                    )
+            when(pathList) {
+                is AuthResult.Success -> {
+                    item {
+                        CommonLazyRow(
+                            title = "산책로 추천",
+                            items = (pathList as AuthResult.Success<List<UserPath?>>).resultData,
+                        ) { item ->
+                            ContentCardView(
+                                data = item,
+                                onClick = onNavigateToWalkPath,
+                                modifier = Modifier.width(cardWidth)
+                            )
+                        }
+                    }
                 }
+                else -> {}
+
             }
-            item { CommonLazyRow(
-                title = "여행지 추천",
-                items = travelDestinationList,
-            ) { item -> ContentCardView(item, {}, Modifier.width(cardWidth)) } }
-            item { CommonLazyRow(
-                title = "애견 카페",
-                items = dogCafeList,
-            ) { item -> ContentCardView(item, {}, Modifier.width(cardWidth)) } }
+
+
+//            item { CommonLazyRow(
+//                title = "여행지 추천",
+//                items = travelDestinationList,
+//            ) { item -> ContentCardView(item, {}, Modifier.width(cardWidth)) } }
+//            item { CommonLazyRow(
+//                title = "애견 카페",
+//                items = dogCafeList,
+//            ) { item -> ContentCardView(item, {}, Modifier.width(cardWidth)) } }
             item {
                 if (communityList.isNotEmpty()) {
                     CommunityCard(

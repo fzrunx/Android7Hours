@@ -20,12 +20,12 @@ import javax.inject.Inject
 class TrailRepositoryImpl @Inject constructor(
     private val pathApi: PathApi
 ): TrailRepository {
-    override suspend fun getAllRecommendedPaths(coord: Coord, radius: Float?): Flow<AuthResult<List<UserPath>>> = flow {
+    override suspend fun getAllRecommendedPaths(coord: Coord?, radius: Float?): Flow<AuthResult<List<UserPath>>> = flow {
         emit(AuthResult.Loading)
         val paths = pathApi.getPaths(
 //            token = "Bearer $token",
-            lat = coord.latitude,
-            lng = coord.longitude,
+            lat = coord?.latitude,
+            lng = coord?.longitude,
             radius = radius
         ).map { it.toUserPath() }
         emit(AuthResult.Success(paths))

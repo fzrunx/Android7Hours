@@ -21,27 +21,27 @@ data class AppBottomBarItem(
 ): BottomBarItem {
     override fun fetch() = listOf(
         AppBottomBarItem(
-            tabName = "Home",
+            tabName = "홈",
             icon = Icons.Filled.Home,
             destination = HomeNavigationRoute.HomeTab
         ),
         AppBottomBarItem(
-            tabName = "Trail",
+            tabName = "산책로",
             icon = Icons.Filled.Explore,
             destination = TrailNavigationRoute.TrailMainTab
         ),
         AppBottomBarItem(
-            tabName = "Monitor",
+            tabName = "모니터링",
             icon = Icons.Filled.Videocam,
             destination = MonitorNavigationRoute.MainTab
         ),
         AppBottomBarItem(
-            tabName = "Community",
+            tabName = "커뮤니티",
             icon = Icons.Filled.People,
             destination = CommunityNavigationRoute.MainTab
         ),
         AppBottomBarItem(
-            tabName = "Mypage",
+            tabName = "마이페이지",
             icon = Icons.Filled.Person,
             destination = MypageNavigationRoute.MainTab
         ),
