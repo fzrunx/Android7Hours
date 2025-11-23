@@ -1,5 +1,8 @@
 package com.sesac.domain.model
 
+import kotlinx.serialization.Serializable
+
+@Serializable
 data class Coord(
     val latitude: Double = 0.0,
     val longitude: Double = 0.0,

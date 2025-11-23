@@ -24,7 +24,6 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
@@ -32,7 +31,8 @@ import coil3.request.ImageRequest
 import coil3.request.crossfade
 import coil3.size.Scale
 import com.sesac.common.component.CommonLazyRow
-import com.sesac.common.ui.theme.Android7HoursTheme
+import com.sesac.common.model.PathParceler
+import com.sesac.common.model.toPathParceler
 import com.sesac.common.ui.theme.bannerHeight
 import com.sesac.common.ui.theme.cardWidth
 import com.sesac.common.ui.theme.paddingLarge
@@ -48,7 +48,8 @@ import com.sesac.common.R as cR
 fun HomeScreen(
     modifier: Modifier = Modifier,
     viewModel: HomeViewModel = hiltViewModel(),
-    onNavigateToWalkPath: () -> Unit = {},
+//    uiState: AuthUiState,
+    onNavigateToPathDetail: (PathParceler?) -> Unit = {},
     onNavigateToCommunity: () -> Unit = {},
 ) {
     val banners by viewModel.bannerList.collectAsStateWithLifecycle()
@@ -72,10 +73,10 @@ fun HomeScreen(
                         CommonLazyRow(
                             title = "산책로 추천",
                             items = (pathList as AuthResult.Success<List<Path?>>).resultData,
-                        ) { item ->
+                        ) { path ->
                             ContentCardView(
-                                data = item,
-                                onClick = onNavigateToWalkPath,
+                                data = path,
+                                onClick = { onNavigateToPathDetail(path?.toPathParceler()) },
                                 modifier = Modifier.width(cardWidth)
                             )
                         }
@@ -159,10 +160,10 @@ fun CommunityCard(
 }
 
 // --- 6. Preview ---
-@Preview(showBackground = true)
-@Composable
-fun HomePagePreview() {
-    Android7HoursTheme {
-        HomeScreen(onNavigateToWalkPath = {}, onNavigateToCommunity = {})
-    }
-}
+//@Preview(showBackground = true)
+//@Composable
+//fun HomePagePreview() {
+//    Android7HoursTheme {
+//        HomeScreen(onNavigateToWalkPath = {}, onNavigateToCommunity = {})
+//    }
+//}

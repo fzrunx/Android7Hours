@@ -141,7 +141,7 @@ fun BottomSheetContent(
                         onFollowClick = onFollowClick
                     )
                     WalkPathTab.MY_RECORDS -> {
-                        viewModel.getUserBookmarkedPaths(uiState.token)
+//                        viewModel.getUserBookmarkedPaths(uiState.token)
                         MyRecordsTabContent(
                             viewModel = viewModel,
                             myPaths = myPaths.filterNotNull(),

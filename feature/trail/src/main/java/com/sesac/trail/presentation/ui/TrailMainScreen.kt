@@ -58,6 +58,8 @@ import com.sesac.trail.presentation.component.RecordingControls
 import com.sesac.trail.presentation.component.ReopenSheetButton
 import com.sesac.trail.presentation.component.addMemoMarker
 import androidx.compose.runtime.DisposableEffect
+import com.sesac.common.model.toPathParceler
+import com.sesac.trail.nav_graph.NestedNavigationRoute
 
 enum class WalkPathTab { RECOMMENDED, MY_RECORDS }
 
@@ -371,7 +373,7 @@ fun TrailMainScreen(
                 onTabChange = { viewModel.updateActiveTab(it) },
                 onPathClick = {
                     viewModel.updateSelectedPath(it)
-                    navController.navigate(TrailNavigationRoute.TrailDetailTab)
+                    navController.navigate(NestedNavigationRoute.TrailDetail(it.toPathParceler()))
                 },
                 onFollowClick = { path ->
                     viewModel.updateIsFollowingPath(true)
