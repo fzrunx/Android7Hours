@@ -10,11 +10,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.Card
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -37,7 +37,7 @@ import com.sesac.common.ui.theme.bannerHeight
 import com.sesac.common.ui.theme.cardWidth
 import com.sesac.common.ui.theme.paddingLarge
 import com.sesac.common.ui.theme.paddingMedium
-import com.sesac.domain.model.UserPath
+import com.sesac.domain.model.Path
 import com.sesac.domain.result.AuthResult
 import com.sesac.home.presentation.HomeViewModel
 import com.sesac.common.R as cR
@@ -55,6 +55,10 @@ fun HomeScreen(
     val pathList by viewModel.recommendPathList.collectAsStateWithLifecycle()
     val communityList by viewModel.communityList.collectAsStateWithLifecycle()
 
+    LaunchedEffect(Unit) {
+        viewModel.getRecommendedPaths()
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -67,7 +71,7 @@ fun HomeScreen(
                     item {
                         CommonLazyRow(
                             title = "산책로 추천",
-                            items = (pathList as AuthResult.Success<List<UserPath?>>).resultData,
+                            items = (pathList as AuthResult.Success<List<Path?>>).resultData,
                         ) { item ->
                             ContentCardView(
                                 data = item,

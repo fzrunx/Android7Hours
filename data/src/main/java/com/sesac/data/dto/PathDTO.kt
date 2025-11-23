@@ -19,7 +19,11 @@ data class PathDTO(
     @Json(name = "is_private")
     val isPrivate: Boolean,
     val thumbnail: String?,
-    val coords: List<CoordDTO>
+    val coords: List<CoordDTO>,
+    @Json(name = "bookmarks_count")
+    val bookmarksCount: Int,
+    @Json(name = "is_bookmarked")
+    val isBookmarked: Boolean,
 )
 
 @JsonClass(generateAdapter = true)

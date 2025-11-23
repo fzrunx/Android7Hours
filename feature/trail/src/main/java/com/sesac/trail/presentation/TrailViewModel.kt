@@ -4,9 +4,8 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.sesac.domain.model.Coord
-import com.sesac.domain.model.MyRecord
 import com.sesac.domain.model.UiEvent
-import com.sesac.domain.model.UserPath
+import com.sesac.domain.model.Path
 import com.sesac.domain.result.AuthResult
 import com.sesac.domain.usecase.trail.TrailUseCase
 import com.sesac.trail.presentation.ui.WalkPathTab
@@ -24,20 +23,23 @@ import com.naver.maps.map.overlay.PolylineOverlay // ⭐ 추가
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import com.sesac.domain.model.BookmarkType
+import com.sesac.domain.model.BookmarkedPath
 import com.sesac.domain.model.Comment
 import com.sesac.domain.model.Post
+import com.sesac.domain.usecase.bookmark.BookmarkUseCase
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
-import java.util.Date
 
 
 @HiltViewModel
 class TrailViewModel @Inject constructor(
     private val trailUseCase: TrailUseCase,
+    private val bookmarkUseCase: BookmarkUseCase
 ): ViewModel() {
     private val _invalidToken = Channel<UiEvent>()
     val invalidToken = _invalidToken.receiveAsFlow()
-    private val _recommendedPaths = MutableStateFlow<AuthResult<List<UserPath>>>(AuthResult.NoConstructor)
+    private val _recommendedPaths = MutableStateFlow<AuthResult<List<Path>>>(AuthResult.NoConstructor)
     val recommendedPaths = _recommendedPaths.asStateFlow()
     // 폴리라인 인스턴스를 ViewModel State로 관리
     private val _polylineOverlay = MutableStateFlow<PolylineOverlay?>(null)
@@ -67,9 +69,12 @@ class TrailViewModel @Inject constructor(
         _polylineOverlay.value = polyline
     }
 
-    private val _myPaths = MutableStateFlow<AuthResult<List<UserPath>>>(AuthResult.NoConstructor)
+    private val _myPaths = MutableStateFlow<AuthResult<List<Path>>>(AuthResult.NoConstructor)
     val myPaths = _myPaths.asStateFlow()
-
+    private val _bookmarkedPaths = MutableStateFlow<AuthResult<List<BookmarkedPath?>>>(AuthResult.NoConstructor)
+    val bookmarkedPaths = _bookmarkedPaths.asStateFlow()
+    private val _isBookmarked = MutableStateFlow(false)
+    val isBookmarked = _isBookmarked.asStateFlow()
     private val _isSheetOpen = MutableStateFlow(false)
     val isSheetOpen get() = _isSheetOpen.asStateFlow()
     private val _isPaused = MutableStateFlow(false)
@@ -86,7 +91,7 @@ class TrailViewModel @Inject constructor(
     private val _isEditMode = MutableStateFlow(false)
     val isEditMode get() = _isEditMode.asStateFlow()
 
-    private val _selectedPath = MutableStateFlow<UserPath?>(null)
+    private val _selectedPath = MutableStateFlow<Path?>(null)
     val selectedPath get() = _selectedPath.asStateFlow()
 
 //    init {
@@ -150,6 +155,39 @@ class TrailViewModel @Inject constructor(
     fun updateRecordingTime(changeRate: Long?) {
         _recordingTime.value += changeRate ?: -_recordingTime.value
     }
+    
+    fun getUserBookmarkedPaths(token: String?) {
+        viewModelScope.launch {
+            val bookmarkList = mutableListOf<BookmarkedPath>()
+            token?.let {
+                bookmarkUseCase.getMyBookmarksUseCase(token).collectLatest { bookmarks ->
+                    if (bookmarks is AuthResult.Success) {
+                        bookmarks.resultData.forEach { bookmark ->
+                            if (bookmark.bookmarkedItem is BookmarkedPath) {
+                                bookmarkList.add(bookmark.bookmarkedItem as BookmarkedPath)
+                            }
+                        }
+                    }
+                    _bookmarkedPaths.value = AuthResult.Success(bookmarkList)
+                }
+            } ?: run { _bookmarkedPaths.value = AuthResult.Success(emptyList()) }
+            Log.d("TAG-TrailViewModel", "bookmarkedPaths : ${bookmarkedPaths.value}")
+        }
+    }
+
+    fun toggleBookmark(token: String?, id: Int) {
+        viewModelScope.launch {
+            token?.let {
+                bookmarkUseCase.toggleBookmarkUseCase(token, id, BookmarkType.PATH).collectLatest { bookmarkResponse ->
+                    if (bookmarkResponse is AuthResult.Success) {
+                        _selectedPath.value = _selectedPath.value?.copy(bookmarksCount = bookmarkResponse.resultData.bookmarksCount)
+//                        _isBookmarked.value = !_isBookmarked.value
+                    }
+                }
+            }
+        }
+    }
+
 
     fun updateIsSheetOpen(newState: Boolean?) {
         viewModelScope.launch { _isSheetOpen.value = newState ?: !_isSheetOpen.value }
@@ -175,7 +213,7 @@ class TrailViewModel @Inject constructor(
         viewModelScope.launch { _activeTab.value = walkPathTab }
     }
 
-    fun updateSelectedPath(path: UserPath?) {
+    fun updateSelectedPath(path: Path?) {
         viewModelScope.launch { _selectedPath.value = path }
     }
 
@@ -237,7 +275,7 @@ class TrailViewModel @Inject constructor(
     // 새 댓글 내용
     var newCommentContent by mutableStateOf("")
 
-    fun handleOpenComments(path: UserPath) {
+    fun handleOpenComments(path: Path) {
         // Create a synthetic Post object from the UserPath
         selectedPostForComments = Post.EMPTY
         isCommentsOpen = true

@@ -12,16 +12,13 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
 import com.sesac.common.ui.theme.*
 import com.sesac.domain.model.Comment
-import com.sesac.domain.model.LatLngPoint
 import com.sesac.domain.model.Post
-import com.sesac.domain.model.UserPath
+import com.sesac.domain.model.Path
 import com.sesac.trail.presentation.TrailViewModel
 import kotlinx.coroutines.launch
-import java.util.Date
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -30,14 +27,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.sesac.common.component.CommonCommentItem
-import com.sesac.domain.model.Coord
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun InfoDetailScreen(
-    selectedDetailPath: UserPath?,
-    onStartFollowing: (UserPath) -> Unit,
+    selectedDetailPath: Path?,
+    onStartFollowing: (Path) -> Unit,
     viewModel: TrailViewModel? = null,
     postForPreview: Post? = null,
     commentsForPreview: List<Comment>? = null,
@@ -66,9 +62,9 @@ fun InfoDetailScreen(
             // 헤더
             item {
                 PathImageHeader(
-                    pathName = it.name,
-                    isFavorite = isFavorite,
-                    onFavoriteClick = handleFavorite
+                    pathName = it.pathName,
+                    isBookmarked = isFavorite,
+                    onBookmarkClick = handleFavorite
                 )
             }
 
@@ -82,7 +78,7 @@ fun InfoDetailScreen(
                 ) {
                     Column {
                         Text(
-                            text = it.name,
+                            text = it.pathName,
                             style = MaterialTheme.typography.headlineSmall,
                             fontWeight = FontWeight.Bold
                         )
@@ -114,7 +110,7 @@ fun InfoDetailScreen(
                         InfoCard(
                             icon = Icons.Filled.Favorite,
                             label = "좋아요",
-                            value = "${selectedDetailPath.likes}개",
+                            value = "${it.likes}개",
                             modifier = Modifier.weight(1f)
                         )
                         InfoCard(
@@ -148,8 +144,8 @@ fun InfoDetailScreen(
             // ⭐ viewModel LaunchedEffect
             item {
                 if (viewModel != null) {
-                    LaunchedEffect(selectedDetailPath) {
-                        selectedDetailPath?.let { viewModel.handleOpenComments(it) }
+                    LaunchedEffect(it) {
+                        it.let { viewModel.handleOpenComments(it) }
                     }
                 }
             }
@@ -280,64 +276,52 @@ fun InfoDetailScreen(
 }
 
 
-@Composable
-@Preview(showBackground = true)
-fun InfoDetailScreenPreview() {
-    val dummyPos = LatLngPoint(0.5, 0.5)
-    val mockPath = UserPath(
-        id = 1,
-        name = "병원 정보",
-        uploader = "산책왕123",
-        distance = 1.5f,
-        time = 15,
-        likes = 45,
-        distanceFromMe = 0.3f,
-        coord = listOf(Coord(0.5,0.5)),
-        tags = listOf("🌳 자연친화적", "🐕 반려견 동반 가능")
-    )
-
-    // ⭐ Mock 데이터를 실제로 넣어주기
-    val mockPost = Post(
-        id = 1L,
-        author = "홍길동",
-        authorImage = "",
-        timeAgo = "2일 전",
-        content = "이 병원 정말 좋아요!",
-        image = null,
-        likes = 5,
-        comments = 2,
-        isLiked = false,
-        category = "정보공유",
-        createdAt = Date()
-    )
-
-    val mockComments = listOf(
-        Comment(
-            id = 1,
-            postId = 1,
-            author = "댓글유저1",
-            timeAgo = "1일 전",
-            content = "좋은 정보 감사합니다!",
-            authorImage = ""
-        ),
-        Comment(
-            id = 2,
-            postId = 1,
-            author = "댓글유저2",
-            timeAgo = "3일 전",
-            content = "여기 진짜 좋아요!",
-            authorImage = ""
-        )
-    )
-
-    Android7HoursTheme {
-        InfoDetailScreen(
-            selectedDetailPath = mockPath,
-            onStartFollowing = {},
-            // ✅ null이 아닌 실제 데이터 전달
-            postForPreview = mockPost,
-            commentsForPreview = mockComments,
-            newCommentContentPreview = ""
-        )
-    }
-}
+//@Composable
+//@Preview(showBackground = true)
+//fun InfoDetailScreenPreview() {
+//    val dummyPos = LatLngPoint(0.5, 0.5)
+//    val mockPath = UserPath(
+//        id = 1,
+//        name = "병원 정보",
+//        uploader = "산책왕123",
+//        distance = 1.5f,
+//        time = 15,
+//        likes = 45,
+//        distanceFromMe = 0.3f,
+//        coord = listOf(Coord(0.5,0.5)),
+//        tags = listOf("🌳 자연친화적", "🐕 반려견 동반 가능")
+//    )
+//
+//    // ⭐ Mock 데이터를 실제로 넣어주기
+//    val mockPost = Post.EMPTY
+//
+//    val mockComments = listOf(
+//        Comment(
+//            id = 1,
+//            postId = 1,
+//            author = "댓글유저1",
+//            timeAgo = "1일 전",
+//            content = "좋은 정보 감사합니다!",
+//            authorImage = ""
+//        ),
+//        Comment(
+//            id = 2,
+//            postId = 1,
+//            author = "댓글유저2",
+//            timeAgo = "3일 전",
+//            content = "여기 진짜 좋아요!",
+//            authorImage = ""
+//        )
+//    )
+//
+//    Android7HoursTheme {
+//        InfoDetailScreen(
+//            selectedDetailPath = mockPath,
+//            onStartFollowing = {},
+//            // ✅ null이 아닌 실제 데이터 전달
+//            postForPreview = mockPost,
+//            commentsForPreview = mockComments,
+//            newCommentContentPreview = ""
+//        )
+//    }
+//}

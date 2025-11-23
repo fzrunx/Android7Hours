@@ -47,7 +47,7 @@ import com.sesac.common.ui.theme.paddingLarge
 import kotlinx.coroutines.delay
 import com.sesac.domain.model.Coord
 import com.sesac.common.utils.EffectPauseStop
-import com.sesac.domain.model.UserPath
+import com.sesac.domain.model.Path
 import com.sesac.domain.result.AuthResult
 import com.sesac.domain.result.AuthUiState
 import com.sesac.trail.nav_graph.TrailNavigationRoute
@@ -199,6 +199,7 @@ fun TrailMainScreen(
 
     LaunchedEffect(Unit, uiState) {
         viewModel.getMyPaths(uiState.token)
+        Log.d("TAG-TrailMainScreen", "myPaths : $myPaths")
     }
 
     // --- 타이머 로직 (녹화 중일 때 시간 증가) ---
@@ -318,7 +319,7 @@ fun TrailMainScreen(
             when (recommendedPaths) {
                 is AuthResult.Loading -> CircularProgressIndicator()
                 is AuthResult.Success -> {
-                    (recommendedPaths as AuthResult.Success<List<UserPath>>).resultData.forEach { path ->
+                    (recommendedPaths as AuthResult.Success<List<Path>>).resultData.forEach { path ->
                         path.coord?.forEach {
                             val hBias = (it.longitude * 2) - 1f
                             val vBias = (it.latitude * 2) - 1f
@@ -355,9 +356,10 @@ fun TrailMainScreen(
             // ToDo : NetworkError, 경로 없음 -> 빈화면 혹은 오류 화면 출력
             BottomSheetContent(
                 viewModel = viewModel,
+                uiState = uiState,
                 activeTab = activeTab,
-                recommendedPaths = if (recommendedPaths is AuthResult.Success) (recommendedPaths as AuthResult.Success<List<UserPath>>).resultData else listOf(),
-                myPaths = if (myPaths is AuthResult.Success) (myPaths as AuthResult.Success<List<UserPath>>).resultData else listOf(),
+                recommendedPaths = if (recommendedPaths is AuthResult.Success) (recommendedPaths as AuthResult.Success<List<Path>>).resultData else listOf(),
+                myPaths = if (myPaths is AuthResult.Success) (myPaths as AuthResult.Success<List<Path>>).resultData else listOf(),
                 isEditMode = isEditMode,
                 onSheetOpenToggle = { viewModel.updateIsSheetOpen(null) },
                 onStartRecording = {
@@ -375,7 +377,7 @@ fun TrailMainScreen(
                     viewModel.updateIsFollowingPath(true)
                     viewModel.updateIsRecording(true)
                     viewModel.updateIsSheetOpen(false)
-                    Log.d("Tag-TrailMainScree", "Following path: ${path.name}")
+                    Log.d("Tag-TrailMainScree", "Following path: ${path.pathName}")
                 },
                 onRegisterClick = {
                     viewModel.updateIsSheetOpen(false)
@@ -412,7 +414,7 @@ fun TrailMainScreen(
                 recordingTime = recordingTime,
                 onPauseToggle = { viewModel.updateIsPaused(null) },
                 onStopRecording = {
-                    viewModel.updateSelectedPath(UserPath.EMPTY)
+                    viewModel.updateSelectedPath(Path.EMPTY)
                     viewModel.updateIsRecording(false)
                     viewModel.updateRecordingTime(0)
                     viewModel.updateIsFollowingPath(false)

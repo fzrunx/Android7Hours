@@ -35,8 +35,8 @@ fun NavGraphBuilder.trailRoute(
     }
     composable<TrailNavigationRoute.TrailDetailTab> {
         TrailDetailScreen(
-//            path = path,
             viewModel = trailViewModel,
+            uiState = uiState,
             navController = navController,
             onStartFollowing = onStartFollowing,
         )
