@@ -1,7 +1,7 @@
 package com.sesac.android7hours.di
 
 import com.sesac.domain.repository.BookmarkRepository
-import com.sesac.domain.repository.TrailRepository
+import com.sesac.domain.repository.PathRepository
 import com.sesac.domain.usecase.bookmark.BookmarkUseCase
 import com.sesac.domain.usecase.bookmark.GetMyBookmarksUseCase
 import com.sesac.domain.usecase.bookmark.ToggleBookmarkUseCase
@@ -19,12 +19,12 @@ object BookmarkUseCaseModule {
     @ActivityRetainedScoped
     fun provideGetMyBookmarksUseCase(
         repository: BookmarkRepository,
-        trailRepository: TrailRepository,
+        pathRepository: PathRepository,
 //        postRepository: PostRepository,
     ): BookmarkUseCase {
         return BookmarkUseCase(
             getMyBookmarksUseCase = GetMyBookmarksUseCase(repository),
-            toggleBookmarkUseCase = ToggleBookmarkUseCase(trailRepository, /*postRepository*/),
+            toggleBookmarkUseCase = ToggleBookmarkUseCase(pathRepository, /*postRepository*/),
         )
     }
 }

@@ -1,6 +1,6 @@
-package com.sesac.domain.usecase.trail
+package com.sesac.domain.usecase.path
 
-data class TrailUseCase(
+data class PathUseCase(
     val getAllMyRecordUseCase: GetAllMyRecordUseCase,
     val createPathUseCase: CreatePathUseCase,
     val updatePathUseCase: UpdatePathUseCase,

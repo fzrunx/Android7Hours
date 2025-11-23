@@ -7,7 +7,7 @@ import com.sesac.domain.model.Path
 import com.sesac.domain.result.AuthResult
 import kotlinx.coroutines.flow.Flow
 
-interface TrailRepository {
+interface PathRepository {
     suspend fun getAllRecommendedPaths(coord: Coord?, radius: Float?): Flow<AuthResult<List<Path>>>
     suspend fun getMyPaths(token: String): Flow<AuthResult<List<Path>>>
     suspend fun createPath(token: String, path: Path): Flow<AuthResult<Path>>

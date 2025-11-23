@@ -12,16 +12,16 @@ import com.sesac.domain.model.BookmarkResponse
 import com.sesac.domain.model.Coord
 import com.sesac.domain.model.MyRecord
 import com.sesac.domain.model.Path
-import com.sesac.domain.repository.TrailRepository
+import com.sesac.domain.repository.PathRepository
 import com.sesac.domain.result.AuthResult
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.flow
 import javax.inject.Inject
 
-class TrailRepositoryImpl @Inject constructor(
+class PathRepositoryImpl @Inject constructor(
     private val pathApi: PathApi
-): TrailRepository {
+): PathRepository {
     override suspend fun getAllRecommendedPaths(coord: Coord?, radius: Float?): Flow<AuthResult<List<Path>>> = flow {
         emit(AuthResult.Loading)
         val paths = pathApi.getPaths(

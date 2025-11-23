@@ -16,7 +16,7 @@ import com.sesac.data.repository.PetRepositoryImpl
 
 import com.sesac.data.repository.SessionRepositoryImpl
 
-import com.sesac.data.repository.TrailRepositoryImpl
+import com.sesac.data.repository.PathRepositoryImpl
 
 import com.sesac.domain.repository.AuthRepository
 
@@ -34,7 +34,7 @@ import com.sesac.domain.repository.PetRepository
 
 import com.sesac.domain.repository.SessionRepository
 
-import com.sesac.domain.repository.TrailRepository
+import com.sesac.domain.repository.PathRepository
 
 import dagger.Binds
 
@@ -69,8 +69,8 @@ abstract class RepositoryModule {
     @Binds
     @ActivityRetainedScoped
     abstract fun bindTrailRepository(
-        trailRepositoryImpl: TrailRepositoryImpl
-    ): TrailRepository
+        pathRepositoryImpl: PathRepositoryImpl
+    ): PathRepository
 
     @Binds
     @ActivityRetainedScoped

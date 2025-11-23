@@ -8,7 +8,7 @@ import com.sesac.domain.usecase.community.CommunityUseCase
 import com.sesac.domain.usecase.home.HomeUseCase
 import com.sesac.domain.model.Path
 import com.sesac.domain.result.AuthResult
-import com.sesac.domain.usecase.trail.TrailUseCase
+import com.sesac.domain.usecase.path.PathUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -18,7 +18,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
-    private val trailUseCase: TrailUseCase,
+    private val pathUseCase: PathUseCase,
     private val homeUseCase: HomeUseCase,
     private val communityUseCase: CommunityUseCase,
 ): ViewModel() {
@@ -39,7 +39,7 @@ class HomeViewModel @Inject constructor(
 
     fun getRecommendedPaths() {
         viewModelScope.launch {
-            trailUseCase.getAllRecommendedPathsUseCase(null, null).collectLatest { _recommendPathList.value = it }
+            pathUseCase.getAllRecommendedPathsUseCase(null, null).collectLatest { _recommendPathList.value = it }
         }
     }
 

@@ -7,7 +7,7 @@ import com.sesac.domain.model.Coord
 import com.sesac.domain.model.UiEvent
 import com.sesac.domain.model.Path
 import com.sesac.domain.result.AuthResult
-import com.sesac.domain.usecase.trail.TrailUseCase
+import com.sesac.domain.usecase.path.PathUseCase
 import com.sesac.trail.presentation.ui.WalkPathTab
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
@@ -34,7 +34,7 @@ import kotlinx.coroutines.flow.update
 
 @HiltViewModel
 class TrailViewModel @Inject constructor(
-    private val trailUseCase: TrailUseCase,
+    private val pathUseCase: PathUseCase,
     private val bookmarkUseCase: BookmarkUseCase
 ): ViewModel() {
     private val _invalidToken = Channel<UiEvent>()
@@ -101,7 +101,7 @@ class TrailViewModel @Inject constructor(
 
     fun getRecommendedPaths(coord: Coord, radius: Float = 5000f) {
         viewModelScope.launch {
-            trailUseCase.getAllRecommendedPathsUseCase(coord, radius).collectLatest { paths ->
+            pathUseCase.getAllRecommendedPathsUseCase(coord, radius).collectLatest { paths ->
                 if (paths is AuthResult.Success) {
                     _recommendedPaths.value = paths
                 }
@@ -112,7 +112,7 @@ class TrailViewModel @Inject constructor(
     fun getMyPaths(token: String?) {
         viewModelScope.launch {
             token?.let {
-                trailUseCase.getMyPaths(it).collectLatest { paths ->
+                pathUseCase.getMyPaths(it).collectLatest { paths ->
                     if (paths is AuthResult.Success) { _myPaths.value = paths }
                 }
             } ?: run {
@@ -134,7 +134,7 @@ class TrailViewModel @Inject constructor(
             if (token.isNullOrEmpty()) { _invalidToken.send(UiEvent.ToastEvent("유저 정보가 없습니다.")) }
             else{
                 _selectedPath.value?.let { path ->
-                    trailUseCase.createPathUseCase(token, path).collectLatest { createdPath ->
+                    pathUseCase.createPathUseCase(token, path).collectLatest { createdPath ->
                         // You might want to refresh the list or navigate
                         // For now, just update the selected path with the created one
                         if (createdPath is AuthResult.Success) {
@@ -234,7 +234,7 @@ class TrailViewModel @Inject constructor(
                 return@launch
             }
             _selectedPath.value?.let { path ->
-                trailUseCase.updatePathUseCase(token, path.id, path).collectLatest { result ->
+                pathUseCase.updatePathUseCase(token, path.id, path).collectLatest { result ->
                     if (result is AuthResult.Success) {
                         getMyPaths(token)
                     }
@@ -249,7 +249,7 @@ class TrailViewModel @Inject constructor(
                 _invalidToken.send(UiEvent.ToastEvent("유저 정보가 없습니다."))
                 return@launch
             }
-            trailUseCase.deletePathUseCase(token, pathId).collectLatest { result ->
+            pathUseCase.deletePathUseCase(token, pathId).collectLatest { result ->
                 if (result is AuthResult.Success) {
                     getMyPaths(token)
                 }
