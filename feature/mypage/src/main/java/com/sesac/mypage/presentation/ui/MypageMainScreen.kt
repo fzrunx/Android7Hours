@@ -124,7 +124,7 @@ fun MypageMainScreen(
         item {
             MypageButtonView(
                 onClick = {
-                    viewModel.signout(uiState.id)
+                    viewModel.signOut(uiState.id)
                     uiState.reset()
                     viewModel.logout()
                     nav2LoginScreen()

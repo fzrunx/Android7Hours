@@ -1,7 +1,11 @@
 package com.sesac.mypage.presentation
 
+import android.util.Log
+import androidx.compose.ui.graphics.Path
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.sesac.domain.model.BookmarkType
+import com.sesac.domain.model.BookmarkedPath
 import com.sesac.domain.model.Breed
 import com.sesac.domain.model.FavoriteCommunityPost
 import com.sesac.domain.model.FavoriteWalkPath
@@ -11,7 +15,10 @@ import com.sesac.domain.usecase.mypage.MypageUseCase
 import com.sesac.domain.model.User
 import com.sesac.domain.model.Pet
 import com.sesac.domain.result.AuthResult
+import com.sesac.domain.result.JoinUiState
+import com.sesac.domain.result.ResponseUiState
 import com.sesac.domain.usecase.auth.AuthUseCase
+import com.sesac.domain.usecase.bookmark.BookmarkUseCase
 import com.sesac.domain.usecase.pet.PetUseCase
 import com.sesac.domain.usecase.session.SessionUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -25,9 +32,11 @@ import javax.inject.Inject
 
 @HiltViewModel
 class MypageViewModel @Inject constructor(
-    private val mypageUseCase: MypageUseCase,
     private val authUseCase: AuthUseCase,
     private val sessionUseCase: SessionUseCase,
+    private val bookmarkUseCase: BookmarkUseCase,
+
+    private val mypageUseCase: MypageUseCase,
     private val petUseCase: PetUseCase,
 ) : ViewModel() {
     val tabLabels = listOf("산책로", "커뮤니티")
@@ -42,6 +51,11 @@ class MypageViewModel @Inject constructor(
     // AddPetScreen
     private val _breeds = MutableStateFlow<List<Breed>>(emptyList())
     val breeds = _breeds.asStateFlow()
+//    private val _bookmarkedPaths = MutableStateFlow<AuthResult<List<BookmarkedPath?>>>(AuthResult.NoConstructor)
+    private val _bookmarkedPaths = MutableStateFlow<ResponseUiState<List<BookmarkedPath>>>(ResponseUiState.Idle)
+    val bookmarkedPaths = _bookmarkedPaths.asStateFlow()
+
+
     // MypageFavoriteScreen
     private val _favoriteWalkPaths = MutableStateFlow<List<FavoriteWalkPath>>(emptyList())
     val favoriteWalkPaths get() = _favoriteWalkPaths.asStateFlow()
@@ -114,19 +128,50 @@ class MypageViewModel @Inject constructor(
         }
     }
 
-    fun getFavoriteWalkPaths() {
+    fun getUserBookmarkedPaths(token: String?) {
         viewModelScope.launch {
-            mypageUseCase.getFavoriteWalkPathsUseCase().collectLatest { _favoriteWalkPaths.value = it }
+            _bookmarkedPaths.value = ResponseUiState.Loading
+            if (token == null) {
+                _bookmarkedPaths.value = ResponseUiState.Error("로그인이 필요합니다.")
+                return@launch
+            }
+
+            bookmarkUseCase.getMyBookmarksUseCase(token)
+                .catch { e ->
+                    _bookmarkedPaths.value = ResponseUiState.Error(e.message ?: "알 수 없는 오류가 발생했습니다.")
+                }
+                .collectLatest { bookmarksResult ->
+                    when (bookmarksResult) {
+                        is AuthResult.Success -> {
+                            val pathList = bookmarksResult.resultData.mapNotNull { it.bookmarkedItem as? BookmarkedPath }
+                            _bookmarkedPaths.value = ResponseUiState.Success("북마크를 불러왔습니다.", pathList)
+                        }
+                        is AuthResult.NetworkError -> {
+                            _bookmarkedPaths.value = ResponseUiState.Error(bookmarksResult.exception.message ?: "unknown")
+                        }
+                        else -> {
+                            // Other AuthResult states are not handled here.
+                        }
+                    }
+                }
         }
     }
 
-    fun deleteFavoriteWalkPath(favoriteWalkPath: FavoriteWalkPath) {
+    fun toggleBookmark(token: String?, id: Int) {
         viewModelScope.launch {
-            mypageUseCase.deleteFavoriteWalkPathsUseCase(favoriteWalkPath.id).collectLatest { success ->
-                if (success) {
-                    getFavoriteWalkPaths()
-                }
+            if (token == null) {
+                Log.e("MypageViewModel", "Toggle bookmark failed: token is null")
+                return@launch
             }
+            bookmarkUseCase.toggleBookmarkUseCase(token, id, BookmarkType.PATH)
+                .collectLatest { bookmarkResponse ->
+                    if (bookmarkResponse is AuthResult.Success) {
+                        // Refresh the list on success
+                        getUserBookmarkedPaths(token)
+                    } else if (bookmarkResponse is AuthResult.NetworkError) {
+                        Log.e("MypageViewModel", "Toggle bookmark failed: ${bookmarkResponse.exception}")
+                    }
+                }
         }
     }
 
@@ -191,13 +236,13 @@ class MypageViewModel @Inject constructor(
         }
     }
 
-    fun signout(user: User) {
+    fun signOut(user: User) {
         viewModelScope.launch {
             authUseCase.deleteUserUseCase(user.id).collectLatest { }
         }
     }
 
-    fun signout(id: Int) {
+    fun signOut(id: Int) {
         viewModelScope.launch {
             authUseCase.deleteUserUseCase(id).collectLatest { }
         }

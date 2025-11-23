@@ -39,11 +39,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -67,13 +65,11 @@ import com.sesac.common.ui.theme.White
 import com.sesac.common.ui.theme.paddingLarge
 import com.sesac.common.ui.theme.paddingMicro
 import com.sesac.common.ui.theme.paddingSmall
-import com.sesac.domain.model.BookmarkedPath
 import com.sesac.domain.model.Path
-import com.sesac.domain.result.AuthResult
 import com.sesac.domain.result.AuthUiState
+import com.sesac.domain.result.ResponseUiState
 import com.sesac.trail.presentation.TrailViewModel
 import com.sesac.trail.presentation.component.TagFlow
-import kotlinx.coroutines.launch
 
 
 // --- Main Composable ---
@@ -88,42 +84,28 @@ fun TrailDetailScreen(
 ) {
     val context = LocalContext.current
     val selectedDetailPathState by viewModel.selectedPath.collectAsStateWithLifecycle()
-    val bookmarkedPaths by viewModel.bookmarkedPaths.collectAsStateWithLifecycle()
+    val bookmarkedPathsState by viewModel.bookmarkedPaths.collectAsStateWithLifecycle()
 
-//    val isBookmarked by remember(bookmarkedPaths, selectedDetailPath) {
-//        derivedStateOf {
-//            if (bookmarkedPaths is AuthResult.Success && selectedDetailPath != null) {
-//                (bookmarkedPaths as AuthResult.Success<List<BookmarkedPath?>>).resultData.any { it?.id == selectedDetailPath!!.id }
-//            } else {
-//                false
-//            }
-//        }
-//    }
-    var isBookmarked by remember { mutableStateOf(false) }
-    val scope = rememberCoroutineScope()
-
+    val isBookmarked by remember(bookmarkedPathsState, selectedDetailPathState) {
+        derivedStateOf {
+            val paths = (bookmarkedPathsState as? ResponseUiState.Success)?.result ?: emptyList()
+            val currentPathId = selectedDetailPathState?.id
+            if (currentPathId == null) false else paths.any { it.id == currentPathId }
+        }
+    }
 
     LaunchedEffect(Unit) {
-        selectedDetailPath?.let { selected ->
-            viewModel.updateSelectedPath(selected)
-            viewModel.getUserBookmarkedPaths(uiState.token)
-            if (bookmarkedPaths is AuthResult.Success) {
-                isBookmarked = (bookmarkedPaths as AuthResult.Success<List<BookmarkedPath?>>).resultData.any { it?.id == selected.id }
-            }
-            Log.d("TAG-TrailDetailScreen", "isBookmarked1 : $isBookmarked")
+        selectedDetailPath?.let {
+            viewModel.updateSelectedPath(it)
         }
+        viewModel.getUserBookmarkedPaths(uiState.token)
     }
 
     selectedDetailPathState?.let { selected ->
         val handleBookmark: () -> Unit = {
-            scope.launch {
-                val message = if (isBookmarked) "즐겨찾기에서 제거되었습니다" else "즐겨찾기에 추가되었습니다"
-                viewModel.toggleBookmark(uiState.token, selected.id)
-//                viewModel.getUserBookmarkedPaths(uiState.token)
-                isBookmarked = !isBookmarked
-                Log.d("TAG-TrailDetailScreen", "isBookmarked2 : $isBookmarked")
-                Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
-            }
+            viewModel.toggleBookmark(uiState.token, selected.id)
+            val message = if (isBookmarked) "즐겨찾기에서 제거합니다." else "즐겨찾기에 추가합니다."
+            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
         }
 
         Column(

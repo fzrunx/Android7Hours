@@ -132,17 +132,7 @@ class AuthViewModel @Inject constructor(
             _joinUiState.value = JoinUiState.Loading
             val form = _joinFormState.value
 
-            val userToPost = Auth(
-//                id = -1, // Server will generate
-                username = form.email,
-                email = form.email,
-                fullName = form.name,
-                nickname = form.nickname,
-                password = form.password,
-                passwordVerification = form.passwordConfirm
-            )
-
-            authUseCase.postUser(userToPost)
+            authUseCase.postUser(form.toAuth())
                 .collectLatest { result ->
                     when (result) {
                         is AuthResult.Success -> {

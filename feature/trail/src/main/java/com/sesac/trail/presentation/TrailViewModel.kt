@@ -27,8 +27,10 @@ import com.sesac.domain.model.BookmarkType
 import com.sesac.domain.model.BookmarkedPath
 import com.sesac.domain.model.Comment
 import com.sesac.domain.model.Post
+import com.sesac.domain.result.ResponseUiState
 import com.sesac.domain.usecase.bookmark.BookmarkUseCase
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.update
 
 
@@ -39,7 +41,7 @@ class TrailViewModel @Inject constructor(
 ): ViewModel() {
     private val _invalidToken = Channel<UiEvent>()
     val invalidToken = _invalidToken.receiveAsFlow()
-    private val _recommendedPaths = MutableStateFlow<AuthResult<List<Path>>>(AuthResult.NoConstructor)
+    private val _recommendedPaths = MutableStateFlow<ResponseUiState<List<Path>>>(ResponseUiState.Idle)
     val recommendedPaths = _recommendedPaths.asStateFlow()
     // 폴리라인 인스턴스를 ViewModel State로 관리
     private val _polylineOverlay = MutableStateFlow<PolylineOverlay?>(null)
@@ -69,12 +71,10 @@ class TrailViewModel @Inject constructor(
         _polylineOverlay.value = polyline
     }
 
-    private val _myPaths = MutableStateFlow<AuthResult<List<Path>>>(AuthResult.NoConstructor)
+    private val _myPaths = MutableStateFlow<ResponseUiState<List<Path>>>(ResponseUiState.Idle)
     val myPaths = _myPaths.asStateFlow()
-    private val _bookmarkedPaths = MutableStateFlow<AuthResult<List<BookmarkedPath?>>>(AuthResult.NoConstructor)
+    private val _bookmarkedPaths = MutableStateFlow<ResponseUiState<List<BookmarkedPath>>>(ResponseUiState.Idle)
     val bookmarkedPaths = _bookmarkedPaths.asStateFlow()
-    private val _isBookmarked = MutableStateFlow(false)
-    val isBookmarked = _isBookmarked.asStateFlow()
     private val _isSheetOpen = MutableStateFlow(false)
     val isSheetOpen get() = _isSheetOpen.asStateFlow()
     private val _isPaused = MutableStateFlow(false)
@@ -101,9 +101,20 @@ class TrailViewModel @Inject constructor(
 
     fun getRecommendedPaths(coord: Coord, radius: Float = 5000f) {
         viewModelScope.launch {
-            pathUseCase.getAllRecommendedPathsUseCase(coord, radius).collectLatest { paths ->
-                if (paths is AuthResult.Success) {
-                    _recommendedPaths.value = paths
+            _recommendedPaths.value = ResponseUiState.Loading
+            pathUseCase.getAllRecommendedPathsUseCase(coord, radius)
+                .catch { e ->
+                    _recommendedPaths.value = ResponseUiState.Error(e.message ?: "알 수 없는 오류가 발생했습니다.")
+                }
+                .collectLatest { pathsResult ->
+                when (pathsResult) {
+                    is AuthResult.Success -> {
+                        _recommendedPaths.value = ResponseUiState.Success("추천 경로를 불러왔습니다.", pathsResult.resultData)
+                    }
+                    is AuthResult.NetworkError -> {
+                        _recommendedPaths.value = ResponseUiState.Error(pathsResult.exception.message ?: "unknown")
+                    }
+                    else -> Unit
                 }
             }
         }
@@ -111,12 +122,25 @@ class TrailViewModel @Inject constructor(
 
     fun getMyPaths(token: String?) {
         viewModelScope.launch {
-            token?.let {
-                pathUseCase.getMyPaths(it).collectLatest { paths ->
-                    if (paths is AuthResult.Success) { _myPaths.value = paths }
+            _myPaths.value = ResponseUiState.Loading
+            if (token == null) {
+                _myPaths.value = ResponseUiState.Error("로그인이 필요합니다.")
+                return@launch
+            }
+            pathUseCase.getMyPaths(token)
+                .catch { e ->
+                    _myPaths.value = ResponseUiState.Error(e.message ?: "알 수 없는 오류가 발생했습니다.")
                 }
-            } ?: run {
-                _myPaths.value = AuthResult.NoConstructor
+                .collectLatest { pathsResult ->
+                when (pathsResult) {
+                    is AuthResult.Success -> {
+                        _myPaths.value = ResponseUiState.Success("내 경로를 불러왔습니다.", pathsResult.resultData)
+                    }
+                    is AuthResult.NetworkError -> {
+                        _myPaths.value = ResponseUiState.Error(pathsResult.exception.message ?: "unknown")
+                    }
+                    else -> Unit
+                }
             }
         }
     }
@@ -158,33 +182,49 @@ class TrailViewModel @Inject constructor(
     
     fun getUserBookmarkedPaths(token: String?) {
         viewModelScope.launch {
-            val bookmarkList = mutableListOf<BookmarkedPath>()
-            token?.let {
-                bookmarkUseCase.getMyBookmarksUseCase(token).collectLatest { bookmarks ->
-                    if (bookmarks is AuthResult.Success) {
-                        bookmarks.resultData.forEach { bookmark ->
-                            if (bookmark.bookmarkedItem is BookmarkedPath) {
-                                bookmarkList.add(bookmark.bookmarkedItem as BookmarkedPath)
-                            }
+            _bookmarkedPaths.value = ResponseUiState.Loading
+            if (token == null) {
+                _bookmarkedPaths.value = ResponseUiState.Error("로그인이 필요합니다.")
+                return@launch
+            }
+
+            bookmarkUseCase.getMyBookmarksUseCase(token)
+                .catch { e ->
+                    _bookmarkedPaths.value = ResponseUiState.Error(e.message ?: "알 수 없는 오류가 발생했습니다.")
+                }
+                .collectLatest { bookmarksResult ->
+                    when (bookmarksResult) {
+                        is AuthResult.Success -> {
+                            val pathList = bookmarksResult.resultData.mapNotNull { it.bookmarkedItem as? BookmarkedPath }
+                            _bookmarkedPaths.value = ResponseUiState.Success("북마크를 불러왔습니다.", pathList)
+                        }
+                        is AuthResult.NetworkError -> {
+                            _bookmarkedPaths.value = ResponseUiState.Error(bookmarksResult.exception.message ?: "unknown")
+                        }
+                        else -> {
+                            // Other AuthResult states are not handled here.
                         }
                     }
-                    _bookmarkedPaths.value = AuthResult.Success(bookmarkList)
                 }
-            } ?: run { _bookmarkedPaths.value = AuthResult.Success(emptyList()) }
-            Log.d("TAG-TrailViewModel", "bookmarkedPaths : ${bookmarkedPaths.value}")
         }
     }
 
     fun toggleBookmark(token: String?, id: Int) {
         viewModelScope.launch {
-            token?.let {
-                bookmarkUseCase.toggleBookmarkUseCase(token, id, BookmarkType.PATH).collectLatest { bookmarkResponse ->
+            if (token == null) {
+                Log.e("MypageViewModel", "Toggle bookmark failed: token is null")
+                return@launch
+            }
+            bookmarkUseCase.toggleBookmarkUseCase(token, id, BookmarkType.PATH)
+                .collectLatest { bookmarkResponse ->
                     if (bookmarkResponse is AuthResult.Success) {
+                        // Refresh the list on success
+                        getUserBookmarkedPaths(token)
                         _selectedPath.value = _selectedPath.value?.copy(bookmarksCount = bookmarkResponse.resultData.bookmarksCount)
-//                        _isBookmarked.value = !_isBookmarked.value
+                    } else if (bookmarkResponse is AuthResult.NetworkError) {
+                        Log.e("MypageViewModel", "Toggle bookmark failed: ${bookmarkResponse.exception}")
                     }
                 }
-            }
         }
     }
 
