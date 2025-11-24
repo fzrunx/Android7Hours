@@ -10,6 +10,7 @@ import com.sesac.data.repository.MypageRepositoryImpl
 import com.sesac.data.repository.PetRepositoryImpl
 import com.sesac.data.repository.SessionRepositoryImpl
 import com.sesac.data.repository.PathRepositoryImpl
+import com.sesac.data.repository.UserRepositoryImpl
 import com.sesac.domain.repository.AuthRepository
 import com.sesac.domain.repository.BookmarkRepository
 import com.sesac.domain.repository.CommentRepository
@@ -20,6 +21,7 @@ import com.sesac.domain.repository.MypageRepository
 import com.sesac.domain.repository.PetRepository
 import com.sesac.domain.repository.SessionRepository
 import com.sesac.domain.repository.PathRepository
+import com.sesac.domain.repository.UserRepository
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -31,6 +33,24 @@ import javax.inject.Singleton
 @Module
 @InstallIn(ActivityRetainedComponent::class)
 abstract class RepositoryModule {
+
+    @Binds
+    @ActivityRetainedScoped
+    abstract fun bindUserRepository(
+        userRepositoryImpl: UserRepositoryImpl
+    ): UserRepository
+
+    @Binds
+    @ActivityRetainedScoped
+    abstract fun bindAuthRepository(
+        authRepositoryImpl: AuthRepositoryImpl
+    ): AuthRepository
+
+    @Binds
+    @ActivityRetainedScoped
+    abstract fun bindSessionRepository(
+        sessionRepositoryImpl: SessionRepositoryImpl
+    ): SessionRepository
 
     @Binds
     @ActivityRetainedScoped
@@ -80,20 +100,4 @@ abstract class RepositoryModule {
         commentRepositoryImpl: CommentRepositoryImpl
     ): CommentRepository
 
-}
-
-@Module
-@InstallIn(SingletonComponent::class)
-abstract class SingletonRepositoryModule {
-    @Binds
-    @Singleton
-    abstract fun bindAuthRepository(
-        authRepositoryImpl: AuthRepositoryImpl
-    ): AuthRepository
-
-    @Binds
-    @Singleton
-    abstract fun bindSessionRepository(
-        sessionRepositoryImpl: SessionRepositoryImpl
-    ): SessionRepository
 }

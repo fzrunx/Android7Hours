@@ -21,11 +21,13 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 import android.util.Log
 import com.sesac.auth.utils.validate
+import com.sesac.domain.usecase.user.UserUseCase
 import kotlinx.coroutines.delay
 
 @HiltViewModel
 class AuthViewModel @Inject constructor(
     private val authUseCase: AuthUseCase,
+    private val userUseCase: UserUseCase,
     private val sessionUseCase: SessionUseCase
 ) : ViewModel() {
 
@@ -132,7 +134,7 @@ class AuthViewModel @Inject constructor(
             _joinUiState.value = JoinUiState.Loading
             val form = _joinFormState.value
 
-            authUseCase.postUser(form.toAuth())
+            userUseCase.postUser(form.toAuth())
                 .collectLatest { result ->
                     when (result) {
                         is AuthResult.Success -> {

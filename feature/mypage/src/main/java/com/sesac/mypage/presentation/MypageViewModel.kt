@@ -21,6 +21,7 @@ import com.sesac.domain.usecase.auth.AuthUseCase
 import com.sesac.domain.usecase.bookmark.BookmarkUseCase
 import com.sesac.domain.usecase.pet.PetUseCase
 import com.sesac.domain.usecase.session.SessionUseCase
+import com.sesac.domain.usecase.user.UserUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -33,6 +34,7 @@ import javax.inject.Inject
 @HiltViewModel
 class MypageViewModel @Inject constructor(
     private val authUseCase: AuthUseCase,
+    private val userUseCase: UserUseCase,
     private val sessionUseCase: SessionUseCase,
     private val bookmarkUseCase: BookmarkUseCase,
 
@@ -238,13 +240,13 @@ class MypageViewModel @Inject constructor(
 
     fun signOut(user: User) {
         viewModelScope.launch {
-            authUseCase.deleteUserUseCase(user.id).collectLatest { }
+            userUseCase.deleteUserUseCase(user.id).collectLatest { }
         }
     }
 
     fun signOut(id: Int) {
         viewModelScope.launch {
-            authUseCase.deleteUserUseCase(id).collectLatest { }
+            userUseCase.deleteUserUseCase(id).collectLatest { }
         }
     }
 }

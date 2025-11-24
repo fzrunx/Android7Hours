@@ -1,10 +1,10 @@
-package com.sesac.domain.usecase.auth
+package com.sesac.domain.usecase.user
 
-import com.sesac.domain.repository.AuthRepository
+import com.sesac.domain.repository.UserRepository
 import javax.inject.Inject
 
 class DeleteUserUseCase @Inject constructor(
-    private val authRepository: AuthRepository
+    private val authRepository: UserRepository
 ) {
     suspend operator fun invoke(id: Int) = authRepository.deleteUser(id = id)
 }

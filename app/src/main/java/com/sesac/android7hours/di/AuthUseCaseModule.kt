@@ -2,27 +2,23 @@ package com.sesac.android7hours.di
 
 import com.sesac.domain.repository.AuthRepository
 import com.sesac.domain.usecase.auth.AuthUseCase
-import com.sesac.domain.usecase.auth.DeleteUserUseCase
-import com.sesac.domain.usecase.auth.GetAllUsersUseCase
 import com.sesac.domain.usecase.auth.LoginUseCase
 import com.sesac.domain.usecase.auth.LoginWithKakaoUseCase
-import com.sesac.domain.usecase.auth.PostUserUseCase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
+import dagger.hilt.android.components.ActivityRetainedComponent
+import dagger.hilt.android.scopes.ActivityRetainedScoped
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
 @Module
-@InstallIn(SingletonComponent::class)
-object APIUseCaseModule {
+@InstallIn(ActivityRetainedComponent::class)
+object AuthUseCaseModule {
     @Provides
-    @Singleton
+    @ActivityRetainedScoped
     fun provideAuthUseCase(repository: AuthRepository): AuthUseCase {
         return AuthUseCase(
-            getAllUsers = GetAllUsersUseCase(repository),
-            postUser = PostUserUseCase(repository),
-            deleteUserUseCase = DeleteUserUseCase(repository),
             login = LoginUseCase(repository),
             loginWithKakao = LoginWithKakaoUseCase(repository)
         )

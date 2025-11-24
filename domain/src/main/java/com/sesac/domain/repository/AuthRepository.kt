@@ -8,9 +8,6 @@ import com.sesac.domain.result.AuthResult
 import kotlinx.coroutines.flow.Flow
 
 interface AuthRepository {
-    suspend fun getUsers(): Flow<AuthResult<List<User>>>
-    suspend fun postUser(user: Auth): Flow<AuthResult<Unit>>
-    suspend fun deleteUser(id: Int): Flow<AuthResult<Unit>>
     suspend fun login(loginRequest: LoginRequest): Flow<AuthResult<LoginResponse>>
-    fun loginWithKakao(accessToken: String): Flow<AuthResult<LoginResponse>>
+    suspend fun loginWithKakao(accessToken: String): Flow<AuthResult<LoginResponse>>
 }

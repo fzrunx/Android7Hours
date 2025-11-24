@@ -22,24 +22,6 @@ class AuthRepositoryImpl @Inject constructor(
     private val authApi: AuthApi,
     private val kakaoUserApiService: KakaoUserApiService
 ): AuthRepository {
-    override suspend fun getUsers() = flow {
-        emit(AuthResult.Loading)
-        val result = authApi.getUsers().toUserList()
-        emit(AuthResult.Success(result))
-    }.catch {
-        Log.d("TAG-AuthRepositoryImpl", "getUsers() : error : $it")
-        emit(AuthResult.NetworkError(it))
-    }
-
-    override suspend fun postUser(user: Auth) = flow {
-        emit(AuthResult.Loading)
-        authApi.postUser(user.toAuthDTO())
-        emit(AuthResult.Success(Unit))
-    }.catch {
-        Log.d("TAG-AuthRepositoryImpl", "postUser() : error : $it")
-        emit(AuthResult.NetworkError(it))
-    }
-
     override suspend fun login(loginRequest: LoginRequest) = flow {
         emit(AuthResult.Loading)
         val resultDTO = authApi.login(loginRequest)
@@ -52,15 +34,7 @@ class AuthRepositoryImpl @Inject constructor(
         emit(AuthResult.NetworkError(it))
     }
 
-    override suspend fun deleteUser(id: Int): Flow<AuthResult<Unit>> =flow {
-        emit(AuthResult.Loading)
-        authApi.deleteUser(id = id)
-        emit(AuthResult.Success(Unit))
-    }.catch {
-        emit(AuthResult.NetworkError(it))
-    }
-
-    override fun loginWithKakao(accessToken: String): Flow<AuthResult<LoginResponse>> = flow {
+    override suspend fun loginWithKakao(accessToken: String): Flow<AuthResult<LoginResponse>> = flow {
         emit(AuthResult.Loading)
 
         // 1. 카카오 API 호출해서 사용자 정보 가져오기
