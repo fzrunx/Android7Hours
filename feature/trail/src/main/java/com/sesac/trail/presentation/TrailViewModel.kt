@@ -45,8 +45,6 @@ class TrailViewModel @Inject constructor(
     private val _invalidToken = Channel<UiEvent>()
     val invalidToken = _invalidToken.receiveAsFlow()
 
-    // 폴리라인 인스턴스를 ViewModel State로 관리
-
     // =================================================================
     // 📌 1. 지도 녹화 관련 데이터 (MainScreen에서 사용)
     // =================================================================
@@ -277,13 +275,10 @@ class TrailViewModel @Inject constructor(
     }
 
 
-    fun updateIsSheetOpen(newState: Boolean?) {
-        viewModelScope.launch { _isSheetOpen.value = newState ?: !_isSheetOpen.value }
-    }
-
     fun updatePausedState() {
         viewModelScope.launch { _isPaused.value = !_isPaused.value }
     }
+
 
     fun updateSelectedPathLikes(isLiked: Boolean): Boolean {
         viewModelScope.launch {
@@ -318,6 +313,15 @@ class TrailViewModel @Inject constructor(
                     }
                 }
             }
+        }
+    }
+    fun saveCurrentDraft(name: String, description: String?) {
+        // 1. Draft 생성
+        createDraftPath(name, description)
+
+        // 2. RoomDB에 저장
+        _draftPath.value?.let { draft ->
+            savePathToRoom(draft)
         }
     }
 
@@ -367,6 +371,12 @@ class TrailViewModel @Inject constructor(
     private val _isEditMode = MutableStateFlow(false)
     val isEditMode get() = _isEditMode.asStateFlow()
 
+    fun updateIsSheetOpen(newState: Boolean?) {
+        viewModelScope.launch {
+            _isSheetOpen.value = newState ?: !_isSheetOpen.value
+        }
+    }
+
     fun updateIsFollowingPath(newState: Boolean?) {
         viewModelScope.launch {
             _isFollowingPath.value = newState ?: !_isFollowingPath.value
@@ -391,16 +401,44 @@ class TrailViewModel @Inject constructor(
     private val _draftPath = MutableStateFlow<Path?>(null)
     val draftPath = _draftPath.asStateFlow()
 
+    // ✅ 추가: 지도에 표시할 메모 마커 목록
+    private val _memoMarkers = MutableStateFlow<List<com.sesac.domain.model.MemoMarker>>(emptyList())
+    val memoMarkers = _memoMarkers.asStateFlow()
+
+    fun addMemoMarker(latitude: Double, longitude: Double, memo: String) {
+        val newMarker = com.sesac.domain.model.MemoMarker(latitude, longitude, memo)
+        _memoMarkers.value = _memoMarkers.value + newMarker
+    }
+
+    fun clearMemoMarkers() {
+        _memoMarkers.value = emptyList()
+    }
+
+
     fun createDraftPath(name: String, description: String?) {
         val coords = tempPathCoords.value.map { latLng ->
             Coord(latLng.latitude, latLng.longitude)
         }
 
-        _draftPath.value = Path.EMPTY.copy(pathName = name, pathComment = description, coord = coords)
+        _draftPath.value = Path(
+            id = -1,
+            pathName = name,
+            pathComment = description ?: "",
+            coord = coords,
+            markers = _memoMarkers.value,
+            likes = 0,
+            uploader = "",
+            // Provide default values for newly added fields in Path data class
+            bookmarksCount = 0,
+            isBookmarked = false,
+            distanceFromMe = 0f,
+            tags = emptyList()
+        )
     }
 
     fun clearDraftPath() {
         _draftPath.value = null
+        clearMemoMarkers() // ✅ 임시 경로 삭제 시 마커도 함께 삭제
     }
 
     private val _drafts = MutableStateFlow<List<Path>>(emptyList())
@@ -495,6 +533,9 @@ class TrailViewModel @Inject constructor(
                     drafts.forEach { draft ->
                         Log.d("TrailViewModel", "  - Draft: ${draft.pathName}, coords: ${draft.coord?.size}")
                     }
+
+                    clearTempPath() // 폴리라인 초기화
+                    clearMemoMarkers() // 메모 마커 초기화
 
                     _invalidToken.send(UiEvent.ToastEvent("경로가 저장되었습니다"))
                 } else {

@@ -2,6 +2,16 @@ package com.sesac.domain.model
 
 import java.util.Date
 
+data class RecommendedPath(
+    val id: Int,
+    val name: String,
+    val distance: String,
+    val time: String,
+    val rating: Double,
+    val reviews: Int,
+    val color: Any
+)
+
 data class Path(
     val id: Int,
     val uploader: String,
@@ -17,6 +27,7 @@ data class Path(
     val isBookmarked: Boolean,
     val likes: Int = 0,
     val distanceFromMe: Float = 0f, // React의 distance_from_me
+    val markers: List<MemoMarker>? = null,
     val tags: List<String> = emptyList(),
 ) {
     companion object {
@@ -35,6 +46,7 @@ data class Path(
             isBookmarked = false,
             likes = 0,
             distanceFromMe = 0f,
+            markers = null,
             tags = emptyList(),
         )
     }

@@ -178,21 +178,17 @@ fun TrailCreateScreen(
                     return@launch
                 }
 
-                // ✅ 수정: 경로 수정인지 신규 등록인지 구분
                 if (it.id != -1) {
                     // 기존 경로 수정
-                    Log.d("TrailCreateScreen", "Updating path: $it")
                     viewModel.updatePath(uiState.token)
                     Toast.makeText(context, "산책로가 수정되었습니다!", Toast.LENGTH_SHORT).show()
                 } else {
-                    // 신규 경로: RoomDB 저장 → text 변환 → 서버 전송
-                    Log.d("TrailCreateScreen", "Creating new path: $it")
-                    viewModel.savePathToRoom(it)
-                    Toast.makeText(
-                        context,
-                        "산책로가 저장되었습니다!",
-                        Toast.LENGTH_SHORT
-                    ).show()
+                    // 신규 경로: Draft 생성 → RoomDB 저장
+                    viewModel.createDraftPath(it.pathName, it.pathComment)
+                    viewModel.draftPath.value?.let { draft ->
+                        viewModel.savePathToRoom(draft)
+                    }
+                    Toast.makeText(context, "산책로가 저장되었습니다!", Toast.LENGTH_SHORT).show()
                 }
 
                 // ✅ 중요: 저장 후 selectedPath 초기화

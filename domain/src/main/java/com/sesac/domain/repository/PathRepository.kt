@@ -15,7 +15,7 @@ interface PathRepository {
     suspend fun deletePath(token: String, id: Int): Flow<AuthResult<Unit>>
     suspend fun toggleBookmark(token: String, id: Int): Flow<AuthResult<BookmarkResponse>>
     // MyRecord 관련
-    suspend fun getAllMyRecord(): Flow<List<MyRecord?>>
+    suspend fun getAllMyRecord(): Flow<List<MyRecord>>
     suspend fun addMyRecord(newRecord: MyRecord): Flow<Boolean>
     // Room DB (Local) 관련 추가
     suspend fun saveDraft(draft: Path): Flow<Boolean>            // 작성중인 Path 저장

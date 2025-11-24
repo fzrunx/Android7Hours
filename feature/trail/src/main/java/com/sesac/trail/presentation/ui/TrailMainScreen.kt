@@ -325,6 +325,28 @@ fun TrailMainScreen(
                 )
             }
         }
+
+        // ✅ 메모 마커 표시 (ViewModel 상태 기반)
+        val memoMarkers by viewModel.memoMarkers.collectAsStateWithLifecycle()
+        LaunchedEffect(memoMarkers, currentNaverMap) {
+            val map = currentNaverMap ?: return@LaunchedEffect
+
+            // 기존 마커 정리
+            currentMarkers.forEach { it.map = null }
+            currentMarkers.clear()
+
+            // 새 마커 추가
+            memoMarkers.forEach { memoMarker ->
+                addMemoMarker(
+                    context = context,
+                    naverMap = map,
+                    coord = LatLng(memoMarker.latitude, memoMarker.longitude),
+                    memo = memoMarker.memo ?: "",
+                    markers = currentMarkers,
+                    infoWindowStates = infoWindowStates
+                )
+            }
+        }
 //        // ✅ 마커 표시
 //        if (!isRecording) {
 //            when (recommendedPaths) {
@@ -470,18 +492,8 @@ fun TrailMainScreen(
             onTextChange = { memoText = it },
             onCancel = { showMemoDialog = false },
             onConfirm = {
-                val coord = selectedCoord
-                val map = currentNaverMap
-
-                if (coord != null && map != null) {
-                    addMemoMarker(
-                        context = context,
-                        naverMap = map,
-                        coord = coord,
-                        memo = memoText,
-                        markers = currentMarkers,
-                        infoWindowStates = infoWindowStates
-                    )
+                selectedCoord?.let {
+                    viewModel.addMemoMarker(it.latitude, it.longitude, memoText)
                 }
 
                 // Append the memo to the description in the ViewModel

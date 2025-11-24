@@ -11,6 +11,7 @@ data class PathEntity(
     val id: Int = 0,
     val pathName: String,
     val pathComment: String?,
+    val markers: String? = null,
     val level: Int = 2,
     val distance: Float? = 0f,
     val duration: Int = 0,
