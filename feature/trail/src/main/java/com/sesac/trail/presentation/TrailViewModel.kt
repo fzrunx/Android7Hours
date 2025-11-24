@@ -43,8 +43,6 @@ class TrailViewModel @Inject constructor(
     private val _invalidToken = Channel<UiEvent>()
     val invalidToken = _invalidToken.receiveAsFlow()
 
-    // 폴리라인 인스턴스를 ViewModel State로 관리
-
     // =================================================================
     // 📌 1. 지도 녹화 관련 데이터 (MainScreen에서 사용)
     // =================================================================
@@ -275,13 +273,10 @@ class TrailViewModel @Inject constructor(
     }
 
 
-    fun updateIsSheetOpen(newState: Boolean?) {
-        viewModelScope.launch { _isSheetOpen.value = newState ?: !_isSheetOpen.value }
-    }
-
     fun updatePausedState() {
         viewModelScope.launch { _isPaused.value = !_isPaused.value }
     }
+
 
     fun updateSelectedPathLikes(isLiked: Boolean): Boolean {
         viewModelScope.launch {
@@ -298,10 +293,6 @@ class TrailViewModel @Inject constructor(
     // =================================================================
     // 📌 6. 경로 CRUD (생성, 수정, 삭제)
     // =================================================================
-
-    // ✅ 수정: 중복 제거, 하나로 통합
-    private val _invalidToken = Channel<UiEvent>()
-    val invalidToken = _invalidToken.receiveAsFlow()
 
     // ✅ 수정: CreateScreen에서 사용 (녹화 완료 후 저장)
     fun savePath(token: String?, currentCoord: Coord?, radius: Float = 5000f) {
@@ -427,14 +418,19 @@ class TrailViewModel @Inject constructor(
             Coord(latLng.latitude, latLng.longitude)
         }
 
-        _draftPath.value = UserPath(
+        _draftPath.value = Path(
             id = -1,
-            name = name,
-            description = description ?: "",
+            pathName = name,
+            pathComment = description ?: "",
             coord = coords,
-            markers = _memoMarkers.value, // ✅ 메모 마커 리스트 추가
+            markers = _memoMarkers.value,
             likes = 0,
-            uploader = ""
+            uploader = "",
+            // Provide default values for newly added fields in Path data class
+            bookmarksCount = 0,
+            isBookmarked = false,
+            distanceFromMe = 0f,
+            tags = emptyList()
         )
     }
 

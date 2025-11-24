@@ -27,7 +27,6 @@ data class Path(
     val isBookmarked: Boolean,
     val likes: Int = 0,
     val distanceFromMe: Float = 0f, // React의 distance_from_me
-    val coord: List<Coord>? = null,
     val markers: List<MemoMarker>? = null,
     val tags: List<String> = emptyList(),
 ) {
@@ -47,7 +46,6 @@ data class Path(
             isBookmarked = false,
             likes = 0,
             distanceFromMe = 0f,
-            coord = null,
             markers = null,
             tags = emptyList(),
         )

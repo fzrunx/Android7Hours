@@ -184,7 +184,7 @@ fun TrailCreateScreen(
                     Toast.makeText(context, "산책로가 수정되었습니다!", Toast.LENGTH_SHORT).show()
                 } else {
                     // 신규 경로: Draft 생성 → RoomDB 저장
-                    viewModel.createDraftPath(it.name, it.description)
+                    viewModel.createDraftPath(it.pathName, it.pathComment)
                     viewModel.draftPath.value?.let { draft ->
                         viewModel.savePathToRoom(draft)
                     }
