@@ -10,11 +10,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.Card
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -24,7 +24,6 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
@@ -32,12 +31,13 @@ import coil3.request.ImageRequest
 import coil3.request.crossfade
 import coil3.size.Scale
 import com.sesac.common.component.CommonLazyRow
-import com.sesac.common.ui.theme.Android7HoursTheme
+import com.sesac.common.model.PathParceler
+import com.sesac.common.model.toPathParceler
 import com.sesac.common.ui.theme.bannerHeight
 import com.sesac.common.ui.theme.cardWidth
 import com.sesac.common.ui.theme.paddingLarge
 import com.sesac.common.ui.theme.paddingMedium
-import com.sesac.domain.model.UserPath
+import com.sesac.domain.model.Path
 import com.sesac.domain.result.AuthResult
 import com.sesac.home.presentation.HomeViewModel
 import com.sesac.common.R as cR
@@ -48,12 +48,17 @@ import com.sesac.common.R as cR
 fun HomeScreen(
     modifier: Modifier = Modifier,
     viewModel: HomeViewModel = hiltViewModel(),
-    onNavigateToWalkPath: () -> Unit = {},
+//    uiState: AuthUiState,
+    onNavigateToPathDetail: (PathParceler?) -> Unit = {},
     onNavigateToCommunity: () -> Unit = {},
 ) {
     val banners by viewModel.bannerList.collectAsStateWithLifecycle()
     val pathList by viewModel.recommendPathList.collectAsStateWithLifecycle()
     val communityList by viewModel.communityList.collectAsStateWithLifecycle()
+
+    LaunchedEffect(Unit) {
+        viewModel.getRecommendedPaths()
+    }
 
     Column(
         modifier = Modifier
@@ -67,11 +72,11 @@ fun HomeScreen(
                     item {
                         CommonLazyRow(
                             title = "산책로 추천",
-                            items = (pathList as AuthResult.Success<List<UserPath?>>).resultData,
-                        ) { item ->
+                            items = (pathList as AuthResult.Success<List<Path?>>).resultData,
+                        ) { path ->
                             ContentCardView(
-                                data = item,
-                                onClick = onNavigateToWalkPath,
+                                data = path,
+                                onClick = { onNavigateToPathDetail(path?.toPathParceler()) },
                                 modifier = Modifier.width(cardWidth)
                             )
                         }
@@ -155,10 +160,10 @@ fun CommunityCard(
 }
 
 // --- 6. Preview ---
-@Preview(showBackground = true)
-@Composable
-fun HomePagePreview() {
-    Android7HoursTheme {
-        HomeScreen(onNavigateToWalkPath = {}, onNavigateToCommunity = {})
-    }
-}
+//@Preview(showBackground = true)
+//@Composable
+//fun HomePagePreview() {
+//    Android7HoursTheme {
+//        HomeScreen(onNavigateToWalkPath = {}, onNavigateToCommunity = {})
+//    }
+//}

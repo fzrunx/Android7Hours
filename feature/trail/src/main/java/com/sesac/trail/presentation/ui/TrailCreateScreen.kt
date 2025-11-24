@@ -34,7 +34,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
@@ -133,11 +132,11 @@ fun TrailCreateScreen(
 
     var uploadedImageUri by remember { mutableStateOf<String?>(null) }
     var distanceString by remember { mutableStateOf(path?.distance?.takeIf { it > 0f }?.toString() ?: "") }
-    var timeString by remember { mutableStateOf(path?.time?.takeIf { it > 0 }?.toString() ?: "") }
+    var timeString by remember { mutableStateOf(path?.duration?.takeIf { it > 0 }?.toString() ?: "") }
 
     LaunchedEffect(path) {
         distanceString = path?.distance?.takeIf { it > 0f }?.toString() ?: ""
-        timeString = path?.time?.takeIf { it > 0 }?.toString() ?: ""
+        timeString = path?.duration?.takeIf { it > 0 }?.toString() ?: ""
     }
 
     val imagePickerLauncher = rememberLauncherForActivityResult(
@@ -170,9 +169,9 @@ fun TrailCreateScreen(
     fun handleSave() {
         scope.launch {
             path?.let {
-                val isNameInvalid = it.name.isBlank()
+                val isNameInvalid = it.pathName.isBlank()
                 val isDistanceInvalid = it.distance <= 0f
-                val isTimeInvalid = it.time <= 0
+                val isTimeInvalid = it.duration <= 0
 
                 validationState = ValidationState(
                     isNameInvalid = isNameInvalid,
@@ -238,16 +237,16 @@ fun TrailCreateScreen(
 
             FormTextField(
                 label = "산책로 이름",
-                value = pathContent.name,
-                onValueChange = { newValue -> viewModel.updateSelectedPath(pathContent.copy(name = newValue)) },
+                value = pathContent.pathName,
+                onValueChange = { newValue -> viewModel.updateSelectedPath(pathContent.copy(pathName = newValue)) },
                 placeholder = "예: 한강공원 벚꽃길",
                 isRequired = true,
                 isError = validationState.isNameInvalid
             )
 
             DifficultySelector(
-                selectedLevel = pathContent.difiiculty ?: "초급",
-                onLevelSelect = { newDifficulty -> viewModel.updateSelectedPath(pathContent.copy(difiiculty = newDifficulty)) }
+                selectedLevel = pathContent.level ?: "초급",
+                onLevelSelect = { newDifficulty -> viewModel.updateSelectedPath(pathContent.copy(level = newDifficulty)) }
             )
 
             DistanceTimeInputs(
@@ -263,7 +262,7 @@ fun TrailCreateScreen(
                 onTimeChange = { newString ->
                     if (newString.matches(Regex("^\\d*\$"))) {
                         timeString = newString
-                        viewModel.updateSelectedPath(pathContent.copy(time = newString.toIntOrNull() ?: 0))
+                        viewModel.updateSelectedPath(pathContent.copy(duration = newString.toIntOrNull() ?: 0))
                     }
                 },
                 isTimeError = validationState.isTimeInvalid
@@ -271,8 +270,8 @@ fun TrailCreateScreen(
 
             FormTextField(
                 label = "산책로 소개",
-                value = pathContent.description ?: "",
-                onValueChange = { newDescription -> viewModel.updateSelectedPath(pathContent.copy(description = newDescription)) },
+                value = pathContent.pathComment ?: "",
+                onValueChange = { newDescription -> viewModel.updateSelectedPath(pathContent.copy(pathComment = newDescription)) },
                 placeholder = "이 산책로의 특징이나 추천 이유를 작성해주세요...",
                 minLines = 4
             )

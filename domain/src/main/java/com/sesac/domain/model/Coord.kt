@@ -1,7 +1,9 @@
 package com.sesac.domain.model
 
+import kotlinx.serialization.Serializable
 import com.squareup.moshi.JsonClass
 
+@Serializable
 @JsonClass(generateAdapter = true)
 data class Coord(
     val latitude: Double = 0.0,

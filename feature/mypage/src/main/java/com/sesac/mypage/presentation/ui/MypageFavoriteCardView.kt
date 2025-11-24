@@ -55,15 +55,18 @@ import com.sesac.common.ui.theme.primaryContainer
 import com.sesac.common.ui.theme.shapeCard
 import com.sesac.common.ui.theme.shapeImage
 import com.sesac.common.ui.theme.star
+import com.sesac.domain.model.BookmarkedPath
 import com.sesac.domain.model.FavoriteCommunityPost
 import com.sesac.domain.model.FavoriteWalkPath
+import com.sesac.domain.result.AuthUiState
 
 @Composable
-fun FavoriteWalkPathCard(
-    path: FavoriteWalkPath,
+fun BookmarkedPathCard(
+    uiState: AuthUiState,
+    path: BookmarkedPath,
 //    viewModel: MypageViewModel,
     onPathClick: () -> Unit,
-    onRemoveClick: (FavoriteWalkPath) -> Unit
+    onRemoveClick: (String?, Int) -> Unit
 ) {
     Card(
         onClick = onPathClick,
@@ -82,8 +85,8 @@ fun FavoriteWalkPathCard(
                 contentAlignment = Alignment.TopEnd
             ) {
                 AsyncImage(
-                    model = path.image,
-                    contentDescription = path.name,
+                    model = path.thumbnail,
+                    contentDescription = path.pathName,
                     modifier = Modifier
                         .fillMaxSize()
                         .clip(shapeImage),
@@ -108,40 +111,41 @@ fun FavoriteWalkPathCard(
             Spacer(modifier = Modifier.width(paddingMedium))
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = path.name,
+                    text = path.pathName,
                     fontWeight = FontWeight.Bold,
                     color = TextPrimary,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
-                Spacer(modifier = Modifier.height(paddingMicro))
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        Icons.Default.LocationOn,
-                        contentDescription = "Location",
-                        tint = TextDisabled,
-                        modifier = Modifier.size(16.dp)
-                    )
-                    Spacer(modifier = Modifier.width(paddingMicro))
-                    Text(
-                        text = path.location,
-                        fontSize = 12.sp,
-                        color = TextSecondary,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                }
+//                Spacer(modifier = Modifier.height(paddingMicro))
+//                Row(verticalAlignment = Alignment.CenterVertically) {
+//                    Icon(
+//                        Icons.Default.LocationOn,
+//                        contentDescription = "Location",
+//                        tint = TextDisabled,
+//                        modifier = Modifier.size(16.dp)
+//                    )
+//                    Spacer(modifier = Modifier.width(paddingMicro))
+//                    Text(
+//                        text = path.location,
+//                        fontSize = 12.sp,
+//                        color = TextSecondary,
+//                        maxLines = 1,
+//                        overflow = TextOverflow.Ellipsis
+//                    )
+//                }
                 Spacer(modifier = Modifier.height(paddingSmall))
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
-                        path.distance,
+                        path.distance.toString(),
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Bold,
                         color = Primary
                     )
                     Spacer(modifier = Modifier.width(paddingSmall))
                     Text(
-                        "★ ${path.rating}",
+//                        "★ ${path.rating}",
+                        path.bookmarksCount.toString(),
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Bold,
                         color = star
@@ -150,7 +154,7 @@ fun FavoriteWalkPathCard(
             }
             IconButton(
 //                onClick = { viewModel.deleteFavoriteWalkPath(path) },
-                onClick = { onRemoveClick(path) },
+                onClick = { onRemoveClick(uiState.token, path.id) },
                 modifier = Modifier.align(Alignment.Top)
             ) {
                 Icon(

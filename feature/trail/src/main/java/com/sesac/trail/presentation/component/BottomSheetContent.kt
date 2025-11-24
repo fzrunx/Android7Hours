@@ -40,25 +40,27 @@ import com.sesac.common.ui.theme.SheetHandleWidth
 import com.sesac.common.ui.theme.paddingLarge
 import com.sesac.common.ui.theme.paddingMicro
 import com.sesac.common.ui.theme.paddingSmall
-import com.sesac.domain.model.UserPath
+import com.sesac.domain.model.Path
+import com.sesac.domain.result.AuthUiState
 import com.sesac.trail.presentation.TrailViewModel
 import com.sesac.trail.presentation.ui.WalkPathTab
 
 @Composable
 fun BottomSheetContent(
     viewModel: TrailViewModel,
+    uiState: AuthUiState,
     activeTab: WalkPathTab,
-    recommendedPaths: List<UserPath?>,
-    myPaths: List<UserPath?>,
+    recommendedPaths: List<Path?>,
+    myPaths: List<Path?>,
     isEditMode: Boolean,
     onSheetOpenToggle: () -> Unit,
     onStartRecording: () -> Unit,
     onTabChange: (WalkPathTab) -> Unit,
-    onPathClick: (UserPath) -> Unit,
-    onFollowClick: (UserPath) -> Unit,
+    onPathClick: (Path) -> Unit,
+    onFollowClick: (Path) -> Unit,
     onRegisterClick: () -> Unit,
     onEditModeToggle: () -> Unit,
-    onModifyClick: (UserPath) -> Unit,
+    onModifyClick: (Path) -> Unit,
     onDeleteClick: (Int) -> Unit
 ) {
     Surface(
@@ -138,17 +140,21 @@ fun BottomSheetContent(
                         onPathClick = onPathClick,
                         onFollowClick = onFollowClick
                     )
-                    WalkPathTab.MY_RECORDS -> MyRecordsTabContent(
-                        viewModel = viewModel,
-                        myPaths = myPaths.filterNotNull(),
-                        isEditMode = isEditMode,
-                        onPathClick = onPathClick,
-                        onFollowClick = { /* MyRecord에서 UserPath로 변환 필요 */ },
-                        onRegisterClick = onRegisterClick,
-                        onEditModeToggle = onEditModeToggle,
+                    WalkPathTab.MY_RECORDS -> {
+//                        viewModel.getUserBookmarkedPaths(uiState.token)
+                        MyRecordsTabContent(
+                            viewModel = viewModel,
+                            myPaths = myPaths.filterNotNull(),
+                            isEditMode = isEditMode,
+                            onPathClick = onPathClick,
+                            onFollowClick = { /* MyRecord에서 UserPath로 변환 필요 */ },
+                            onRegisterClick = onRegisterClick,
+                            onEditModeToggle = onEditModeToggle,
 //                        onModifyClick = onModifyClick,
-                        onDeleteClick = onDeleteClick,
-                    )
+                            onDeleteClick = onDeleteClick,
+                        )
+                    }
+
                 }
             }
         }

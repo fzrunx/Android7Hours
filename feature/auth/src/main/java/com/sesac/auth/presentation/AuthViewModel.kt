@@ -132,17 +132,7 @@ class AuthViewModel @Inject constructor(
             _joinUiState.value = JoinUiState.Loading
             val form = _joinFormState.value
 
-            val userToPost = Auth(
-//                id = -1, // Server will generate
-                username = form.email,
-                email = form.email,
-                fullName = form.name,
-                nickname = form.nickname,
-                password = form.password,
-                passwordVerification = form.passwordConfirm
-            )
-
-            authUseCase.postUser(userToPost)
+            authUseCase.postUser(form.toAuth())
                 .collectLatest { result ->
                     when (result) {
                         is AuthResult.Success -> {
@@ -200,27 +190,44 @@ class AuthViewModel @Inject constructor(
         _joinUiState.value = JoinUiState.Loading
 
         viewModelScope.launch {
-            // [수정] 이제 AuthUseCase에 실제로 존재하는 함수를 호출합니다
-            // (물론, 3단계에 걸쳐 이 함수를 Domain, Data 계층에 만들어야 합니다)
-            authUseCase.loginWithKakao(accessToken)
-                .collectLatest { result ->
-                    when (result) {
-                        // [수정] onLoginClick과 동일한 로직을 사용합니다
-                        is AuthResult.Success -> {
-                            sessionUseCase.saveSession(result.resultData)
-                            _joinUiState.value = JoinUiState.Success("Login successful!")
-                        }
-                        is AuthResult.NetworkError -> {
-                            _joinUiState.value = JoinUiState.Error(result.exception.message ?: "Network Error")
-                        }
-                        is AuthResult.Loading -> {
-                            _joinUiState.value = JoinUiState.Loading
-                        }
-                        else -> {
-                            // Not handled state
+            try {
+                // [수정] 이제 AuthUseCase에 실제로 존재하는 함수를 호출합니다
+                // (물론, 3단계에 걸쳐 이 함수를 Domain, Data 계층에 만들어야 합니다)
+                authUseCase.loginWithKakao(accessToken)
+                    .collectLatest { result ->
+                        when (result) {
+                            // [수정] onLoginClick과 동일한 로직을 사용합니다
+                            is AuthResult.Success -> {
+                                sessionUseCase.saveSession(result.resultData)
+                                _joinUiState.value = JoinUiState.Success("Login successful!")
+                            }
+
+                            is AuthResult.NetworkError -> {
+                                _joinUiState.value =
+                                    JoinUiState.Error(result.exception.message ?: "Network Error")
+                            }
+
+                            is AuthResult.Loading -> {
+                                _joinUiState.value = JoinUiState.Loading
+                            }
+
+                            else -> {
+                                // 미처리 상태도 Idle로 fallback
+                                _joinUiState.value = JoinUiState.Idle
+                            }
                         }
                     }
-                }
+            } catch (e: UnsupportedOperationException) {
+                // Binder crash 등으로 인해 SDK 내부에서 예외 발생 시 안전하게 처리
+                Log.e("AuthViewModel", "Kakao login failed due to binder issue", e)
+                _joinUiState.value =
+                    JoinUiState.Error("카카오 로그인 중 문제가 발생했습니다. 다시 시도해주세요.")
+            } catch (e: Exception) {
+                // 기타 예외 처리
+                Log.e("AuthViewModel", "Unexpected error in Kakao login", e)
+                _joinUiState.value =
+                    JoinUiState.Error("알 수 없는 오류가 발생했습니다. 다시 시도해주세요.")
+            }
         }
     }
     // ---

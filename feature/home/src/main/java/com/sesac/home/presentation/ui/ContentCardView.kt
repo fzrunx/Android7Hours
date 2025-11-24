@@ -24,15 +24,15 @@ import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import coil3.request.crossfade
 import coil3.size.Scale
+import com.sesac.common.model.PathParceler
 import com.sesac.common.ui.theme.cardHeight
 import com.sesac.common.ui.theme.cardRound
 import com.sesac.common.ui.theme.paddingMedium
-import com.sesac.domain.model.HomeCardData
-import com.sesac.domain.model.UserPath
+import com.sesac.domain.model.Path
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ContentCardView(data: UserPath?, onClick: () -> Unit, modifier: Modifier = Modifier) {
+fun ContentCardView(data: Path?, onClick: () -> Unit, modifier: Modifier = Modifier) {
     val context = LocalContext.current
     Card(
         onClick = onClick,
@@ -46,7 +46,7 @@ fun ContentCardView(data: UserPath?, onClick: () -> Unit, modifier: Modifier = M
                     .crossfade(true)
                     .scale(Scale.FILL)
                     .build(),
-                contentDescription = data?.name,
+                contentDescription = data?.pathName,
                 modifier = Modifier.fillMaxSize(),
                 contentScale = ContentScale.Crop,
             )
@@ -67,7 +67,7 @@ fun ContentCardView(data: UserPath?, onClick: () -> Unit, modifier: Modifier = M
                 verticalArrangement = Arrangement.Bottom
             ) {
                 Text(
-                    text = data?.name ?: "정보 없음",
+                    text = data?.pathName ?: "정보 없음",
                     color = MaterialTheme.colorScheme.onPrimary,
                     style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold),
                     maxLines = 1,

@@ -46,9 +46,9 @@ fun CommunityMainScreen(
     var editingPost by remember { mutableStateOf<Post?>(null) }
     val isEditDialogOpen by derivedStateOf { editingPost != null }
 
-    val filteredPosts by viewModel.filteredPosts.collectAsState()
-    val searchQuery by viewModel.searchQuery.collectAsStateWithLifecycle()
-    val activeFilter by viewModel.activeFilter.collectAsState()
+//    val filteredPosts by viewModel.filteredPosts.collectAsState()
+//    val searchQuery by viewModel.searchQuery.collectAsStateWithLifecycle()
+//    val activeFilter by viewModel.activeFilter.collectAsState()
 
     val postDeleteMessage = stringResource(cR.string.community_snackbar_post_delecte)
     val postCreateMessage = stringResource(cR.string.community_snackbar_post_create)
@@ -56,10 +56,10 @@ fun CommunityMainScreen(
     val postEditorCategories = listOf("산책후기", "정보공유", "질문")
 
     // BottomSheet와 ViewModel 상태 동기화
-    LaunchedEffect(viewModel.isCommentsOpen) {
-        if (viewModel.isCommentsOpen) modalSheetState.show()
-        else modalSheetState.hide()
-    }
+//    LaunchedEffect(viewModel.isCommentsOpen) {
+//        if (viewModel.isCommentsOpen) modalSheetState.show()
+//        else modalSheetState.hide()
+//    }
 
     // -------------------- UI --------------------
     Scaffold(
@@ -80,114 +80,114 @@ fun CommunityMainScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-            // 검색바 & 필터
-            CommonSearchBarContent(
-                isSearchOpen = isSearchOpen.value,
-                query = searchQuery,
-                onQueryChange = viewModel::onSearchQueryChange
-            )
-            CommonFilterTabs(
-                filterOptions = listOf("전체", "인기글", "산책후기", "정보공유"),
-                selectedFilter = activeFilter,
-                onFilterSelected = viewModel::onFilterChange
-            )
-
-            // 게시물 목록
-            if (filteredPosts.isEmpty()) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        stringResource(cR.string.community_placeholder_post_empty),
-                        color = Gray400
-                    )
-                }
-            } else {
-                LazyColumn(modifier = Modifier.fillMaxSize()) {
-                    items(filteredPosts, key = { it.id }) { post ->
-                        PostCardView(
-                            post = post,
-                            isMyPost = post.author == "나",
-                            onLikeToggle = { viewModel.onLikeToggle(post.id) },
-                            onEdit = { editingPost = post },
-                            onDelete = {
-                                viewModel.deletePost(post.id)
-                                coroutineScope.launch {
-                                    snackbarHostState.showSnackbar(postDeleteMessage)
-                                }
-                            },
-                            onCommentClick = { viewModel.handleOpenComments(post) }
-                        )
-                    }
-                }
-            }
-
-            // 새 게시글 작성 다이얼로그
-            if (isCreateDialogOpen) {
-                PostEditorDialogView(
-                    categories = postEditorCategories,
-                    onDismiss = { isCreateDialogOpen = false },
-                    onSave = { content, image, category ->
-                        viewModel.createPost(content, image, category)
-                        isCreateDialogOpen = false
-                        coroutineScope.launch {
-                            snackbarHostState.showSnackbar(postCreateMessage)
-                        }
-                    }
-                )
-            }
-
-            // 게시글 수정 다이얼로그
-            if (isEditDialogOpen) {
-                PostEditorDialogView(
-                    categories = postEditorCategories,
-                    initialPost = editingPost,
-                    onDismiss = { editingPost = null },
-                    onSave = { content, image, category ->
-                        editingPost?.let {
-                            viewModel.updatePost(
-                                it.copy(
-                                    content = content,
-                                    image = image.takeIf { !it.isNullOrBlank() },
-                                    category = category
-                                )
-                            )
-                        }
-                        editingPost = null
-                        coroutineScope.launch {
-                            snackbarHostState.showSnackbar(postUpdateMessage)
-                        }
-                    }
-                )
-            }
+//            // 검색바 & 필터
+//            CommonSearchBarContent(
+//                isSearchOpen = isSearchOpen.value,
+//                query = searchQuery,
+//                onQueryChange = viewModel::onSearchQueryChange
+//            )
+//            CommonFilterTabs(
+//                filterOptions = listOf("전체", "인기글", "산책후기", "정보공유"),
+//                selectedFilter = activeFilter,
+//                onFilterSelected = viewModel::onFilterChange
+//            )
+//
+//            // 게시물 목록
+//            if (filteredPosts.isEmpty()) {
+//                Box(
+//                    modifier = Modifier.fillMaxSize(),
+//                    contentAlignment = Alignment.Center
+//                ) {
+//                    Text(
+//                        stringResource(cR.string.community_placeholder_post_empty),
+//                        color = Gray400
+//                    )
+//                }
+//            } else {
+//                LazyColumn(modifier = Modifier.fillMaxSize()) {
+//                    items(filteredPosts, key = { it.id }) { post ->
+//                        PostCardView(
+//                            post = post,
+//                            isMyPost = post.author == "나",
+//                            onLikeToggle = { viewModel.onLikeToggle(post.id) },
+//                            onEdit = { editingPost = post },
+//                            onDelete = {
+//                                viewModel.deletePost(post.id)
+//                                coroutineScope.launch {
+//                                    snackbarHostState.showSnackbar(postDeleteMessage)
+//                                }
+//                            },
+//                            onCommentClick = { viewModel.handleOpenComments(post) }
+//                        )
+//                    }
+//                }
+//            }
+//
+//            // 새 게시글 작성 다이얼로그
+//            if (isCreateDialogOpen) {
+//                PostEditorDialogView(
+//                    categories = postEditorCategories,
+//                    onDismiss = { isCreateDialogOpen = false },
+//                    onSave = { content, image, category ->
+//                        viewModel.createPost(content, image, category)
+//                        isCreateDialogOpen = false
+//                        coroutineScope.launch {
+//                            snackbarHostState.showSnackbar(postCreateMessage)
+//                        }
+//                    }
+//                )
+//            }
+//
+//            // 게시글 수정 다이얼로그
+//            if (isEditDialogOpen) {
+//                PostEditorDialogView(
+//                    categories = postEditorCategories,
+//                    initialPost = editingPost,
+//                    onDismiss = { editingPost = null },
+//                    onSave = { content, image, category ->
+//                        editingPost?.let {
+//                            viewModel.updatePost(
+//                                it.copy(
+//                                    content = content,
+//                                    image = image.takeIf { !it.isNullOrBlank() },
+//                                    category = category
+//                                )
+//                            )
+//                        }
+//                        editingPost = null
+//                        coroutineScope.launch {
+//                            snackbarHostState.showSnackbar(postUpdateMessage)
+//                        }
+//                    }
+//                )
+//            }
         }
     }
-
-    // -------------------- 댓글 BottomSheet --------------------
-    if (viewModel.selectedPostForComments != null) {
-        val context = LocalContext.current
-        val comments by viewModel.comments.collectAsStateWithLifecycle()
-
-        ModalBottomSheet(
-            onDismissRequest = { viewModel.handleCloseComments() },
-            sheetState = modalSheetState
-        ) {
-            CommonCommentSheetContent(
-                modifier = Modifier.fillMaxHeight(0.9f),
-                post = viewModel.selectedPostForComments!!,
-                comments = comments,
-                newCommentContent = viewModel.newCommentContent,
-                onNewCommentChange = { viewModel.newCommentContent = it },
-                onAddComment = {
-                    val success = viewModel.handleAddComment()
-                    Toast.makeText(
-                        context,
-                        if (success) "댓글이 작성되었습니다" else "댓글 내용을 입력해주세요",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                },
-            )
-        }
-    }
+//
+//    // -------------------- 댓글 BottomSheet --------------------
+//    if (viewModel.selectedPostForComments != null) {
+//        val context = LocalContext.current
+//        val comments by viewModel.comments.collectAsStateWithLifecycle()
+//
+//        ModalBottomSheet(
+//            onDismissRequest = { viewModel.handleCloseComments() },
+//            sheetState = modalSheetState
+//        ) {
+//            CommonCommentSheetContent(
+//                modifier = Modifier.fillMaxHeight(0.9f),
+//                post = viewModel.selectedPostForComments!!,
+//                comments = comments,
+//                newCommentContent = viewModel.newCommentContent,
+//                onNewCommentChange = { viewModel.newCommentContent = it },
+//                onAddComment = {
+//                    val success = viewModel.handleAddComment()
+//                    Toast.makeText(
+//                        context,
+//                        if (success) "댓글이 작성되었습니다" else "댓글 내용을 입력해주세요",
+//                        Toast.LENGTH_SHORT
+//                    ).show()
+//                },
+//            )
+//        }
+//    }
 }
