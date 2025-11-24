@@ -219,6 +219,15 @@ class TrailViewModel @Inject constructor(
             }
         }
     }
+    fun saveCurrentDraft(name: String, description: String?) {
+        // 1. Draft 생성
+        createDraftPath(name, description)
+
+        // 2. RoomDB에 저장
+        _draftPath.value?.let { draft ->
+            savePathToRoom(draft)
+        }
+    }
 
     fun updatePath(token: String?) {
         viewModelScope.launch {
@@ -296,6 +305,20 @@ class TrailViewModel @Inject constructor(
     private val _draftPath = MutableStateFlow<UserPath?>(null)
     val draftPath = _draftPath.asStateFlow()
 
+    // ✅ 추가: 지도에 표시할 메모 마커 목록
+    private val _memoMarkers = MutableStateFlow<List<com.sesac.domain.model.MemoMarker>>(emptyList())
+    val memoMarkers = _memoMarkers.asStateFlow()
+
+    fun addMemoMarker(latitude: Double, longitude: Double, memo: String) {
+        val newMarker = com.sesac.domain.model.MemoMarker(latitude, longitude, memo)
+        _memoMarkers.value = _memoMarkers.value + newMarker
+    }
+
+    fun clearMemoMarkers() {
+        _memoMarkers.value = emptyList()
+    }
+
+
     fun createDraftPath(name: String, description: String?) {
         val coords = tempPathCoords.value.map { latLng ->
             Coord(latLng.latitude, latLng.longitude)
@@ -306,6 +329,7 @@ class TrailViewModel @Inject constructor(
             name = name,
             description = description ?: "",
             coord = coords,
+            markers = _memoMarkers.value, // ✅ 메모 마커 리스트 추가
             likes = 0,
             uploader = ""
         )
@@ -313,6 +337,7 @@ class TrailViewModel @Inject constructor(
 
     fun clearDraftPath() {
         _draftPath.value = null
+        clearMemoMarkers() // ✅ 임시 경로 삭제 시 마커도 함께 삭제
     }
 
     private val _drafts = MutableStateFlow<List<UserPath>>(emptyList())
@@ -405,6 +430,9 @@ class TrailViewModel @Inject constructor(
                     drafts.forEach { draft ->
                         Log.d("TrailViewModel", "  - Draft: ${draft.name}, coords: ${draft.coord?.size}")
                     }
+
+                    clearTempPath() // 폴리라인 초기화
+                    clearMemoMarkers() // 메모 마커 초기화
 
                     _invalidToken.send(UiEvent.ToastEvent("경로가 저장되었습니다"))
                 } else {

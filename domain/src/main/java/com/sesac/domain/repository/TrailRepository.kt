@@ -13,7 +13,7 @@ interface TrailRepository {
     suspend fun updatePath(token: String, id: Int, updatedPath: UserPath): Flow<AuthResult<UserPath>>
     suspend fun deletePath(token: String, id: Int): Flow<AuthResult<Unit>>
     // MyRecord 관련
-    suspend fun getAllMyRecord(): Flow<List<MyRecord?>>
+    suspend fun getAllMyRecord(): Flow<List<MyRecord>>
     suspend fun addMyRecord(newRecord: MyRecord): Flow<Boolean>
     // Room DB (Local) 관련 추가
     suspend fun saveDraft(draft: UserPath): Flow<Boolean>            // 작성중인 Path 저장

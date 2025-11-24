@@ -53,6 +53,7 @@ data class UserPath(
     val likes: Int = 0,
     val distanceFromMe: Float = 0f, // React의 distance_from_me
     val coord: List<Coord>? = null,
+    val markers: List<MemoMarker>? = null,
     val tags: List<String> = emptyList(),
     val difiiculty: String? = null,
     val description: String? = null,
@@ -69,6 +70,7 @@ data class UserPath(
             likes = 0,
             distanceFromMe = 0f,
             coord = null,
+            markers = null,
             tags = emptyList(),
             difiiculty = null,
             isPrivate = false,
