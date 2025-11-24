@@ -36,14 +36,14 @@ import com.sesac.common.ui.theme.Purple600
 import com.sesac.common.ui.theme.White
 import com.sesac.common.ui.theme.paddingMicro
 import com.sesac.common.ui.theme.paddingSmall
-import com.sesac.domain.model.UserPath
+import com.sesac.domain.model.Path
 
 
 @Composable
 fun RecommendedTabContent(
-    paths: List<UserPath>,
-    onPathClick: (UserPath) -> Unit,
-    onFollowClick: (UserPath) -> Unit
+    paths: List<Path>,
+    onPathClick: (Path) -> Unit,
+    onFollowClick: (Path) -> Unit
 ) {
     LazyColumn(
         contentPadding = PaddingValues(vertical = paddingSmall),
@@ -61,9 +61,9 @@ fun RecommendedTabContent(
 
 @Composable
 fun RecommendedPathItem(
-    path: UserPath,
-    onPathClick: (UserPath) -> Unit,
-    onFollowClick: (UserPath) -> Unit
+    path: Path,
+    onPathClick: (Path) -> Unit,
+    onFollowClick: (Path) -> Unit
 ) {
     Card(
         modifier = Modifier.fillMaxWidth().clickable { onPathClick(path) },
@@ -81,9 +81,9 @@ fun RecommendedPathItem(
             )
             Spacer(Modifier.width(paddingSmall))
             Column(modifier = Modifier.weight(1f)) {
-                Text(path.name, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                Text(path.pathName, fontWeight = FontWeight.Bold, fontSize = 16.sp)
                 Text("@${path.uploader}", fontSize = 12.sp, color = Color.Gray)
-                Text("${path.distance} · ${path.time} 코스", fontSize = 14.sp)
+                Text("${path.distance} · ${path.duration} 코스", fontSize = 14.sp)
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.Filled.Favorite, contentDescription = "Likes", tint = Purple600, modifier = Modifier.size(16.dp))
                     Text(" ${path.likes}", fontSize = 12.sp, color = Purple600)

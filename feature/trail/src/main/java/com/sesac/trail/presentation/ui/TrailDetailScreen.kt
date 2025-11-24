@@ -1,38 +1,73 @@
 package com.sesac.trail.presentation.ui
 
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Arrangement.spacedBy
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.TrendingUp
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Navigation
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Schedule
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import coil3.compose.AsyncImage
-import kotlinx.coroutines.launch
-import com.sesac.common.ui.theme.*
-import com.sesac.domain.model.Coord
-import com.sesac.domain.model.UserPath
+import com.sesac.common.ui.theme.GrayTabText
+import com.sesac.common.ui.theme.NoteBox
+import com.sesac.common.ui.theme.PaddingSection
+import com.sesac.common.ui.theme.PrimaryPurpleLight
+import com.sesac.common.ui.theme.Purple100
+import com.sesac.common.ui.theme.Purple600
+import com.sesac.common.ui.theme.White
+import com.sesac.common.ui.theme.paddingLarge
+import com.sesac.common.ui.theme.paddingMicro
+import com.sesac.common.ui.theme.paddingSmall
+import com.sesac.domain.model.Path
+import com.sesac.domain.result.AuthUiState
+import com.sesac.domain.result.ResponseUiState
 import com.sesac.trail.presentation.TrailViewModel
 import com.sesac.trail.presentation.component.TagFlow
 
@@ -41,48 +76,47 @@ import com.sesac.trail.presentation.component.TagFlow
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TrailDetailScreen(
-//    path: UserPath,
+    uiState: AuthUiState,
     viewModel: TrailViewModel = hiltViewModel<TrailViewModel>(),
     navController: NavController,
-    onStartFollowing: (UserPath) -> Unit
+    selectedDetailPath: Path?,
+    onStartFollowing: (Path) -> Unit
 ) {
     val context = LocalContext.current
-    var isFavorite by remember { mutableStateOf(false) }
-//    var likeCount by remember { mutableStateOf(path.likes) }
-    val selectedDetailPath by viewModel.selectedPath.collectAsStateWithLifecycle()
-//    var isFavorite by remember { mutableStateOf(false) }
+    val selectedDetailPathState by viewModel.selectedPath.collectAsStateWithLifecycle()
+    val bookmarkedPathsState by viewModel.bookmarkedPaths.collectAsStateWithLifecycle()
 
-    val snackbarHostState = remember { SnackbarHostState() }
-    val scope = rememberCoroutineScope()
-
-    val handleLike = {
-//        if (isLiked) likeCount-- else likeCount++
-//        isLiked = !isLiked
-        isFavorite = viewModel.updateSelectedPathLikes(isFavorite)
-    }
-
-    val handleFavorite: () -> Unit = {
-//        isFavorite = !isFavorite
-        scope.launch {
-//            val message = if (isFavorite) "즐겨찾기에 추가되었습니다" else "즐겨찾기에서 제거되었습니다"
-            val message = if (isFavorite) "즐겨찾기에 추가되었습니다" else "즐겨찾기에서 제거되었습니다"
-            isFavorite = viewModel.updateSelectedPathLikes(isFavorite)
-            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+    val isBookmarked by remember(bookmarkedPathsState, selectedDetailPathState) {
+        derivedStateOf {
+            val paths = (bookmarkedPathsState as? ResponseUiState.Success)?.result ?: emptyList()
+            val currentPathId = selectedDetailPathState?.id
+            if (currentPathId == null) false else paths.any { it.id == currentPathId }
         }
     }
 
-//    Scaffold(
-//    ) { _ ->
-    selectedDetailPath?.let {
+    LaunchedEffect(Unit) {
+        selectedDetailPath?.let {
+            viewModel.updateSelectedPath(it)
+        }
+        viewModel.getUserBookmarkedPaths(uiState.token)
+    }
+
+    selectedDetailPathState?.let { selected ->
+        val handleBookmark: () -> Unit = {
+            viewModel.toggleBookmark(uiState.token, selected.id)
+            val message = if (isBookmarked) "즐겨찾기에서 제거합니다." else "즐겨찾기에 추가합니다."
+            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+        }
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
         ) {
             PathImageHeader(
-                pathName = it.name,
-                isFavorite = isFavorite,
-                onFavoriteClick = handleFavorite
+                pathName = selected.pathName,
+                isBookmarked = isBookmarked,
+                onBookmarkClick = handleBookmark,
             )
 
             Column(
@@ -94,7 +128,7 @@ fun TrailDetailScreen(
                 // Title & Uploader
                 Column {
                     Text(
-                        text = it.name,
+                        text = selected.pathName,
                         style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Bold
                     )
@@ -108,7 +142,7 @@ fun TrailDetailScreen(
                         )
                         Spacer(Modifier.width(paddingMicro))
                         Text(
-                            text = "@${it.uploader}",
+                            text = "@${selected.uploader}",
                             style = MaterialTheme.typography.bodyMedium,
                             color = GrayTabText
                         )
@@ -117,7 +151,7 @@ fun TrailDetailScreen(
 
                 // Follow Button
                 Button(
-                    onClick = { onStartFollowing(it) },
+                    onClick = { onStartFollowing(selected) },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(52.dp),
@@ -135,13 +169,13 @@ fun TrailDetailScreen(
                         InfoCard(
                             icon = Icons.Filled.LocationOn,
                             label = "거리",
-                            value = it.distance.toString(),
+                            value = selected.distance.toString(),
                             modifier = Modifier.weight(1f)
                         )
                         InfoCard(
                             icon = Icons.Filled.Schedule,
                             label = "소요시간",
-                            value = it.time.toString(),
+                            value = selected.duration.toString(),
                             modifier = Modifier.weight(1f)
                         )
                     }
@@ -149,22 +183,22 @@ fun TrailDetailScreen(
                         InfoCard(
                             icon = Icons.Filled.Favorite,
                             label = "좋아요",
-                            value = "${ selectedDetailPath!!.likes}개",
+                            value = "${selected.bookmarksCount}개",
                             modifier = Modifier.weight(1f)
                         )
                         InfoCard(
                             icon = Icons.AutoMirrored.Filled.TrendingUp,
                             label = "내 위치에서",
-                            value =  it.distanceFromMe.toString(),
+                            value = selected.distanceFromMe.toString(),
                             modifier = Modifier.weight(1f)
                         )
                     }
                 }
                 // Route Features
                 PathSection(title = "코스 특징") {
-                    if ( selectedDetailPath!!.tags.isNotEmpty()) {
+                    if (selectedDetailPath!!.tags.isNotEmpty()) {
                         TagFlow(
-                            selectedTags =  selectedDetailPath!!.tags,
+                            selectedTags = selected.tags,
                             editable = false
                         )
                     } else {
@@ -179,7 +213,7 @@ fun TrailDetailScreen(
                 // Description
                 PathSection(title = "산책로 소개") {
                     Text(
-                        text = it.description ?: "소개글이 없습니다.",
+                        text = selected.pathComment ?: "소개글이 없습니다.",
                         style = MaterialTheme.typography.bodyMedium,
                         color = GrayTabText,
                         lineHeight = 24.sp
@@ -206,7 +240,7 @@ fun TrailDetailScreen(
         }
 
     }
-    }
+}
 //}
 
 
@@ -214,8 +248,8 @@ fun TrailDetailScreen(
 @Composable
 fun PathImageHeader(
     pathName: String,
-    isFavorite: Boolean,
-    onFavoriteClick: () -> Unit,
+    isBookmarked: Boolean,
+    onBookmarkClick: () -> Unit,
     imageUrl: String = "https://images.unsplash.com/photo-1675435842943-7d7385e9a835?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHx3YWxraW5nJTIwcGF0aCUyMHBhcmt8ZW58MXx8fHwxNzYxODExNTY0fDA&ixlib=rb-4.1.0&q=80&w=1080"
 ) {
     Box(
@@ -229,17 +263,18 @@ fun PathImageHeader(
             modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.Crop
         )
+        Log.d("TAG-TrailDetailScreen", "isBookmarked3 : $isBookmarked")
         FloatingActionButton(
-            onClick = onFavoriteClick,
+            onClick = onBookmarkClick,
             modifier = Modifier
                 .align(Alignment.TopEnd)
                 .padding(paddingLarge),
-            containerColor = if (isFavorite) Purple600 else MaterialTheme.colorScheme.surface,
-            contentColor = if (isFavorite) Color.White else GrayTabText,
+            containerColor = if (isBookmarked) Purple600 else MaterialTheme.colorScheme.surface,
+            contentColor = if (isBookmarked) White else GrayTabText,
             shape = CircleShape
         ) {
             Icon(
-                imageVector = if (isFavorite) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
+                imageVector = if (isBookmarked) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
                 contentDescription = "좋아요"
             )
         }

@@ -18,10 +18,12 @@ data class PathEntity(
     val isPrivate: Boolean = true,
     val thumbnail: String = "",
     val geom: String = "",
-    val authUserId: Int,
+    val authUserId: Int = -1,
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis(),
     val status: DraftStatus = DraftStatus.DRAFT,
+    val bookmarksCount: Int = 0,
+    val isBookmarked: Boolean = false,
 )
 
 

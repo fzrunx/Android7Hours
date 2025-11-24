@@ -29,7 +29,7 @@ fun NavGraphBuilder.mypageRoute(
         MypageManageScreen()
     }
     composable<MypageNavigationRoute.FavoriteTab> {
-        MypageFavoriteScreen()
+        MypageFavoriteScreen(uiStatus = uiState)
     }
     composable<MypageNavigationRoute.SettingTab> {
         MypageSettingScreen(permissionStates = permissionState)

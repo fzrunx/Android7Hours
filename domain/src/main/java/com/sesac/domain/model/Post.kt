@@ -2,16 +2,39 @@ package com.sesac.domain.model
 
 import java.util.Date
 
+/**
+ * Represents a Post in the domain layer, used by the UI.
+ */
 data class Post(
-    val id: Long,
-    val author: String,
-    val authorImage: String,
-    val timeAgo: String,
+    override val id: Int,
+    val authUser: String,
+//    val postType: String, // "review" or "info"
+    val title: String,
     val content: String,
-    val image: String?,
-    val likes: Int,
-    val comments: Int,
-    val isLiked: Boolean,
-    val category: String,
-    val createdAt: Date = Date(System.currentTimeMillis())
-)
+    val imageUrl: String?,
+    val createdAt: Date,
+    val updatedAt: Date,
+    val commentsCount: Int,
+    var likesCount: Int,
+    var bookmarksCount: Int,
+    var isLiked: Boolean,
+    var isBookmarked: Boolean,
+) : BookmarkedItem {
+    companion object {
+        val EMPTY = Post(
+            id = -1,
+            authUser = "",
+//            postType = "",
+            title = "",
+            content = "",
+            imageUrl = "",
+            createdAt = Date(),
+            updatedAt = Date(),
+            commentsCount = 0,
+            likesCount = 0,
+            bookmarksCount = 0,
+            isLiked = false,
+            isBookmarked = false,
+        )
+    }
+}

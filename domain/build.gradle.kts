@@ -3,7 +3,7 @@ plugins {
     alias(libs.plugins.jetbrains.kotlin.jvm)
     alias(libs.plugins.ksp)
 
-
+    alias(libs.plugins.kotlin.serialization)
 }
 java {
     sourceCompatibility = JavaVersion.VERSION_21

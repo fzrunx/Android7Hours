@@ -39,6 +39,7 @@ import com.sesac.community.presentation.CommunityViewModel
 import com.sesac.home.nav_graph.EntryPointScreen
 import com.sesac.home.nav_graph.HomeNavigationRoute
 import com.sesac.home.nav_graph.TopBarAction
+import com.sesac.trail.nav_graph.NestedNavigationRoute
 import com.sesac.trail.presentation.TrailViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import com.sesac.common.R as cR
@@ -136,6 +137,11 @@ class MainActivity : ComponentActivity() {
                             navController = navController,
                             nav2Home = { navController.navigate(HomeNavigationRoute.HomeTab) },
                             nav2LoginScreen = { navController.navigate(AuthNavigationRoute.LoginTab) },
+                            onNavigateToPathDetail = { path ->
+                                path?.let {
+                                    navController.navigate(NestedNavigationRoute.TrailDetail(it))
+                                }
+                            },
                             startDestination = startDestination,
                             uiState = uiState,
                             isSearchOpen = isSearchOpen,

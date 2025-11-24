@@ -28,181 +28,181 @@ class CommunityViewModel @Inject constructor(
     private val communityUseCase: CommunityUseCase,
 ) : ViewModel() {
 
-    private val _posts = MutableStateFlow<List<Post>>(emptyList())
-    private val _searchQuery = MutableStateFlow("")
-    val searchQuery get() = _searchQuery.asStateFlow()
-    private val _activeFilter = MutableStateFlow("전체")
-    val activeFilter get() = _activeFilter.asStateFlow()
-    // 댓글 상태
-    private val _comments = MutableStateFlow<List<Comment>>(emptyList())
-    val comments: StateFlow<List<Comment>> get() = _comments.asStateFlow()
-
-    // 선택된 게시물
-    var selectedPostForComments by mutableStateOf<Post?>(null)
-        private set
-
-    // 댓글 시트 열림 여부
-    var isCommentsOpen by mutableStateOf(false)
-        private set
-
-    // 새 댓글 내용
-    var newCommentContent by mutableStateOf("")
-
-    init {
-        observePosts()
-    }
-
-    private fun observePosts() {
-        viewModelScope.launch {
-            communityUseCase.getAllCommunityUseCase()
-                .map { postModels ->
-                    postModels.mapIndexed { index, postModel ->
-                        postModel.toPresentation(index.toLong())
-                    }.sortedByDescending { it.createdAt }
-                }
-                .collect { posts ->
-                    _posts.value = posts
-                }
-        }
-    }
-
-    val filteredPosts: StateFlow<List<Post>> = combine(
-        _posts,
-        _searchQuery,
-        _activeFilter
-    ) { posts, query, filter ->
-        var filtered = posts
-
-        if (filter != "전체") {
-            filtered = if (filter == "인기글") {
-                filtered.filter { it.likes > 100 }
-            } else {
-                filtered.filter { it.category == filter }
-            }
-        }
-
-        if (query.isNotBlank()) {
-            filtered = filtered.filter {
-                it.content.contains(query, ignoreCase = true) ||
-                        it.author.contains(query, ignoreCase = true)
-            }
-        }
-        filtered
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = emptyList()
-    )
-
-    fun onSearchQueryChange(query: String) {
-        _searchQuery.value = query
-    }
-
-    fun onFilterChange(filter: String) {
-        _activeFilter.value = filter
-    }
-
-    fun onLikeToggle(postId: Long) {
-        _posts.update { currentPosts ->
-            currentPosts.map { post ->
-                if (post.id == postId) {
-                    post.copy(
-                        isLiked = !post.isLiked,
-                        likes = if (post.isLiked) post.likes - 1 else post.likes + 1
-                    )
-                } else {
-                    post
-                }
-            }
-        }
-    }
-
-    fun createPost(content: String, image: String?, category: String) {
-        val newPost = Post(
-            id = System.currentTimeMillis(),
-            author = "나", // TODO: 실제 사용자 정보로 대체
-            authorImage = "https://picsum.photos/seed/me/200", // TODO: 실제 사용자 프로필로 대체
-            timeAgo = "방금 전",
-            content = content,
-            image = image.takeIf { !it.isNullOrBlank() },
-            likes = 0,
-            comments = 0,
-            isLiked = false,
-            category = category,
-            createdAt = Date()
-        )
-        _posts.update { currentPosts ->
-            (listOf(newPost) + currentPosts).sortedByDescending { it.createdAt }
-        }
-    }
-
-    fun updatePost(updatedPost: Post) {
-        _posts.update { currentPosts ->
-            currentPosts.map { post ->
-                if (post.id == updatedPost.id) {
-                    updatedPost
-                } else {
-                    post
-                }
-            }.sortedByDescending { it.createdAt }
-        }
-    }
-
-    fun deletePost(postId: Long) {
-        _posts.update { currentPosts ->
-            currentPosts.filterNot { it.id == postId }
-        }
-    }
-
-    private fun Community.toPresentation(id: Long): Post = Post(
-        id = id,
-        author = this.userName,
-        authorImage = "https://picsum.photos/seed/${this.userName}/200",
-        timeAgo = calculateTimeAgo(this.create_at),
-        content = this.content,
-        image = this.imageResList?.firstOrNull()?.let { "https://picsum.photos/seed/$id/400/300" },
-        likes = this.likes,
-        comments = this.comments?.size ?: 0,
-        isLiked = false,
-        category = this.category,
-        createdAt = this.create_at
-    )
-    fun handleOpenComments(post: Post) {
-        selectedPostForComments = post
-        isCommentsOpen = true
-    }
-
-    fun handleCloseComments() {
-        isCommentsOpen = false
-        selectedPostForComments = null
-    }
-
-    fun handleAddComment(): Boolean {
-        val post = selectedPostForComments ?: return false
-        if (newCommentContent.isBlank()) return false
-
-        val newComment = Comment(
-            id = System.currentTimeMillis(),
-            postId = post.id.toInt(),
-            author = "나",
-            authorImage = "https://picsum.photos/seed/me/200",
-            timeAgo = "방금 전",
-            content = newCommentContent
-        )
-
-        // 댓글 리스트 업데이트
-        _comments.update { it + newComment }
-
-        // 해당 게시물 댓글 수 증가
-        _posts.update { posts ->
-            posts.map { p ->
-                if (p.id == post.id) p.copy(comments = p.comments + 1)
-                else p
-            }
-        }
-
-        newCommentContent = ""
-        return true
-    }
+//    private val _posts = MutableStateFlow<List<Post>>(emptyList())
+//    private val _searchQuery = MutableStateFlow("")
+//    val searchQuery get() = _searchQuery.asStateFlow()
+//    private val _activeFilter = MutableStateFlow("전체")
+//    val activeFilter get() = _activeFilter.asStateFlow()
+//    // 댓글 상태
+//    private val _comments = MutableStateFlow<List<Comment>>(emptyList())
+//    val comments: StateFlow<List<Comment>> get() = _comments.asStateFlow()
+//
+//    // 선택된 게시물
+//    var selectedPostForComments by mutableStateOf<Post?>(null)
+//        private set
+//
+//    // 댓글 시트 열림 여부
+//    var isCommentsOpen by mutableStateOf(false)
+//        private set
+//
+//    // 새 댓글 내용
+//    var newCommentContent by mutableStateOf("")
+//
+//    init {
+//        observePosts()
+//    }
+//
+//    private fun observePosts() {
+//        viewModelScope.launch {
+//            communityUseCase.getAllCommunityUseCase()
+//                .map { postModels ->
+//                    postModels.mapIndexed { index, postModel ->
+//                        postModel.toPresentation(index.toLong())
+//                    }.sortedByDescending { it.createdAt }
+//                }
+//                .collect { posts ->
+//                    _posts.value = posts
+//                }
+//        }
+//    }
+//
+//    val filteredPosts: StateFlow<List<Post>> = combine(
+//        _posts,
+//        _searchQuery,
+//        _activeFilter
+//    ) { posts, query, filter ->
+//        var filtered = posts
+//
+//        if (filter != "전체") {
+//            filtered = if (filter == "인기글") {
+//                filtered.filter { it.likes > 100 }
+//            } else {
+//                filtered.filter { it.category == filter }
+//            }
+//        }
+//
+//        if (query.isNotBlank()) {
+//            filtered = filtered.filter {
+//                it.content.contains(query, ignoreCase = true) ||
+//                        it.author.contains(query, ignoreCase = true)
+//            }
+//        }
+//        filtered
+//    }.stateIn(
+//        scope = viewModelScope,
+//        started = SharingStarted.WhileSubscribed(5000),
+//        initialValue = emptyList()
+//    )
+//
+//    fun onSearchQueryChange(query: String) {
+//        _searchQuery.value = query
+//    }
+//
+//    fun onFilterChange(filter: String) {
+//        _activeFilter.value = filter
+//    }
+//
+//    fun onLikeToggle(postId: Long) {
+//        _posts.update { currentPosts ->
+//            currentPosts.map { post ->
+//                if (post.id == postId) {
+//                    post.copy(
+//                        isLiked = !post.isLiked,
+//                        likes = if (post.isLiked) post.likes - 1 else post.likes + 1
+//                    )
+//                } else {
+//                    post
+//                }
+//            }
+//        }
+//    }
+//
+//    fun createPost(content: String, image: String?, category: String) {
+//        val newPost = Post(
+//            id = System.currentTimeMillis(),
+//            author = "나", // TODO: 실제 사용자 정보로 대체
+//            authorImage = "https://picsum.photos/seed/me/200", // TODO: 실제 사용자 프로필로 대체
+//            timeAgo = "방금 전",
+//            content = content,
+//            image = image.takeIf { !it.isNullOrBlank() },
+//            likes = 0,
+//            comments = 0,
+//            isLiked = false,
+//            category = category,
+//            createdAt = Date()
+//        )
+//        _posts.update { currentPosts ->
+//            (listOf(newPost) + currentPosts).sortedByDescending { it.createdAt }
+//        }
+//    }
+//
+//    fun updatePost(updatedPost: Post) {
+//        _posts.update { currentPosts ->
+//            currentPosts.map { post ->
+//                if (post.id == updatedPost.id) {
+//                    updatedPost
+//                } else {
+//                    post
+//                }
+//            }.sortedByDescending { it.createdAt }
+//        }
+//    }
+//
+//    fun deletePost(postId: Long) {
+//        _posts.update { currentPosts ->
+//            currentPosts.filterNot { it.id == postId }
+//        }
+//    }
+//
+//    private fun Community.toPresentation(id: Long): Post = Post(
+//        id = id,
+//        author = this.userName,
+//        authorImage = "https://picsum.photos/seed/${this.userName}/200",
+//        timeAgo = calculateTimeAgo(this.create_at),
+//        content = this.content,
+//        image = this.imageResList?.firstOrNull()?.let { "https://picsum.photos/seed/$id/400/300" },
+//        likes = this.likes,
+//        comments = this.comments?.size ?: 0,
+//        isLiked = false,
+//        category = this.category,
+//        createdAt = this.create_at
+//    )
+//    fun handleOpenComments(post: Post) {
+//        selectedPostForComments = post
+//        isCommentsOpen = true
+//    }
+//
+//    fun handleCloseComments() {
+//        isCommentsOpen = false
+//        selectedPostForComments = null
+//    }
+//
+//    fun handleAddComment(): Boolean {
+//        val post = selectedPostForComments ?: return false
+//        if (newCommentContent.isBlank()) return false
+//
+//        val newComment = Comment(
+//            id = System.currentTimeMillis(),
+//            postId = post.id.toInt(),
+//            author = "나",
+//            authorImage = "https://picsum.photos/seed/me/200",
+//            timeAgo = "방금 전",
+//            content = newCommentContent
+//        )
+//
+//        // 댓글 리스트 업데이트
+//        _comments.update { it + newComment }
+//
+//        // 해당 게시물 댓글 수 증가
+//        _posts.update { posts ->
+//            posts.map { p ->
+//                if (p.id == post.id) p.copy(comments = p.comments + 1)
+//                else p
+//            }
+//        }
+//
+//        newCommentContent = ""
+//        return true
+//    }
 
 }

@@ -1,5 +1,6 @@
 package com.sesac.data.source.api
 
+import com.sesac.data.dto.BookmarkResponseDTO
 import com.sesac.data.dto.PathDTO
 import com.sesac.data.dto.PathCreateRequestDTO
 import com.sesac.data.dto.PathUpdateRequestDTO
@@ -37,6 +38,12 @@ interface PathApi {
         @Header("Authorization") token: String,
         @Body request: PathCreateRequestDTO
     ): PathDTO
+
+    @POST("paths/{id}/bookmark_toggle/")
+    suspend fun bookmarkToggle(
+        @Header("Authorization") token: String,
+        @Path("id") id: Int,
+    ): BookmarkResponseDTO
 
     @PATCH("paths/{id}/")
     suspend fun updatePath(

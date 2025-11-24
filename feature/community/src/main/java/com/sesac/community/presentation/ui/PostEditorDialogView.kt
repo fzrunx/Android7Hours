@@ -53,8 +53,8 @@ fun PostEditorDialogView(
     val buttonText = if (isEditMode) "수정" else "작성"
 
     var content by remember { mutableStateOf(initialPost?.content ?: "") }
-    var image by remember { mutableStateOf(initialPost?.image ?: "") }
-    var category by remember { mutableStateOf(initialPost?.category ?: "산책후기") }
+//    var image by remember { mutableStateOf(initialPost?.image ?: "") }
+//    var category by remember { mutableStateOf(initialPost?.category ?: "산책후기") }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -64,19 +64,19 @@ fun PostEditorDialogView(
                 // 1. 카테고리 선택
                 Text("카테고리", style = MaterialTheme.typography.labelMedium)
                 Spacer(modifier = Modifier.height(paddingSmall))
-                LazyRow(horizontalArrangement = Arrangement.spacedBy(paddingSmall)) {
-                    items(categories) { cat ->
-                        FilterChip(
-                            selected = category == cat,
-                            onClick = { category = cat },
-                            label = { Text(cat) },
-                            colors = FilterChipDefaults.filterChipColors(
-                                selectedContainerColor = MaterialTheme.colorScheme.primary,
-                                selectedLabelColor = Color.White
-                            )
-                        )
-                    }
-                }
+//                LazyRow(horizontalArrangement = Arrangement.spacedBy(paddingSmall)) {
+//                    items(categories) { cat ->
+//                        FilterChip(
+//                            selected = category == cat,
+//                            onClick = { category = cat },
+//                            label = { Text(cat) },
+//                            colors = FilterChipDefaults.filterChipColors(
+//                                selectedContainerColor = MaterialTheme.colorScheme.primary,
+//                                selectedLabelColor = Color.White
+//                            )
+//                        )
+//                    }
+//                }
                 Spacer(modifier = Modifier.height(paddingLarge))
 
                 // 2. 내용 입력
@@ -95,35 +95,35 @@ fun PostEditorDialogView(
                 // 3. 이미지 URL 입력
                 Text("이미지 URL (선택)", style = MaterialTheme.typography.labelMedium)
                 Spacer(modifier = Modifier.height(paddingSmall))
-                OutlinedTextField(
-                    value = image,
-                    onValueChange = { image = it },
-                    placeholder = { "https://..." },
-                    modifier = Modifier.fillMaxWidth(),
-                    leadingIcon = { Icon(Icons.Default.Image, null) }
-                )
-                if (image.isNotBlank()) {
-                    AsyncImage(
-                        model = image,
-                        contentDescription = "Image preview",
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = paddingSmall)
-                            .height(120.dp)
-                            .clip(MaterialTheme.shapes.medium),
-                        contentScale = ContentScale.Crop,
-//                        placeholder = painterResource(id = R.drawable.placeholder)
-                    )
-                }
+//                OutlinedTextField(
+//                    value = image,
+//                    onValueChange = { image = it },
+//                    placeholder = { "https://..." },
+//                    modifier = Modifier.fillMaxWidth(),
+//                    leadingIcon = { Icon(Icons.Default.Image, null) }
+//                )
+//                if (image.isNotBlank()) {
+//                    AsyncImage(
+//                        model = image,
+//                        contentDescription = "Image preview",
+//                        modifier = Modifier
+//                            .fillMaxWidth()
+//                            .padding(top = paddingSmall)
+//                            .height(120.dp)
+//                            .clip(MaterialTheme.shapes.medium),
+//                        contentScale = ContentScale.Crop,
+////                        placeholder = painterResource(id = R.drawable.placeholder)
+//                    )
+//                }
             }
         },
         confirmButton = {
-            Button(
-                onClick = { onSave(content, image, category) },
-                enabled = content.isNotBlank()
-            ) {
-                Text(buttonText)
-            }
+//            Button(
+//                onClick = { onSave(content, image, category) },
+//                enabled = content.isNotBlank()
+//            ) {
+//                Text(buttonText)
+//            }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {

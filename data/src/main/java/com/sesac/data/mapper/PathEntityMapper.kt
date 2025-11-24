@@ -5,6 +5,7 @@ import com.sesac.data.type.DraftStatus
 import com.sesac.domain.model.Coord
 import com.sesac.domain.model.MemoMarker
 import com.sesac.domain.model.UserPath
+import com.sesac.domain.model.Path
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.Types
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
@@ -26,25 +27,24 @@ fun UserPath.toPathEntity(): PathEntity {
 
 
     return PathEntity(
-        id = if (this.id == -1) 0 else this.id,
-        pathName = this.name,
-        pathComment = this.description,
-        markers = markersJson,
-        level = when (this.difiiculty) {
-            "초급" -> 1
-            "중급" -> 2
-            "고급" -> 3
-            else -> 0
-        },
-        distance = this.distance,
-        duration = this.time,
-        isPrivate = this.isPrivate,
-        thumbnail = this.thumbnail ?: "",
-        geom = geomJson, // 좌표 JSON으로 저장
-        authUserId = 0, // 필요하면 유저 ID 넣기
-        status = DraftStatus.DRAFT
-    )
-}
+    id = if (this.id == -1) 0 else this.id,
+    pathName = this.name,
+    pathComment = this.description,,
+    markers = markersJson,
+    level = when (this.level) {
+        "초급" -> 1
+        "중급" -> 2
+        "고급" -> 3
+        else -> 0
+    },
+    distance = this.distance,
+    duration = this.time,
+    isPrivate = this.isPrivate,
+    thumbnail = this.thumbnail ?: "",
+    geom = geomJson, // 필요하면 좌표 JSON으로 저장
+    authUserId = 0, // 필요하면 유저 ID 넣기
+    status = DraftStatus.DRAFT
+)
 
 
 fun PathEntity.toUserPath(): UserPath {

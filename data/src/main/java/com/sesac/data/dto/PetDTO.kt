@@ -12,6 +12,7 @@ data class PetDTO(
     val birthday: String,
     val neutering: Boolean,
     val breed: String,
+    val image: String? = null,
 )
 
 @JsonClass(generateAdapter = true)

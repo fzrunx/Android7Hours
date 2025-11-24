@@ -14,72 +14,100 @@ data class RecommendedPath(
 
 data class Path(
     val id: Int,
-    val createdAt: Date = Date(System.currentTimeMillis()),
-    val updatedAt: Date = Date(System.currentTimeMillis()),
-    val pathName: String,
-    val pathComment: String?,
-    val level: Int = 2,
-    val distance: Float?,
-    val duration: Int,
-    val isPrivate: Boolean? = true,
-    val thumbnail: String = "",
-    val geom: String = "",
-    val authUserId: Int,
-    ) {
-    companion object {
-        val EMPTY = Path(
-            id = -1,
-            createdAt = Date(System.currentTimeMillis()),
-            updatedAt = Date(System.currentTimeMillis()),
-            pathName = "",
-            pathComment = null,
-            level = 2,
-            distance = 0f,
-            duration = 0,
-            isPrivate = true,
-            thumbnail = "",
-            geom = "",
-            authUserId = -1,
-        )
-    }
-}
-
-data class UserPath(
-    val id: Int,
-    val name: String,
     val uploader: String,
+    val pathName: String,
+    val pathComment: String? = null,
+    val level: String? = null,
     val distance: Float = 0f,
-    val time: Int = 0,
+    val duration: Int = 0,
+    val isPrivate: Boolean = false,
+    val thumbnail: String? = null,
+    val coord: List<Coord>? = null,
+    val bookmarksCount: Int,
+    val isBookmarked: Boolean,
     val likes: Int = 0,
     val distanceFromMe: Float = 0f, // React의 distance_from_me
     val coord: List<Coord>? = null,
     val markers: List<MemoMarker>? = null,
     val tags: List<String> = emptyList(),
-    val difiiculty: String? = null,
-    val description: String? = null,
-    val isPrivate: Boolean = false,
-    val thumbnail: String? = null,
 ) {
     companion object {
-        val EMPTY = UserPath(
+        val EMPTY = Path(
             id = -1,
-            name = "",
             uploader = "",
+            pathName = "",
+            pathComment = "",
+            level = null,
             distance = 0f,
-            time = 0,
+            duration = 0,
+            isPrivate = false,
+            thumbnail = "",
+            coord = null,
+            bookmarksCount = 0,
+            isBookmarked = false,
             likes = 0,
             distanceFromMe = 0f,
             coord = null,
             markers = null,
             tags = emptyList(),
-            difiiculty = null,
-            isPrivate = false,
-            thumbnail = "",
         )
     }
 
-    fun toMyRecord(): MyRecord = MyRecord(id = -1, name = name, distance = distance)
+    fun toBookmarkedPath(): BookmarkedPath = BookmarkedPath(
+        id = this.id,
+        source = "PUBLIC_API",
+        uploader = this.uploader,
+        pathName = this.pathName,
+        pathComment = this.pathComment,
+        level = when(this.level) {
+            "초급" -> 1
+            "중급" -> 2
+            "고급" -> 3
+            else -> 0
+        },
+        distance = this.distance.toDouble(),
+        duration = this.duration,
+        isPrivate = this.isPrivate,
+        thumbnail = this.thumbnail,
+        bookmarksCount = this.bookmarksCount,
+        isBookmarked = true,
+    )
+
+    fun toPost(): Post = Post(
+        id = this.id,
+        authUser = this.uploader,
+        title = this.pathName,
+        content = this.pathComment ?: "",
+        imageUrl = this.thumbnail,
+        createdAt = Date(),
+        updatedAt = Date(),
+        commentsCount = 0,
+        likesCount = this.likes,
+        bookmarksCount = this.bookmarksCount,
+        isLiked = false,
+        isBookmarked = this.isBookmarked,
+    )
 }
+
+/**
+ * Represents a bookmarked Path in the domain layer.
+ * bookmark 정보에 필요없는 정보 제외(좌표 등)
+ */
+data class BookmarkedPath(
+    override val id: Int,
+    val source: String,
+    val uploader: String,
+    val pathName: String,
+    val pathComment: String?,
+    val level: Int,
+    val distance: Double,
+    val duration: Int?,
+    val isPrivate: Boolean,
+    val thumbnail: String?,
+    var bookmarksCount: Int,
+    var isBookmarked: Boolean,
+) : BookmarkedItem
+
 
 data class MyRecord(
     val id: Int,

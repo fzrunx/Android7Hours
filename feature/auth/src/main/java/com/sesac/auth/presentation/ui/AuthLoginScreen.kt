@@ -132,8 +132,17 @@ fun AuthLoginScreen(
     }
 
     LaunchedEffect(uiState) {
-        if (uiState is JoinUiState.Success) {
-            onLoginSuccess()
+        when (uiState) {
+            is JoinUiState.Success -> {
+                onLoginSuccess() // 로그인 성공 시 화면 이동
+            }
+            is JoinUiState.Error -> {
+                isLoading = false // 로딩 상태 종료
+            }
+            is JoinUiState.Loading -> {
+                isLoading = true // 로딩 상태 표시
+            }
+            else -> {}
         }
     }
 
@@ -199,25 +208,56 @@ fun AuthLoginScreen(
         Button(
             onClick = {
                 isLoading = true // 카카오 SDK 로딩 시작
-                // 1. 카카오톡이 설치되어 있는지 확인
-                if (UserApiClient.instance.isKakaoTalkLoginAvailable(context)) {
-                    // 2. 카카오톡으로 로그인 시도
-                    UserApiClient.instance.loginWithKakaoTalk(context) { token, error ->
+                try {
+                    val kakaoContext = context
+                    val kakaoCallback: (OAuthToken?, Throwable?) -> Unit = { token, error ->
+                        isLoading = false
                         if (error != null) {
-                            Log.e("KakaoLoginTest", "카카오톡 로그인 실패", error)
-                            // 3. 카톡 실패 (예: 사용자 취소) 시, 카카오계정(웹뷰)으로 재시도
-                            if (error is ClientError && error.reason == ClientErrorCause.Cancelled) {
-                                UserApiClient.instance.loginWithKakaoAccount(context, callback = kakaoLoginCallback)
-                            } else {
-                                kakaoLoginCallback(null, error)
-                            }
+                            Log.e("KakaoLoginTest", "카카오 로그인 실패", error)
+                            Toast.makeText(kakaoContext, "카카오 로그인 실패", Toast.LENGTH_SHORT).show()
                         } else if (token != null) {
-                            kakaoLoginCallback(token, null)
+                            Log.i("KakaoLoginTest", "카카오 로그인 성공! Access Token: ${token.accessToken}")
+                            viewModel.onKakaoLoginSuccess(token.accessToken)
                         }
                     }
-                } else {
-                    // 4. 카카오톡이 없으면, 카카오계정(웹뷰)으로 바로 시도
-                    UserApiClient.instance.loginWithKakaoAccount(context, callback = kakaoLoginCallback)
+
+                    if (UserApiClient.instance.isKakaoTalkLoginAvailable(kakaoContext)) {
+                        // 카카오톡 설치 시
+                        UserApiClient.instance.loginWithKakaoTalk(kakaoContext) { token, error ->
+                            if (error != null) {
+                                Log.e("KakaoLoginTest", "카카오톡 로그인 실패", error)
+                                // 취소 예외: 웹뷰 로그인 fallback
+                                if (error is ClientError && error.reason == ClientErrorCause.Cancelled) {
+                                    UserApiClient.instance.loginWithKakaoAccount(kakaoContext, callback = kakaoCallback)
+                                } else {
+                                    kakaoCallback(null, error)
+                                }
+                            } else if (token != null) {
+                                kakaoCallback(token, null)
+                            }
+                        }
+                    } else {
+                        // 카카오톡 설치 안됨 → 바로 웹뷰 로그인
+                        UserApiClient.instance.loginWithKakaoAccount(kakaoContext, callback = kakaoCallback)
+                    }
+
+                } catch (e: Exception) {
+                    // 예외 발생 시도 fallback
+                    Log.e("KakaoLoginTest", "카카오 로그인 중 예외 발생, 웹뷰로 fallback", e)
+                    try {
+                        UserApiClient.instance.loginWithKakaoAccount(context) { token, error ->
+                            isLoading = false
+                            if (error != null) {
+                                Log.e("KakaoLoginTest", "웹뷰 로그인 실패", error)
+                                Toast.makeText(context, "카카오 로그인 실패", Toast.LENGTH_SHORT).show()
+                            } else if (token != null) {
+                                viewModel.onKakaoLoginSuccess(token.accessToken)
+                            }
+                        }
+                    } catch (_: Exception) {
+                        isLoading = false
+                        Toast.makeText(context, "카카오 로그인 실패", Toast.LENGTH_SHORT).show()
+                    }
                 }
             },
             modifier = Modifier.fillMaxWidth()
