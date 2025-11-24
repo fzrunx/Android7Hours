@@ -148,7 +148,7 @@ fun BottomSheetContent(
                             isEditMode = isEditMode,
                             onPathClick = onPathClick,
                             onFollowClick = { /* MyRecord에서 UserPath로 변환 필요 */ },
-                            onRegisterClick = onRegisterClick,
+//                            onRegisterClick = onRegisterClick,
                             onEditModeToggle = onEditModeToggle,
 //                        onModifyClick = onModifyClick,
                             onDeleteClick = onDeleteClick,

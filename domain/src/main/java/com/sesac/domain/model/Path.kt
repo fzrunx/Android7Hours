@@ -58,6 +58,21 @@ data class Path(
         bookmarksCount = this.bookmarksCount,
         isBookmarked = true,
     )
+
+    fun toPost(): Post = Post(
+        id = this.id,
+        authUser = this.uploader,
+        title = this.pathName,
+        content = this.pathComment ?: "",
+        imageUrl = this.thumbnail,
+        createdAt = Date(),
+        updatedAt = Date(),
+        commentsCount = 0,
+        likesCount = this.likes,
+        bookmarksCount = this.bookmarksCount,
+        isLiked = false,
+        isBookmarked = this.isBookmarked,
+    )
 }
 
 /**

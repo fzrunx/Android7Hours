@@ -7,8 +7,8 @@ import java.util.Date
  */
 data class Post(
     override val id: Int,
-    val userId: Int,
-    val postType: String, // "review" or "info"
+    val authUser: String,
+//    val postType: String, // "review" or "info"
     val title: String,
     val content: String,
     val imageUrl: String?,
@@ -23,8 +23,8 @@ data class Post(
     companion object {
         val EMPTY = Post(
             id = -1,
-            userId = -1,
-            postType = "",
+            authUser = "",
+//            postType = "",
             title = "",
             content = "",
             imageUrl = "",

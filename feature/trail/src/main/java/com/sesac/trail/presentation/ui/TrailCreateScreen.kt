@@ -85,17 +85,6 @@ import com.sesac.trail.presentation.component.TagFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
-// --- 데이터 클래스 ---
-data class WalkPathData(
-    val name: String,
-    val difficulty: String,
-    val distance: String,
-    val estimatedTime: String,
-    val description: String,
-    val tags: List<String>,
-    val imageUri: String?
-)
-
 data class ValidationState(
     val isNameInvalid: Boolean = false,
     val isDistanceInvalid: Boolean = false,
@@ -128,6 +117,7 @@ fun TrailCreateScreen(
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             CircularProgressIndicator()
         }
+        return
     }
 
     var uploadedImageUri by remember { mutableStateOf<String?>(null) }
@@ -180,23 +170,33 @@ fun TrailCreateScreen(
                 )
 
                 if (isNameInvalid || isDistanceInvalid || isTimeInvalid) {
+                    Toast.makeText(
+                        context,
+                        "필수 항목을 모두 입력해주세요",
+                        Toast.LENGTH_SHORT
+                    ).show()
                     return@launch
                 }
 
+                // ✅ 수정: 경로 수정인지 신규 등록인지 구분
                 if (it.id != -1) {
-                    Log.d("TrailCreateScreen", "Updating path: $path")
+                    // 기존 경로 수정
+                    Log.d("TrailCreateScreen", "Updating path: $it")
                     viewModel.updatePath(uiState.token)
                     Toast.makeText(context, "산책로가 수정되었습니다!", Toast.LENGTH_SHORT).show()
                 } else {
-                    Log.d("Tag-TrailCreateScreen", "New path created: $path")
-                    viewModel.savePath(uiState.token, Coord.DEFAULT)
-                    Toast.makeText(context, "산책로가 등록되었습니다!", Toast.LENGTH_SHORT).show()
+                    // 신규 경로: RoomDB 저장 → text 변환 → 서버 전송
+                    Log.d("TrailCreateScreen", "Creating new path: $it")
+                    viewModel.savePathToRoom(it)
+                    Toast.makeText(
+                        context,
+                        "산책로가 저장되었습니다!",
+                        Toast.LENGTH_SHORT
+                    ).show()
                 }
 
-                // 서버 저장이 아닌 RoomDB에 임시 저장
-                viewModel.saveDraft(it)
-                Toast.makeText(context, "산책로가 임시 저장되었습니다.", Toast.LENGTH_SHORT).show()
-
+                // ✅ 중요: 저장 후 selectedPath 초기화
+                viewModel.clearSelectedPath()
                 navController.popBackStack()
             }
         }
@@ -285,7 +285,6 @@ fun TrailCreateScreen(
             CreateBottomActions(
                 onCancel = {
                     scope.launch {
-                        viewModel.saveDraftIfNotEmpty()
                         viewModel.clearSelectedPath()
                         navController.popBackStack()
                     }
@@ -319,18 +318,6 @@ fun CreateBottomActions(
                 .padding(paddingLarge),
             horizontalArrangement = Arrangement.spacedBy(paddingSmall)
         ) {
-            Button(
-                onClick = onCancel,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = NoteBox,
-                    contentColor = GrayTabText
-                ),
-                modifier = Modifier
-                    .weight(1f)
-                    .height(48.dp)
-            ) {
-                Text("나중에 하기")
-            }
             Button(
                 onClick = onSave,
                 colors = ButtonDefaults.buttonColors(
@@ -536,16 +523,3 @@ fun DistanceTimeInputs(
         )
     }
 }
-
-// --- Preview ---
-
-//@Preview(showBackground = true, device = "id:pixel_5")
-//@Composable
-//fun WalkPathCreatePagePreview() {
-//    MaterialTheme {
-//        TrailCreateScreen(
-//            navController = rememberNavController(),
-////            onSave = { }, // ✅ 타입 명시
-//        )
-//    }
-//}

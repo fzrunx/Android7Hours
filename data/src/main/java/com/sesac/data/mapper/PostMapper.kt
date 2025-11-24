@@ -30,8 +30,7 @@ fun PostDTO.toPost(): Post {
 
     return Post(
         id = this.id,
-        userId = this.authUser,
-        postType = this.postType,
+        authUser = this.authUser,
         title = this.title,
         content = this.content,
         imageUrl = this.image,

@@ -17,9 +17,10 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-import com.naver.maps.map.NaverMap // ⭐ 추가
-import com.naver.maps.map.overlay.Marker // ⭐ 추가
-import com.naver.maps.map.overlay.PolylineOverlay // ⭐ 추가
+import com.naver.maps.geometry.LatLng // ⭐ 추가
+import com.naver.maps.map.NaverMap
+import com.naver.maps.map.overlay.Marker
+import com.naver.maps.map.overlay.PolylineOverlay
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -34,7 +35,6 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.update
 
-
 @HiltViewModel
 class TrailViewModel @Inject constructor(
     private val pathUseCase: PathUseCase,
@@ -42,14 +42,92 @@ class TrailViewModel @Inject constructor(
 ): ViewModel() {
     private val _invalidToken = Channel<UiEvent>()
     val invalidToken = _invalidToken.receiveAsFlow()
-    private val _recommendedPaths = MutableStateFlow<ResponseUiState<List<Path>>>(ResponseUiState.Idle)
-    val recommendedPaths = _recommendedPaths.asStateFlow()
+
     // 폴리라인 인스턴스를 ViewModel State로 관리
+
+    // =================================================================
+    // 📌 1. 지도 녹화 관련 데이터 (MainScreen에서 사용)
+    // =================================================================
+
+    // ✅ 수정: LatLng 타입으로 변경 (UI 레이어에서 사용하는 타입)
+    private val _tempPathCoords = MutableStateFlow<List<LatLng>>(emptyList())
+    val tempPathCoords = _tempPathCoords.asStateFlow()
+
+    fun addTempPoint(point: LatLng) {
+        _tempPathCoords.value = _tempPathCoords.value + point
+    }
+
+    fun clearTempPath() {
+        _tempPathCoords.value = emptyList()
+    }
+
+    // =================================================================
+    // 📌 2. 녹화 상태 관리
+    // =================================================================
+
+    private val _isRecording = MutableStateFlow(false)
+    val isRecording = _isRecording.asStateFlow()
+
+    private val _isPaused = MutableStateFlow(false)
+    val isPaused = _isPaused.asStateFlow()
+
+    private val _recordingTime = MutableStateFlow(0L)
+    val recordingTime = _recordingTime.asStateFlow()
+
+    fun startRecording() {
+        _isRecording.value = true
+        _isPaused.value = false
+        _recordingTime.value = 0L
+        clearTempPath()
+    }
+
+    fun pauseRecording() {
+        _isPaused.value = true
+    }
+
+    fun resumeRecording() {
+        _isPaused.value = false
+    }
+
+    fun stopRecording() {
+        _isRecording.value = false
+        _isPaused.value = false
+    }
+
+    fun addRecordingTime(delta: Long) {
+        _recordingTime.value += delta
+    }
+
+    // ✅ 추가: MainScreen에서 사용하는 편의 함수
+    fun updateRecordingTime(changeRate: Long?) {
+        _recordingTime.value += changeRate ?: -_recordingTime.value
+    }
+
+    fun updateIsPaused(newState: Boolean?) {
+        viewModelScope.launch {
+            _isPaused.value = newState ?: !_isPaused.value
+        }
+    }
+
+    fun updateIsRecording(newState: Boolean?) {
+        viewModelScope.launch {
+            _isRecording.value = newState ?: !_isRecording.value
+        }
+    }
+
+    // =================================================================
+    // 📌 3. 지도 오버레이 관리 (폴리라인, 마커)
+    // =================================================================
+
     private val _polylineOverlay = MutableStateFlow<PolylineOverlay?>(null)
     val polylineOverlay = _polylineOverlay.asStateFlow()
 
     // 마커 리스트를 ViewModel 내부의 MutableList로 관리
     val currentMarkers: MutableList<Marker> = mutableListOf()
+
+    fun setPolylineInstance(polyline: PolylineOverlay) {
+        _polylineOverlay.value = polyline
+    }
 
     fun clearAllMapObjects(naverMap: NaverMap?) {
         if (naverMap == null) return
@@ -64,33 +142,21 @@ class TrailViewModel @Inject constructor(
         }
         currentMarkers.clear() // 리스트 비우기
 
-        // 디버깅 용
-        println("🧹 TrailViewModel: 지도 객체 (폴리라인/마커) 초기화 완료")
+        println("🧹 TrailViewModel: 지도 객체 초기화 완료")
     }
 
-    fun setPolylineInstance(polyline: PolylineOverlay) {
-        _polylineOverlay.value = polyline
-    }
+    // =================================================================
+    // 📌 4. 경로 목록 관리 (추천 경로, 내 경로)
+    // =================================================================
 
+    private val _recommendedPaths = MutableStateFlow<ResponseUiState<List<Path>>>(ResponseUiState.Idle)
+    val recommendedPaths = _recommendedPaths.asStateFlow()
     private val _myPaths = MutableStateFlow<ResponseUiState<List<Path>>>(ResponseUiState.Idle)
     val myPaths = _myPaths.asStateFlow()
+
     private val _bookmarkedPaths = MutableStateFlow<ResponseUiState<List<BookmarkedPath>>>(ResponseUiState.Idle)
     val bookmarkedPaths = _bookmarkedPaths.asStateFlow()
-    private val _isSheetOpen = MutableStateFlow(false)
-    val isSheetOpen get() = _isSheetOpen.asStateFlow()
-    private val _isPaused = MutableStateFlow(false)
-    val isPaused = _isPaused.asStateFlow()
-    private val _isRecording = MutableStateFlow(false)
-    private val _isFollowingPath = MutableStateFlow(false)
-    val isFollowingPath get() = _isFollowingPath.asStateFlow()
-    val isRecoding get() = _isRecording.asStateFlow()
-    private val _recordingTime = MutableStateFlow<Long>(0L)
-    val recordingTime = _recordingTime.asStateFlow()
-    private val _activeTab = MutableStateFlow(WalkPathTab.RECOMMENDED)
-    val activeTab get() = _activeTab.asStateFlow()
 
-    private val _isEditMode = MutableStateFlow(false)
-    val isEditMode get() = _isEditMode.asStateFlow()
 
     private val _selectedPath = MutableStateFlow<Path?>(null)
     val selectedPath get() = _selectedPath.asStateFlow()
@@ -146,39 +212,18 @@ class TrailViewModel @Inject constructor(
         }
     }
 
-//    fun getMyRecords() {
-//        viewModelScope.launch {
-//            trailUseCase.getAllMyRecordUseCase().collectLatest { records ->
-//                _myPaths.value = records.filterNotNull()
-//            }
-//        }
-//    }
+    // =================================================================
+    // 📌 5. 선택된 경로 관리
+    // =================================================================
 
-    fun savePath(token: String?, currentCoord: Coord?, radius: Float = 5000f) {
+    fun updateSelectedPath(path: Path?) {
         viewModelScope.launch {
-            if (token.isNullOrEmpty()) { _invalidToken.send(UiEvent.ToastEvent("유저 정보가 없습니다.")) }
-            else{
-                _selectedPath.value?.let { path ->
-                    pathUseCase.createPathUseCase(token, path).collectLatest { createdPath ->
-                        // You might want to refresh the list or navigate
-                        // For now, just update the selected path with the created one
-                        if (createdPath is AuthResult.Success) {
-                            val coord = currentCoord ?: createdPath.resultData.coord?.first() ?: Coord.DEFAULT
-                            _selectedPath.value = createdPath.resultData
-                            getRecommendedPaths(coord, radius) // Refresh recommended paths
-                        }
-                    }
-                }
-            }
+            _selectedPath.value = path
         }
     }
 
     fun clearSelectedPath() {
         _selectedPath.value = null
-    }
-
-    fun updateRecordingTime(changeRate: Long?) {
-        _recordingTime.value += changeRate ?: -_recordingTime.value
     }
 
     fun getUserBookmarkedPaths(token: String?) {
@@ -234,38 +279,44 @@ class TrailViewModel @Inject constructor(
         viewModelScope.launch { _isSheetOpen.value = newState ?: !_isSheetOpen.value }
     }
 
-    fun updateIsFollowingPath(newState: Boolean?) {
-        viewModelScope.launch { _isFollowingPath.value = newState ?: !_isFollowingPath.value }
-    }
-
-    fun updateIsPaused(newState: Boolean?) {
-        viewModelScope.launch { _isPaused.value = newState ?: !_isPaused.value }
-    }
-
-    fun updateIsRecording(newState: Boolean?) {
-        viewModelScope.launch { _isRecording.value = newState ?: !_isRecording.value }
-    }
-
     fun updatePausedState() {
         viewModelScope.launch { _isPaused.value = !_isPaused.value }
-    }
-
-    fun updateActiveTab(walkPathTab: WalkPathTab) {
-        viewModelScope.launch { _activeTab.value = walkPathTab }
-    }
-
-    fun updateSelectedPath(path: Path?) {
-        viewModelScope.launch { _selectedPath.value = path }
     }
 
     fun updateSelectedPathLikes(isLiked: Boolean): Boolean {
         viewModelScope.launch {
             _selectedPath.value?.let {
                 val preLikes = it.likes
-                _selectedPath.value = it.copy(likes = if (isLiked) preLikes - 1 else preLikes + 1)
+                _selectedPath.value = it.copy(
+                    likes = if (isLiked) preLikes - 1 else preLikes + 1
+                )
             }
         }
         return !isLiked
+    }
+
+    // =================================================================
+    // 📌 6. 경로 CRUD (생성, 수정, 삭제)
+    // =================================================================
+
+    // ✅ 수정: CreateScreen에서 사용 (녹화 완료 후 저장)
+    fun savePath(token: String?, currentCoord: Coord?, radius: Float = 5000f) {
+        viewModelScope.launch {
+            if (token.isNullOrEmpty()) {
+                _invalidToken.send(UiEvent.ToastEvent("유저 정보가 없습니다."))
+                return@launch
+            }
+
+            _selectedPath.value?.let { path ->
+                pathUseCase.createPathUseCase(token, path).collectLatest { result ->
+                    if (result is AuthResult.Success) {
+                        val coord = currentCoord ?: result.resultData.coord?.first() ?: Coord.DEFAULT
+                        _selectedPath.value = result.resultData
+                        getRecommendedPaths(coord, radius)
+                    }
+                }
+            }
+        }
     }
 
     fun updatePath(token: String?) {
@@ -298,11 +349,58 @@ class TrailViewModel @Inject constructor(
         }
     }
 
+    // =================================================================
+    // 📌 7. UI 상태 관리 (시트, 팔로우, 편집 모드 등)
+    // =================================================================
+
+    private val _isSheetOpen = MutableStateFlow(false)
+    val isSheetOpen get() = _isSheetOpen.asStateFlow()
+
+    private val _isFollowingPath = MutableStateFlow(false)
+    val isFollowingPath get() = _isFollowingPath.asStateFlow()
+
+    private val _activeTab = MutableStateFlow(WalkPathTab.RECOMMENDED)
+    val activeTab get() = _activeTab.asStateFlow()
+
+    private val _isEditMode = MutableStateFlow(false)
+    val isEditMode get() = _isEditMode.asStateFlow()
+
+    fun updateIsFollowingPath(newState: Boolean?) {
+        viewModelScope.launch {
+            _isFollowingPath.value = newState ?: !_isFollowingPath.value
+        }
+    }
+
+    fun updateActiveTab(walkPathTab: WalkPathTab) {
+        viewModelScope.launch {
+            _activeTab.value = walkPathTab
+        }
+    }
+
     fun updateIsEditMode(isEditing: Boolean? = null) {
         _isEditMode.value = isEditing ?: !_isEditMode.value
     }
 
-    // ⭐ Draft 기능 관련 StateFlow 추가
+    // =================================================================
+    // 📌 8. Draft 기능 (임시 저장)
+    // =================================================================
+
+    // ✅ 추가: CreateScreen에서 사용하는 임시 경로 데이터
+    private val _draftPath = MutableStateFlow<Path?>(null)
+    val draftPath = _draftPath.asStateFlow()
+
+    fun createDraftPath(name: String, description: String?) {
+        val coords = tempPathCoords.value.map { latLng ->
+            Coord(latLng.latitude, latLng.longitude)
+        }
+
+        _draftPath.value = Path.EMPTY.copy(pathName = name, pathComment = description, coord = coords)
+    }
+
+    fun clearDraftPath() {
+        _draftPath.value = null
+    }
+
     private val _drafts = MutableStateFlow<List<Path>>(emptyList())
     val drafts: StateFlow<List<Path>> get() = _drafts.asStateFlow()
 
@@ -320,42 +418,24 @@ class TrailViewModel @Inject constructor(
     // Draft 저장 (suspend)
     suspend fun saveDraft(draft: Path): Boolean {
         return try {
-            val success = pathUseCase.saveDraftUseCase(draft).first() // Flow -> 단일값
-            if (success) loadDrafts()
-            success
-        } catch (e: Exception) {
-            false
-        }
-    }
+            Log.d("TrailViewModel", "🔄 Calling trailUseCase.saveDraftUseCase...")
+            Log.d("TrailViewModel", "Draft details: id=${draft.id}, name=${draft.pathName}, coords=${draft.coord?.size}")
 
-    // Draft 삭제 (suspend)
-    suspend fun deleteDraft(draft: Path): Boolean {
-        return try {
-            val success = pathUseCase.deleteDraftUseCase(draft).first() // Flow -> 단일값
-            if (success) loadDrafts() // 삭제 후 목록 갱신
-            success
-        } catch (e: Exception) {
-            false
-        }
-    }
+            val success = pathUseCase.saveDraftUseCase(draft).first()
 
-    // Draft 전체 삭제 (suspend)
-    suspend fun clearAllDrafts(): Boolean {
-        return try {
-            val success = pathUseCase.clearAllDraftsUseCase().first() // Flow -> 단일값
-            if (success) _drafts.value = emptyList()
-            success
-        } catch (e: Exception) {
-            false
-        }
-    }
+            Log.d("TrailViewModel", "UseCase returned: $success")
 
-    // UI에서 화면 나가기 직전에 호출할 임시 저장 함수
-    suspend fun saveDraftIfNotEmpty() {
-        _selectedPath.value?.let {
-            if (it.id == -1 && (it.coord?.isNotEmpty() == true || it.pathComment?.let { d -> d.trim().isNotEmpty() } == true)) {
-                saveDraft(it)
+            if (success) {
+                loadDrafts()
+                Log.d("TrailViewModel", "✅ Draft saved and list reloaded")
+            } else {
+                Log.e("TrailViewModel", "❌ UseCase returned false")
             }
+
+            success
+        } catch (e: Exception) {
+            Log.e("TrailViewModel", "❌ Exception in saveDraft: ${e.message}", e)
+            false
         }
     }
 
@@ -365,6 +445,72 @@ class TrailViewModel @Inject constructor(
         }
     }
 
+    suspend fun deleteDraft(draft: Path): Boolean {
+        return try {
+            val success = pathUseCase.deleteDraftUseCase(draft).first()
+            if (success) loadDrafts()
+            success
+        } catch (e: Exception) {
+            false
+        }
+    }
+
+    // Draft 전체 삭제 (suspend)
+    suspend fun clearAllDrafts(): Boolean {
+        return try {
+            val success = pathUseCase.clearAllDraftsUseCase().first()
+            if (success) _drafts.value = emptyList()
+            success
+        } catch (e: Exception) {
+            false
+        }
+    }
+    // =================================================================
+// 📌 8-1. RoomDB 저장 전용 함수
+// =================================================================
+
+    // ✅ 추가: RoomDB에만 저장 (서버 전송 X)
+    fun savePathToRoom(path: Path) {
+        viewModelScope.launch {
+            Log.d("TrailViewModel", "📦 === Starting savePathToRoom ===")
+            Log.d("TrailViewModel", "Path ID: ${path.id}")
+            Log.d("TrailViewModel", "Path Name: ${path.pathName}")
+            Log.d("TrailViewModel", "Path Distance: ${path.distance}")
+            Log.d("TrailViewModel", "Path Time: ${path.duration}")
+            Log.d("TrailViewModel", "Path Coords: ${path.coord?.size ?: 0} coordinates")
+
+            try {
+                val success = saveDraft(path)
+
+                Log.d("TrailViewModel", "saveDraft() returned: $success")
+
+                if (success) {
+                    Log.d("TrailViewModel", "✅ Successfully saved to RoomDB")
+
+                    // 저장 확인을 위해 다시 불러와보기
+                    val drafts = loadDrafts()
+                    Log.d("TrailViewModel", "📋 Current drafts count: ${drafts.size}")
+                    drafts.forEach { draft ->
+                        Log.d("TrailViewModel", "  - Draft: ${draft.pathName}, coords: ${draft.coord?.size}")
+                    }
+
+                    _invalidToken.send(UiEvent.ToastEvent("경로가 저장되었습니다"))
+                } else {
+                    Log.e("TrailViewModel", "❌ saveDraft returned false")
+                    _invalidToken.send(UiEvent.ToastEvent("저장에 실패했습니다"))
+                }
+            } catch (e: Exception) {
+                Log.e("TrailViewModel", "❌ Exception in savePathToRoom: ${e.message}", e)
+                _invalidToken.send(UiEvent.ToastEvent("오류 발생: ${e.message}"))
+            }
+
+            Log.d("TrailViewModel", "📦 === Finished savePathToRoom ===")
+        }
+    }
+
+    // =================================================================
+    // 📌 9. 댓글 관리
+    // =================================================================
 
     // 댓글 상태
     private val _comments = MutableStateFlow<List<Comment>>(emptyList())
@@ -383,7 +529,7 @@ class TrailViewModel @Inject constructor(
 
     fun handleOpenComments(path: Path) {
         // Create a synthetic Post object from the UserPath
-        selectedPostForComments = Post.EMPTY
+        selectedPostForComments = path.toPost()
         isCommentsOpen = true
     }
 

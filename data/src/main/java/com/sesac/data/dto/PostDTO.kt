@@ -12,9 +12,8 @@ import com.sesac.data.dto.BookmarkedObject
 data class PostDTO(
     override val id: Int,
     @Json(name = "auth_user")
-    val authUser: Int,
+    val authUser: String,
     @Json(name = "post_type")
-    val postType: String,
     val title: String,
     val content: String,
     val image: String?,
