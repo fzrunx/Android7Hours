@@ -4,39 +4,42 @@ import com.sesac.data.dto.PathDTO
 import com.sesac.data.dto.CoordRequestDTO
 import com.sesac.data.dto.PathCreateRequestDTO
 import com.sesac.data.dto.PathUpdateRequestDTO
-import com.sesac.domain.model.UserPath
+import com.sesac.domain.model.Path
 
-fun PathDTO.toUserPath() = UserPath(
+fun PathDTO.toPath() = Path(
     id = this.id,
-    name = this.pathName,
     uploader = this.authUserNickname,
-    distance = this.distance.toFloat(),
-    time = this.duration ?: 0,
-    likes = 0,
-    distanceFromMe = 0f,
-    coord = this.coords.toCoordList(),
-    tags = emptyList(),
-    difiiculty = when(this.level) {
+    pathName = this.pathName,
+    pathComment = this.pathComment,
+    level = when(this.level) {
         1 -> "초급"
         2 -> "중급"
         3 -> "고급"
         else -> "알 수 없음"
     },
-    description = this.pathComment,
+    distance = this.distance.toFloat(),
+    duration = this.duration ?: 0,
     isPrivate = this.isPrivate,
+    thumbnail = this.thumbnail,
+    coord = this.coords.toCoordList(),
+    bookmarksCount = this.bookmarksCount,
+    isBookmarked = this.isBookmarked,
+    likes = 0,
+    distanceFromMe = 0f,
+    tags = emptyList(),
 )
 
-fun UserPath.toPathCreateRequestDTO() = PathCreateRequestDTO(
-    pathName = this.name,
-    pathComment = this.description,
-    level = when(difiiculty) {
+fun Path.toPathCreateRequestDTO() = PathCreateRequestDTO(
+    pathName = this.pathName,
+    pathComment = this.pathComment,
+    level = when(level) {
         "초급" -> 1
         "중급" -> 2
         "고급" -> 3
         else -> 0
     },
     distance = this.distance,
-    duration = this.time,
+    duration = this.duration,
     coords = this.coord?.toCoordRequestDTOList() ?: listOf(CoordRequestDTO.EMPTY),
     startTime = null, // Not available in UserPath
     endTime = null, // Not available in UserPath
@@ -44,28 +47,28 @@ fun UserPath.toPathCreateRequestDTO() = PathCreateRequestDTO(
     isPrivate = this.isPrivate,
 )
 
-fun UserPath.toPathUpdateRequestDTO(): PathUpdateRequestDTO {
+fun Path.toPathUpdateRequestDTO(): PathUpdateRequestDTO {
     return PathUpdateRequestDTO(
-        pathName = this.name,
-        pathComment = this.description,
-        level = when(difiiculty) {
+        pathName = this.pathName,
+        pathComment = this.pathComment,
+        level = when(level) {
             "초급" -> 1
             "중급" -> 2
             "고급" -> 3
             else -> 0
         },
         distance = this.distance,
-        duration = this.time,
+        duration = this.duration,
         thumbnail = this.thumbnail,
         isPrivate = this.isPrivate,
     )
 }
 
-fun List<PathDTO>.toUserPathList() =
-    this.map { it.toUserPath() }.toList()
+fun List<PathDTO>.toPathList() =
+    this.map { it.toPath() }.toList()
 
-fun List<UserPath>.toPathCreateRequestDTOList() =
+fun List<Path>.toPathCreateRequestDTOList() =
     this.map { it.toPathCreateRequestDTO() }.toList()
 
-fun List<UserPath>.toPathUpdateRequestDTOList() =
+fun List<Path>.toPathUpdateRequestDTOList() =
     this.map { it.toPathUpdateRequestDTO() }.toList()

@@ -7,6 +7,13 @@ sealed interface JoinUiState {
     data class Error(val message: String) : JoinUiState
 }
 
+sealed class ResponseUiState<out T> {
+    object Idle : ResponseUiState<Nothing>()
+    object Loading : ResponseUiState<Nothing>()
+    data class Success<T>(val message: String, val result: T) : ResponseUiState<T>()
+    data class Error(val message: String) : ResponseUiState<Nothing>()
+}
+
 data class AuthUiState(
     val isLoggedIn: Boolean = false,
     val token: String? = null,

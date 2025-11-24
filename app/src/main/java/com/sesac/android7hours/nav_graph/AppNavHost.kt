@@ -11,12 +11,14 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import com.sesac.auth.nav_graph.authRoute
 import com.sesac.common.component.CommonMapLifecycle
+import com.sesac.common.model.PathParceler
 import com.sesac.community.nav_graph.communityRoute
 import com.sesac.community.presentation.CommunityViewModel
 import com.sesac.domain.result.AuthUiState
 import com.sesac.home.nav_graph.homeRoute
 import com.sesac.monitor.nav_graph.monitorRoute
 import com.sesac.mypage.nav_graph.mypageRoute
+import com.sesac.trail.nav_graph.trailNestedNavGraph
 import com.sesac.trail.nav_graph.trailRoute
 import com.sesac.trail.presentation.TrailViewModel
 
@@ -29,6 +31,7 @@ fun AppNavHost(
     navController: NavHostController,
     nav2Home: () -> Unit,
     nav2LoginScreen: () -> Unit,
+    onNavigateToPathDetail: (PathParceler?) -> Unit,
     startDestination: Any,
     uiState: AuthUiState,
     isSearchOpen: MutableState<Boolean>,
@@ -50,7 +53,9 @@ fun AppNavHost(
 //        popExitTransition = ,
 //        sizeTransform = ,
     ) {
-        homeRoute()
+        homeRoute(
+            onNavigateToPathDetail = onNavigateToPathDetail,
+        )
         trailRoute(
             trailViewModel = trailViewModel,
             navController = navController,
@@ -59,6 +64,13 @@ fun AppNavHost(
             commonMapLifecycle = commonMapLifecycle,
             )
         communityRoute(viewModel = communityViewModel,)
+        trailNestedNavGraph(
+            uiState = uiState,
+            trailViewModel = trailViewModel,
+            navController = navController,
+            onStartFollowing = onStartFollowing,
+        )
+        communityRoute(viewModel = communityViewModel)
         monitorRoute(
             navController = navController,
             commonMapLifecycle = commonMapLifecycle,

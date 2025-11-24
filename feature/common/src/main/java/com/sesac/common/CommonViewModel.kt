@@ -41,6 +41,7 @@ class CommonViewModel @Inject constructor(
 
     fun onLogout() {
         viewModelScope.launch {
+            uiState.value.reset()
             sessionUseCase.clearSession()
         }
     }

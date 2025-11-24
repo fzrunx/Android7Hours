@@ -53,6 +53,7 @@ dependencies {
     implementation(libs.androidx.datastore.preferences.core)
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.converter.moshi)
+    implementation(libs.moshi.adapters)
     implementation(libs.moshi.kotlin)
     ksp(libs.moshi.kotlin.codegen)
     implementation(libs.okhttp.core)

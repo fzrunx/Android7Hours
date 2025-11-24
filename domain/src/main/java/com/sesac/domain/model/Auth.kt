@@ -33,7 +33,16 @@ data class JoinFormState(
     val agreeTerms: Boolean = false,
     val agreePrivacy: Boolean = false,
     val showValidationErrors: Boolean = false
-)
+) {
+    fun toAuth() = Auth(
+        username = this.email,
+        email = this.email,
+        fullName = this.name,
+        nickname = this.nickname,
+        password = this.password,
+        passwordVerification = this.passwordConfirm,
+    )
+}
 
 data class Token(
     val refresh: String,

@@ -48,6 +48,7 @@ import com.sesac.common.ui.theme.Primary
 import com.sesac.common.ui.theme.Surface
 import com.sesac.common.ui.theme.TextPrimary
 import com.sesac.common.ui.theme.TextSecondary
+import com.sesac.common.ui.theme.White
 import com.sesac.common.ui.theme.badgeEnabledBg
 import com.sesac.common.ui.theme.badgeEnabledText
 import com.sesac.common.ui.theme.brushBlue
@@ -214,9 +215,9 @@ fun PermissionCard(
                         checked = isEnabled,
                         onCheckedChange = { onToggle() },
                         colors = SwitchDefaults.colors(
-                            checkedThumbColor = Color.White,
+                            checkedThumbColor = White,
                             checkedTrackColor = Primary,
-                            uncheckedThumbColor = Color.White,
+                            uncheckedThumbColor = White,
                             uncheckedTrackColor = Border
                         )
                     )

@@ -18,11 +18,13 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -47,9 +49,9 @@ import com.sesac.common.ui.theme.paddingLarge
 import kotlinx.coroutines.delay
 import com.sesac.domain.model.Coord
 import com.sesac.common.utils.EffectPauseStop
-import com.sesac.domain.model.UserPath
-import com.sesac.domain.result.AuthResult
+import com.sesac.domain.model.Path
 import com.sesac.domain.result.AuthUiState
+import com.sesac.domain.result.ResponseUiState
 import com.sesac.trail.nav_graph.TrailNavigationRoute
 import com.sesac.trail.presentation.TrailViewModel
 import com.sesac.trail.presentation.component.BottomSheetContent
@@ -58,6 +60,8 @@ import com.sesac.trail.presentation.component.RecordingControls
 import com.sesac.trail.presentation.component.ReopenSheetButton
 import com.sesac.trail.presentation.component.addMemoMarker
 import androidx.compose.runtime.DisposableEffect
+import com.sesac.common.model.toPathParceler
+import com.sesac.trail.nav_graph.NestedNavigationRoute
 
 enum class WalkPathTab { RECOMMENDED, MY_RECORDS }
 
@@ -81,6 +85,7 @@ fun TrailMainScreen(
     // ViewModel State 들
     val recommendedPaths by viewModel.recommendedPaths.collectAsStateWithLifecycle()
     val myPaths by viewModel.myPaths.collectAsStateWithLifecycle()
+    val drafts by viewModel.drafts.collectAsStateWithLifecycle()
 
     val isSheetOpen by viewModel.isSheetOpen.collectAsStateWithLifecycle()
     val isPaused by viewModel.isPaused.collectAsStateWithLifecycle()
@@ -182,6 +187,10 @@ fun TrailMainScreen(
             Log.d("TrailMainScreen", "❌ 폴리라인 지도에서 제거")
         }
     }
+    // ⭐ Draft 목록 초기화
+    LaunchedEffect(Unit) {
+        viewModel.loadDrafts() // suspend 호출, drafts StateFlow 갱신
+    }
 
 // ⭐ 녹화 종료 시 초기화
     LaunchedEffect(isRecording) {
@@ -190,18 +199,6 @@ fun TrailMainScreen(
             pathCoords.clear()
 
             Log.d("TrailMainScreen", "🧹 녹화 중지 시 폴리라인, 마커, 좌표 초기화 완료")
-        } else {
-
-        }
-    }
-
-    LaunchedEffect(lifecycleState, isRecording, isPaused) {
-        if (isRecording && !isPaused && lifecycleState == Lifecycle.State.RESUMED) {
-            while (isRecording && !isPaused && lifecycleState == Lifecycle.State.RESUMED) {
-                delay(1000)
-                viewModel.updateRecordingTime(1)
-            }
-            Log.d("effectPauseStop", "타이머 자동 정지됨 (lifecycle or paused)")
         }
     }
 
@@ -209,21 +206,18 @@ fun TrailMainScreen(
         viewModel.getRecommendedPaths(Coord.DEFAULT, 10000f)
     }
 
-    LaunchedEffect(uiState) {
-        uiState.token?.let {
-            viewModel.getMyPaths(it)
-        }
+    LaunchedEffect(Unit, uiState) {
+        viewModel.getMyPaths(uiState.token)
+        Log.d("TAG-TrailMainScreen", "myPaths : $myPaths")
     }
 
     // --- 타이머 로직 (녹화 중일 때 시간 증가) ---
     LaunchedEffect(lifecycleState, isRecording, isPaused) {
-        if (isRecording && !isPaused && lifecycleState == Lifecycle.State.RESUMED) {
-            while (isRecording && !isPaused && lifecycleState == Lifecycle.State.RESUMED) {
-                delay(1000)
-                viewModel.updateRecordingTime(1)
-            }
-            Log.d("effectPauseStop", "타이머 자동 정지됨 (lifecycle or paused)")
+        while (isRecording && !isPaused && lifecycleState == Lifecycle.State.RESUMED) {
+            delay(1000)
+            viewModel.updateRecordingTime(1)
         }
+        Log.d("effectPauseStop", "타이머 자동 정지됨 (lifecycle or paused)")
     }
     // 🔴 effectPauseStop 적용  // 화면 Pause/Stop 시 MapView도 같이 pause/stop 호출
     lifecycle.EffectPauseStop {
@@ -331,10 +325,14 @@ fun TrailMainScreen(
         }
         // ✅ 마커 표시
         if (!isRecording) {
-            when (recommendedPaths) {
-                is AuthResult.Loading -> CircularProgressIndicator()
-                is AuthResult.Success -> {
-                    (recommendedPaths as AuthResult.Success<List<UserPath>>).resultData.forEach { path ->
+            when (val state = recommendedPaths) {
+                is ResponseUiState.Loading -> {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator()
+                    }
+                }
+                is ResponseUiState.Success -> {
+                    state.result.forEach { path ->
                         path.coord?.forEach {
                             val hBias = (it.longitude * 2) - 1f
                             val vBias = (it.latitude * 2) - 1f
@@ -350,12 +348,10 @@ fun TrailMainScreen(
 
                     }
                 }
-                is AuthResult.NetworkError -> Toast.makeText(
-                    context,
-                    (recommendedPaths as AuthResult.NetworkError).exception.message,
-                    Toast.LENGTH_SHORT
-                ).show()
-                else -> { }
+                is ResponseUiState.Error -> {
+                    Toast.makeText(context, state.message, Toast.LENGTH_SHORT).show()
+                }
+                is ResponseUiState.Idle -> {}
             }
         }
         // ✅ 하단 Bottom Sheet
@@ -368,42 +364,58 @@ fun TrailMainScreen(
                 animationSpec = tween(durationMillis = 0) // 0ms로 즉시 사라지도록
             )
         ) {
-            // ToDo : NetworkError, 경로 없음 -> 빈화면 혹은 오류 화면 출력
-            BottomSheetContent(
-                viewModel = viewModel,
-                activeTab = activeTab,
-                recommendedPaths = if (recommendedPaths is AuthResult.Success) (recommendedPaths as AuthResult.Success<List<UserPath>>).resultData else listOf(),
-                myPaths = if (myPaths is AuthResult.Success) (myPaths as AuthResult.Success<List<UserPath>>).resultData else listOf(),
-                isEditMode = isEditMode,
-                onSheetOpenToggle = { viewModel.updateIsSheetOpen(null) },
-                onStartRecording = {
-                    viewModel.updateIsFollowingPath(false)
-                    viewModel.updateIsRecording(true)
-                    viewModel.updateRecordingTime(0)
-                    viewModel.updateIsSheetOpen(false)
-                },
-                onTabChange = { viewModel.updateActiveTab(it) },
-                onPathClick = {
-                    viewModel.updateSelectedPath(it)
-                    navController.navigate(TrailNavigationRoute.TrailDetailTab)
-                },
-                onFollowClick = { path ->
-                    viewModel.updateIsFollowingPath(true)
-                    viewModel.updateIsRecording(true)
-                    viewModel.updateIsSheetOpen(false)
-                    Log.d("Tag-TrailMainScree", "Following path: ${path.name}")
-                },
-                onRegisterClick = {
-                    viewModel.updateIsSheetOpen(false)
-                    navController.navigate(TrailNavigationRoute.TrailCreateTab)
-                },
-                onEditModeToggle = { viewModel.updateIsEditMode() },
-                onModifyClick = {
-                    viewModel.updateSelectedPath(it)
-                    navController.navigate(TrailNavigationRoute.TrailCreateTab)
-                },
-                onDeleteClick = { viewModel.deletePath(uiState.token, it) }
-            )
+            val activeState = if (activeTab == WalkPathTab.RECOMMENDED) recommendedPaths else myPaths
+
+            when(activeState) {
+                is ResponseUiState.Loading -> {
+                    Box(modifier = Modifier.fillMaxWidth().height(300.dp), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator()
+                    }
+                }
+                is ResponseUiState.Error -> {
+                    Box(modifier = Modifier.fillMaxWidth().height(300.dp), contentAlignment = Alignment.Center) {
+                        Text(text = activeState.message)
+                    }
+                }
+                else -> { // Success or Idle
+                    BottomSheetContent(
+                        viewModel = viewModel,
+                        uiState = uiState,
+                        activeTab = activeTab,
+                        recommendedPaths = (recommendedPaths as? ResponseUiState.Success)?.result ?: emptyList(),
+                        myPaths = (myPaths as? ResponseUiState.Success)?.result ?: emptyList(),
+                        isEditMode = isEditMode,
+                        onSheetOpenToggle = { viewModel.updateIsSheetOpen(null) },
+                        onStartRecording = {
+                            viewModel.updateIsFollowingPath(false)
+                            viewModel.updateIsRecording(true)
+                            viewModel.updateRecordingTime(0)
+                            viewModel.updateIsSheetOpen(false)
+                        },
+                        onTabChange = { viewModel.updateActiveTab(it) },
+                        onPathClick = {
+                            viewModel.updateSelectedPath(it)
+                            navController.navigate(NestedNavigationRoute.TrailDetail(it.toPathParceler()))
+                        },
+                        onFollowClick = { path ->
+                            viewModel.updateIsFollowingPath(true)
+                            viewModel.updateIsRecording(true)
+                            viewModel.updateIsSheetOpen(false)
+                            Log.d("Tag-TrailMainScree", "Following path: ${path.pathName}")
+                        },
+                        onRegisterClick = {
+                            viewModel.updateIsSheetOpen(false)
+                            navController.navigate(TrailNavigationRoute.TrailCreateTab)
+                        },
+                        onEditModeToggle = { viewModel.updateIsEditMode() },
+                        onModifyClick = {
+                            viewModel.updateSelectedPath(it)
+                            navController.navigate(TrailNavigationRoute.TrailCreateTab)
+                        },
+                        onDeleteClick = { viewModel.deletePath(uiState.token, it) }
+                    )
+                }
+            }
         }
 
         // ✅ 시트 다시 열기 버튼
@@ -428,17 +440,28 @@ fun TrailMainScreen(
                 recordingTime = recordingTime,
                 onPauseToggle = { viewModel.updateIsPaused(null) },
                 onStopRecording = {
-                    viewModel.updateSelectedPath(UserPath.EMPTY)
+                    viewModel.updateSelectedPath(Path.EMPTY)
+                    // 현재 기록된 좌표(LatLng)를 도메인 모델의 Coord로 변환
+                    val recordedCoords = pathCoords.map { latLng -> Coord(latLng.latitude, latLng.longitude) }
+
+                    // 새로운 UserPath 객체를 생성하되, 기록된 좌표를 포함시킴
+                    val newPath = Path.EMPTY.copy(coord = recordedCoords)
+
+                    viewModel.saveDraftAsync(newPath)
+
+                    // ViewModel에 새로 생성된 경로를 업데이트
+                    viewModel.updateSelectedPath(newPath)
+
+                    // 녹화 관련 상태 초기화
                     viewModel.updateIsRecording(false)
                     viewModel.updateRecordingTime(0)
                     viewModel.updateIsFollowingPath(false)
                     viewModel.updateIsPaused(false)
-                    viewModel.clearAllMapObjects(currentNaverMap)
-
                     pathCoords.clear()
-
+                    viewModel.clearAllMapObjects(currentNaverMap)
                     currentNaverMap?.locationTrackingMode = LocationTrackingMode.Follow
 
+                    // 화면 이동
                     navController.navigate(TrailNavigationRoute.TrailCreateTab)
                 }
             )
@@ -461,6 +484,17 @@ fun TrailMainScreen(
                         markers = currentMarkers,
                         infoWindowStates = infoWindowStates
                     )
+                }
+
+                // Append the memo to the description in the ViewModel
+                viewModel.selectedPath.value?.let { currentPath ->
+                    val currentDescription = currentPath.pathComment ?: ""
+                    val newDescription = if (currentDescription.isEmpty()) {
+                        memoText
+                    } else {
+                        "$currentDescription\n\n$memoText"
+                    }
+                    viewModel.updateSelectedPath(currentPath.copy(pathComment = newDescription))
                 }
 
                 showMemoDialog = false
