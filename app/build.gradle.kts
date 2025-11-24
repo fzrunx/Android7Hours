@@ -15,7 +15,7 @@ android {
     defaultConfig {
 //        applicationId = "com.sesac.android7hours"
         applicationId = "com.naver.maps.map.demo" // 여기 부분이 네이버 등록된 패키지명이 같아야 함
-        minSdk = 24
+        minSdk = 26
         targetSdk = 36
         versionCode = 1
         versionName = "1.0"

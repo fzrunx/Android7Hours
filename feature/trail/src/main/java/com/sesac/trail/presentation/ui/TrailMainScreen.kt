@@ -74,11 +74,12 @@ fun TrailMainScreen(
     val context = LocalContext.current
     val activity = LocalActivity.current
     val lifecycle = LocalLifecycleOwner.current.lifecycle
-    var lastRawLocation by remember { mutableStateOf<android.location.Location?>(null) }
-    var lastSmoothedLocation by remember { mutableStateOf<android.location.Location?>(null) }
-    // 현재 화면의 라이프사이클 상태 (RESUMED, PAUSED 등)
+    // ✅ 수정: Location 상태 관리
+    var lastRawLocation by remember { mutableStateOf<Location?>(null) }
+    var lastSmoothedLocation by remember { mutableStateOf<Location?>(null) }
+
     val lifecycleState by lifecycle.currentStateAsState()
-    // ViewModel State 들
+    // ✅ 수정: ViewModel State 수집
     val recommendedPaths by viewModel.recommendedPaths.collectAsStateWithLifecycle()
     val myPaths by viewModel.myPaths.collectAsStateWithLifecycle()
     val drafts by viewModel.drafts.collectAsStateWithLifecycle()
@@ -86,14 +87,18 @@ fun TrailMainScreen(
     val isSheetOpen by viewModel.isSheetOpen.collectAsStateWithLifecycle()
     val isPaused by viewModel.isPaused.collectAsStateWithLifecycle()
     val isFollowingPath by viewModel.isFollowingPath.collectAsStateWithLifecycle()
-    val isRecording by viewModel.isRecoding.collectAsStateWithLifecycle()
+    val isRecording by viewModel.isRecording.collectAsStateWithLifecycle()
     val recordingTime by viewModel.recordingTime.collectAsStateWithLifecycle()
     val isEditMode by viewModel.isEditMode.collectAsStateWithLifecycle()
     val activeTab by viewModel.activeTab.collectAsStateWithLifecycle()
-    // GPS 기록 좌표
-    val pathCoords = remember { mutableStateListOf<LatLng>() }
+    // ✅ 수정: tempPathCoords는 이제 ViewModel에서 제공
+    val tempPathCoords by viewModel.tempPathCoords.collectAsStateWithLifecycle()
     val polylineFromVM by viewModel.polylineOverlay.collectAsStateWithLifecycle()
+
     var isTracking by remember { mutableStateOf(false) }
+
+
+
     // 네이버 지도 위치 소스
     val locationSource = remember {
         activity?.let { FusedLocationSource(it, 1000) }
@@ -152,7 +157,7 @@ fun TrailMainScreen(
                     val newPoint = LatLng(smoothLoc.latitude, smoothLoc.longitude)
 
                     // 🔥 3) 최소 이동거리 필터 (정지시 지그재그 방지)
-                    val lastPoint = pathCoords.lastOrNull()
+                    val lastPoint = tempPathCoords.lastOrNull()
                     if (lastPoint != null) {
                         val diff = lastPoint.distanceTo(newPoint)
                         if (diff < 5) {
@@ -162,7 +167,7 @@ fun TrailMainScreen(
                     }
 
                     // 🔥 4) 최종 추가
-                    pathCoords.add(newPoint)
+                    viewModel.addTempPoint(newPoint)
                     Log.d("GPS", "추가됨: ${newPoint.latitude}, ${newPoint.longitude}")
                 }
             }
@@ -171,13 +176,13 @@ fun TrailMainScreen(
 
 
     // ⭐⭐ 폴리라인 좌표 업데이트
-    LaunchedEffect(pathCoords.size, isRecording) {
+    LaunchedEffect(tempPathCoords.size, isRecording) {
         val currentPolyline = polylineFromVM
 
-        if (isRecording && pathCoords.size >= 2) {
-            currentPolyline?.coords = pathCoords.toList()
+        if (isRecording && tempPathCoords.size >= 2) {
+            currentPolyline?.coords = tempPathCoords.toList()
             currentPolyline?.map = currentNaverMap
-            Log.d("TrailMainScreen", "📊 폴리라인 업데이트: ${pathCoords.size}개 좌표")
+            Log.d("TrailMainScreen", "📊 폴리라인 업데이트:  ${tempPathCoords.size}개 좌표")
         } else {
             currentPolyline?.map = null
             Log.d("TrailMainScreen", "❌ 폴리라인 지도에서 제거")
@@ -191,17 +196,14 @@ fun TrailMainScreen(
 // ⭐ 녹화 종료 시 초기화
     LaunchedEffect(isRecording) {
         if (!isRecording) {
-            //  기록 좌표 초기화
-            pathCoords.clear()
-
             Log.d("TrailMainScreen", "🧹 녹화 중지 시 폴리라인, 마커, 좌표 초기화 완료")
         }
     }
-
+    // ✅ 추천 경로 불러오기
     LaunchedEffect(Unit) {
         viewModel.getRecommendedPaths(Coord.DEFAULT, 50000f)
     }
-
+    // ✅ 내 경로 불러오기
     LaunchedEffect(uiState) {
         uiState.token?.let {
             viewModel.getMyPaths(it)
@@ -320,35 +322,35 @@ fun TrailMainScreen(
                 )
             }
         }
-        // ✅ 마커 표시
-        if (!isRecording) {
-            when (recommendedPaths) {
-                is AuthResult.Loading -> CircularProgressIndicator()
-                is AuthResult.Success -> {
-                    (recommendedPaths as AuthResult.Success<List<UserPath>>).resultData.forEach { path ->
-                        path.coord?.forEach {
-                            val hBias = (it.longitude * 2) - 1f
-                            val vBias = (it.latitude * 2) - 1f
-
-//                            PathMarker(
-//                                modifier = Modifier.align(BiasAlignment(hBias.toFloat(), vBias.toFloat())),
-//                                onClick = {
-//                                    viewModel.updateSelectedPath(path)
-//                                    navController.navigate(TrailNavigationRoute.TrailDetailTab)
-//                                }
-//                            )
-                        }
-
-                    }
-                }
-                is AuthResult.NetworkError -> Toast.makeText(
-                    context,
-                    (recommendedPaths as AuthResult.NetworkError).exception.message,
-                    Toast.LENGTH_SHORT
-                ).show()
-                else -> { }
-            }
-        }
+//        // ✅ 마커 표시
+//        if (!isRecording) {
+//            when (recommendedPaths) {
+//                is AuthResult.Loading -> CircularProgressIndicator()
+//                is AuthResult.Success -> {
+//                    (recommendedPaths as AuthResult.Success<List<UserPath>>).resultData.forEach { path ->
+//                        path.coord?.forEach {
+//                            val hBias = (it.longitude * 2) - 1f
+//                            val vBias = (it.latitude * 2) - 1f
+//
+////                            PathMarker(
+////                                modifier = Modifier.align(BiasAlignment(hBias.toFloat(), vBias.toFloat())),
+////                                onClick = {
+////                                    viewModel.updateSelectedPath(path)
+////                                    navController.navigate(TrailNavigationRoute.TrailDetailTab)
+////                                }
+////                            )
+//                        }
+//
+//                    }
+//                }
+//                is AuthResult.NetworkError -> Toast.makeText(
+//                    context,
+//                    (recommendedPaths as AuthResult.NetworkError).exception.message,
+//                    Toast.LENGTH_SHORT
+//                ).show()
+//                else -> { }
+//            }
+//        }
         // ✅ 하단 Bottom Sheet
         AnimatedVisibility(
             visible = isSheetOpen && !isRecording,
@@ -420,12 +422,10 @@ fun TrailMainScreen(
                 onPauseToggle = { viewModel.updateIsPaused(null) },
                 onStopRecording = {
                     // 현재 기록된 좌표(LatLng)를 도메인 모델의 Coord로 변환
-                    val recordedCoords = pathCoords.map { latLng -> Coord(latLng.latitude, latLng.longitude) }
+                    val recordedCoords = tempPathCoords.map { latLng -> Coord(latLng.latitude, latLng.longitude) } // ← MODIFIED
 
                     // 새로운 UserPath 객체를 생성하되, 기록된 좌표를 포함시킴
                     val newPath = UserPath.EMPTY.copy(coord = recordedCoords)
-
-                    viewModel.saveDraftAsync(newPath)
 
                     // ViewModel에 새로 생성된 경로를 업데이트
                     viewModel.updateSelectedPath(newPath)
@@ -435,7 +435,7 @@ fun TrailMainScreen(
                     viewModel.updateRecordingTime(0)
                     viewModel.updateIsFollowingPath(false)
                     viewModel.updateIsPaused(false)
-                    pathCoords.clear()
+
                     viewModel.clearAllMapObjects(currentNaverMap)
                     currentNaverMap?.locationTrackingMode = LocationTrackingMode.Follow
 
@@ -480,7 +480,7 @@ fun TrailMainScreen(
         )
     }
 }
-
+// ✅ 스무딩 함수
 fun smooth(old: Location?, new: Location): Location {
     if (old == null) return new
 
