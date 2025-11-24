@@ -35,6 +35,7 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
@@ -75,7 +76,9 @@ fun TrailDetailScreen(
     viewModel: TrailViewModel = hiltViewModel<TrailViewModel>(),
     navController: NavController,
     selectedDetailPath: Path?,
-    onStartFollowing: (Path) -> Unit
+    onStartFollowing: (Path) -> Unit,
+    onEditClick: (Path) -> Unit,
+    onDeleteClick: (Path) -> Unit,
 ) {
     val context = LocalContext.current
     val selectedDetailPathState by viewModel.selectedPath.collectAsStateWithLifecycle()
@@ -105,6 +108,8 @@ fun TrailDetailScreen(
             Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
         }
 
+        val isMine = true
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -130,22 +135,43 @@ fun TrailDetailScreen(
                         fontWeight = FontWeight.Bold
                     )
                     Spacer(Modifier.height(paddingMicro))
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            Icons.Filled.Person,
-                            contentDescription = "Uploader",
-                            modifier = Modifier.size(16.dp),
-                            tint = GrayTabText
-                        )
-                        Spacer(Modifier.width(paddingMicro))
-                        Text(
-                            text = "@${selected.uploader}",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = GrayTabText
-                        )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                Icons.Filled.Person,
+                                contentDescription = "Uploader",
+                                modifier = Modifier.size(16.dp),
+                                tint = GrayTabText
+                            )
+                            Spacer(Modifier.width(paddingMicro))
+                            Text(
+                                text = "@${selected.uploader}",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = GrayTabText
+                            )
+                        }
+                        if (isMine) {
+                            Row {
+                                TextButton(
+                                    onClick = { onEditClick(selected) },
+                                    modifier = Modifier.height(32.dp)
+                                ) {
+                                    Text("수정", color = GrayTabText, fontSize = 14.sp)
+                                }
+                                TextButton(
+                                    onClick = { onDeleteClick(selected) },
+                                    modifier = Modifier.height(32.dp)
+                                ) {
+                                    Text("삭제", color = GrayTabText, fontSize = 14.sp)
+                                }
+                            }
+                        }
                     }
                 }
-
                 // Follow Button
                 Button(
                     onClick = { onStartFollowing(selected) },
@@ -242,7 +268,6 @@ fun TrailDetailScreen(
                 }
             }
         }
-
     }
 }
 
