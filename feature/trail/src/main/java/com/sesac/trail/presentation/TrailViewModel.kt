@@ -30,6 +30,7 @@ import com.sesac.domain.model.Comment
 import com.sesac.domain.model.Post
 import com.sesac.domain.result.ResponseUiState
 import com.sesac.domain.usecase.bookmark.BookmarkUseCase
+import com.sesac.domain.usecase.comment.CommentUseCases
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.catch
@@ -38,7 +39,8 @@ import kotlinx.coroutines.flow.update
 @HiltViewModel
 class TrailViewModel @Inject constructor(
     private val pathUseCase: PathUseCase,
-    private val bookmarkUseCase: BookmarkUseCase
+    private val bookmarkUseCase: BookmarkUseCase,
+    private val commentUseCases: CommentUseCases
 ): ViewModel() {
     private val _invalidToken = Channel<UiEvent>()
     val invalidToken = _invalidToken.receiveAsFlow()
@@ -512,20 +514,87 @@ class TrailViewModel @Inject constructor(
     // 📌 9. 댓글 관리
     // =================================================================
 
+    private val _commentsState = MutableStateFlow<ResponseUiState<List<Comment>>>(ResponseUiState.Idle)
+    val commentsState: StateFlow<ResponseUiState<List<Comment>>> = _commentsState
+
+    fun getComments(pathId: Int) {
+        viewModelScope.launch {
+            _commentsState.value = ResponseUiState.Loading
+            commentUseCases.getCommentsUseCase("paths", pathId)
+                .catch { e ->
+                    _commentsState.value = ResponseUiState.Error(e.message ?: "알 수 없는 오류가 발생했습니다.")
+                }
+                .collectLatest { result ->
+                    when (result) {
+                        is AuthResult.Success -> {
+                            _commentsState.value = ResponseUiState.Success("댓글을 불러왔습니다.", result.resultData)
+                        }
+                        is AuthResult.NetworkError -> {
+                            _commentsState.value = ResponseUiState.Error(result.exception.message ?: "네트워크 오류")
+                        }
+                        else -> {}
+                    }
+                }
+        }
+    }
+
+    fun createComment(token: String, pathId: Int, content: String) {
+        viewModelScope.launch {
+            commentUseCases.createCommentUseCase(token, "paths", pathId, content)
+                .collectLatest { result ->
+                    when (result) {
+                        is AuthResult.Success -> getComments(pathId) // Refresh comments list
+                        is AuthResult.NetworkError -> _commentsState.value =
+                            ResponseUiState.Error(result.exception.message ?: "네트워크 오류")
+
+                        else -> {}
+                    }
+                }
+        }
+    }
+
+    fun updateComment(token: String, pathId: Int, commentId: Int, content: String) {
+        viewModelScope.launch {
+            commentUseCases.updateCommentUseCase(token, "paths", pathId, commentId, content)
+                .collectLatest { result ->
+                    when (result) {
+                        is AuthResult.Success -> getComments(pathId) // Refresh comments list
+                        is AuthResult.NetworkError -> _commentsState.value =
+                            ResponseUiState.Error(result.exception.message ?: "네트워크 오류")
+                        else -> {}
+                    }
+                }
+        }
+    }
+
+    fun deleteComment(token: String, pathId: Int, commentId: Int) {
+        viewModelScope.launch {
+            commentUseCases.deleteCommentUseCase(token, "paths", pathId, commentId)
+                .collectLatest { result ->
+                    when (result) {
+                        is AuthResult.Success -> getComments(pathId) // Refresh comments list
+                        is AuthResult.NetworkError -> _commentsState.value =
+                            ResponseUiState.Error(result.exception.message ?: "네트워크 오류")
+
+                        else -> {}
+                    }
+                }
+        }
+    }
+
+    // ToDo 삭제, InfoDetailScreen build용
     // 댓글 상태
     private val _comments = MutableStateFlow<List<Comment>>(emptyList())
     val comments: StateFlow<List<Comment>> get() = _comments.asStateFlow()
-
     // 선택된 게시물
     var selectedPostForComments by mutableStateOf<Post?>(null)
         private set
-
     // 댓글 시트 열림 여부
     var isCommentsOpen by mutableStateOf(false)
         private set
-
     // 새 댓글 내용
     var newCommentContent by mutableStateOf("")
+
 
     fun handleOpenComments(path: Path) {
         // Create a synthetic Post object from the UserPath
@@ -548,7 +617,8 @@ class TrailViewModel @Inject constructor(
             author = "나", // TODO: Replace with actual user info
             authorImage = "https://picsum.photos/seed/me/200", // TODO: Replace with actual user profile
             timeAgo = "방금 전",
-            content = newCommentContent
+            content = newCommentContent,
+            authorId = -1,
         )
 
         // Update comments list
@@ -562,4 +632,5 @@ class TrailViewModel @Inject constructor(
         newCommentContent = ""
         return true
     }
+
 }

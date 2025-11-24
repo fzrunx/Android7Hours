@@ -1,6 +1,8 @@
 package com.sesac.data.source.api
 
 import com.sesac.data.dto.BookmarkResponseDTO
+import com.sesac.data.dto.CommentDTO
+import com.sesac.data.dto.CommentRequestDTO
 import com.sesac.data.dto.PathDTO
 import com.sesac.data.dto.PathCreateRequestDTO
 import com.sesac.data.dto.PathUpdateRequestDTO
@@ -56,5 +58,34 @@ interface PathApi {
     suspend fun deletePath(
         @Header("Authorization") token: String,
         @Path("id") id: Int
-    ): Unit
+    )
+
+    // ========== Comments ==========
+
+    @GET("paths/{id}/comments/")
+    suspend fun getComments(
+        @Path("id") pathId: Int
+    ): List<CommentDTO>
+
+    @POST("paths/{id}/comments/")
+    suspend fun createComment(
+        @Header("Authorization") token: String,
+        @Path("id") pathId: Int,
+        @Body request: CommentRequestDTO
+    ): CommentDTO
+
+    @PATCH("paths/{id}/comments/{commentId}/")
+    suspend fun updateComment(
+        @Header("Authorization") token: String,
+        @Path("id") pathId: Int,
+        @Path("commentId") commentId: Int,
+        @Body request: CommentRequestDTO
+    ): CommentDTO
+
+    @DELETE("paths/{id}/comments/{commentId}/")
+    suspend fun deleteComment(
+        @Header("Authorization") token: String,
+        @Path("id") pathId: Int,
+        @Path("commentId") commentId: Int,
+    )
 }

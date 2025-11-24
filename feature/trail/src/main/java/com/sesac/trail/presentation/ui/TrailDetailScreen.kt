@@ -2,7 +2,6 @@ package com.sesac.trail.presentation.ui
 
 import android.util.Log
 import android.widget.Toast
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Arrangement.spacedBy
 import androidx.compose.foundation.layout.Box
@@ -32,7 +31,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -44,7 +42,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -56,10 +53,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import coil3.compose.AsyncImage
 import com.sesac.common.ui.theme.GrayTabText
-import com.sesac.common.ui.theme.NoteBox
 import com.sesac.common.ui.theme.PaddingSection
 import com.sesac.common.ui.theme.PrimaryPurpleLight
-import com.sesac.common.ui.theme.Purple100
 import com.sesac.common.ui.theme.Purple600
 import com.sesac.common.ui.theme.White
 import com.sesac.common.ui.theme.paddingLarge
@@ -69,11 +64,11 @@ import com.sesac.domain.model.Path
 import com.sesac.domain.result.AuthUiState
 import com.sesac.domain.result.ResponseUiState
 import com.sesac.trail.presentation.TrailViewModel
+import com.sesac.common.component.CommonCommentSection
 import com.sesac.trail.presentation.component.TagFlow
 
 
 // --- Main Composable ---
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TrailDetailScreen(
     uiState: AuthUiState,
@@ -85,6 +80,7 @@ fun TrailDetailScreen(
     val context = LocalContext.current
     val selectedDetailPathState by viewModel.selectedPath.collectAsStateWithLifecycle()
     val bookmarkedPathsState by viewModel.bookmarkedPaths.collectAsStateWithLifecycle()
+    val commentsState by viewModel.commentsState.collectAsStateWithLifecycle()
 
     val isBookmarked by remember(bookmarkedPathsState, selectedDetailPathState) {
         derivedStateOf {
@@ -94,11 +90,12 @@ fun TrailDetailScreen(
         }
     }
 
-    LaunchedEffect(Unit) {
+    LaunchedEffect(selectedDetailPath) {
         selectedDetailPath?.let {
             viewModel.updateSelectedPath(it)
+            viewModel.getComments(it.id)
+            viewModel.getUserBookmarkedPaths(uiState.token)
         }
-        viewModel.getUserBookmarkedPaths(uiState.token)
     }
 
     selectedDetailPathState?.let { selected ->
@@ -223,25 +220,31 @@ fun TrailDetailScreen(
 
                 // Reviews
                 PathSection(title = "이용자 후기") {
-                    Column(verticalArrangement = Arrangement.spacedBy(paddingMicro)) {
-                        ReviewItem(
-                            userName = "산책러버",
-                            date = "2일 전",
-                            review = "강아지와 함께 산책하기 정말 좋았어요! 코스도 적당하고 경치가 아름답습니다 👍"
-                        )
-                        ReviewItem(
-                            userName = "햇살맘",
-                            date = "5일 전",
-                            review = "주말에 가족들과 다녀왔는데 아이들도 너무 좋아했어요. 추천합니다! "
-                        )
-                    }
+                    CommonCommentSection(
+                        commentsState = commentsState,
+                        currentUserId = uiState.id,
+                        onPostComment = { content ->
+                            uiState.token?.let { token ->
+                                viewModel.createComment(token, selected.id, content)
+                            } ?: Toast.makeText(context, "로그인이 필요합니다.", Toast.LENGTH_SHORT).show()
+                        },
+                        onUpdateComment = { commentId, content ->
+                            uiState.token?.let { token ->
+                                viewModel.updateComment(token, selected.id, commentId, content)
+                            } ?: Toast.makeText(context, "로그인이 필요합니다.", Toast.LENGTH_SHORT).show()
+                        },
+                        onDeleteComment = { commentId ->
+                            uiState.token?.let { token ->
+                                viewModel.deleteComment(token, selected.id, commentId)
+                            } ?: Toast.makeText(context, "로그인이 필요합니다.", Toast.LENGTH_SHORT).show()
+                        }
+                    )
                 }
             }
         }
 
     }
 }
-//}
 
 
 // --- Image Header ---
@@ -319,38 +322,6 @@ fun PathSection(title: String, content: @Composable ColumnScope.() -> Unit) {
 }
 
 
-// --- Review ---
-@Composable
-fun ReviewItem(userName: String, date: String, review: String) {
-    Card(
-        colors = CardDefaults.cardColors(containerColor = NoteBox),
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp)
-    ) {
-        Column(modifier = Modifier.padding(paddingSmall)) {
-            Row(
-                modifier = Modifier.padding(bottom = paddingMicro),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(32.dp)
-                        .clip(CircleShape)
-                        .background(Purple100),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text("👤")
-                }
-                Spacer(Modifier.width(paddingMicro))
-                Column {
-                    Text(userName, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
-                    Text(date, style = MaterialTheme.typography.bodySmall, color = GrayTabText)
-                }
-            }
-            Text(review, style = MaterialTheme.typography.bodyMedium, color = GrayTabText)
-        }
-    }
-}
 //@Preview(showBackground = true)
 //@Composable
 //fun WalkPathDetailPagePreview() {

@@ -1,10 +1,13 @@
 package com.sesac.data.source.api
 
 import com.sesac.data.dto.BookmarkToggleResponseDTO
+import com.sesac.data.dto.CommentDTO
+import com.sesac.data.dto.CommentRequestDTO
 import com.sesac.data.dto.LikeToggleResponseDTO
 import com.sesac.data.dto.PostDTO
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
+import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.Header
@@ -52,7 +55,7 @@ interface PostApi {
     suspend fun deletePost(
         @Header("Authorization") token: String,
         @Path("id") id: Int
-    ): Unit
+    )
 
     @POST("posts/{post_id}/like-toggle/")
     suspend fun toggleLike(
@@ -65,4 +68,33 @@ interface PostApi {
         @Header("Authorization") token: String,
         @Path("post_id") postId: Int
     ): BookmarkToggleResponseDTO
+
+    // ========== Comments ==========
+
+    @GET("posts/{id}/comments/")
+    suspend fun getComments(
+        @Path("id") postId: Int
+    ): List<CommentDTO>
+
+    @POST("posts/{id}/comments/")
+    suspend fun createComment(
+        @Header("Authorization") token: String,
+        @Path("id") postId: Int,
+        @Body request: CommentRequestDTO
+    ): CommentDTO
+
+    @PATCH("posts/{id}/comments/{commentId}/")
+    suspend fun updateComment(
+        @Header("Authorization") token: String,
+        @Path("id") postId: Int,
+        @Path("commentId") commentId: Int,
+        @Body request: CommentRequestDTO
+    ): CommentDTO
+
+    @DELETE("posts/{id}/comments/{commentId}/")
+    suspend fun deleteComment(
+        @Header("Authorization") token: String,
+        @Path("id") postId: Int,
+        @Path("commentId") commentId: Int,
+    )
 }

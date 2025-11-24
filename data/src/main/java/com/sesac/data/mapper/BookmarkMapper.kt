@@ -1,46 +1,42 @@
 package com.sesac.data.mapper
 
-import com.sesac.data.dto.BookmarkedObject
-import com.sesac.data.dto.BookmarkedPathDTO
+import com.sesac.common.utils.parseDate
 import com.sesac.data.dto.BookmarkDTO
 import com.sesac.data.dto.BookmarkResponseDTO
+import com.sesac.data.dto.BookmarkedObject
+import com.sesac.data.dto.BookmarkedPathDTO
 import com.sesac.data.dto.PostDTO
 import com.sesac.domain.model.Bookmark
 import com.sesac.domain.model.BookmarkResponse
 import com.sesac.domain.model.BookmarkedItem
 import com.sesac.domain.model.BookmarkedPath
-import com.sesac.domain.model.Post
-import java.text.ParseException
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
-import java.util.TimeZone
+import java.time.Instant
+import kotlin.time.Clock
 
 /**
  * Converts a [BookmarkDTO] to a [Bookmark] domain model.
  */
 fun BookmarkDTO.toDomain(): Bookmark {
-    fun parseDate(dateString: String): Date {
-        val formats = arrayOf(
-            "yyyy-MM-dd'T'HH:mm:ss.SSSSSS'Z'",
-            "yyyy-MM-dd'T'HH:mm:ss'Z'",
-            "yyyy-MM-dd'T'HH:mm:ss.SSSSSSXXX", // ISO 8601 with timezone offset
-            "yyyy-MM-dd'T'HH:mm:ssXXX"
-        )
-        for (format in formats) {
-            try {
-                val parser = SimpleDateFormat(format, Locale.US).apply {
-                    timeZone = TimeZone.getTimeZone("UTC")
-                }
-                return parser.parse(dateString) ?: continue
-            } catch (e: ParseException) {
-                // Try next format
-            }
-        }
-        // Return current date as a fallback if parsing fails
-        return Date()
-    }
-
+//    fun parseDate(dateString: String): Date {
+//        val formats = arrayOf(
+//            "yyyy-MM-dd'T'HH:mm:ss.SSSSSS'Z'",
+//            "yyyy-MM-dd'T'HH:mm:ss'Z'",
+//            "yyyy-MM-dd'T'HH:mm:ss.SSSSSSXXX", // ISO 8601 with timezone offset
+//            "yyyy-MM-dd'T'HH:mm:ssXXX"
+//        )
+//        for (format in formats) {
+//            try {
+//                val parser = SimpleDateFormat(format, Locale.US).apply {
+//                    timeZone = TimeZone.getTimeZone("UTC")
+//                }
+//                return parser.parse(dateString) ?: continue
+//            } catch (e: ParseException) {
+//                // Try next format
+//            }
+//        }
+//        // Return current date as a fallback if parsing fails
+//        return Date()
+//    }
     return Bookmark(
         id = this.id,
         createdAt = parseDate(this.createdAt),

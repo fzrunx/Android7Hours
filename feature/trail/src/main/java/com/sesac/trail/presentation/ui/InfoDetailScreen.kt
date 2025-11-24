@@ -405,7 +405,8 @@ fun InfoDetailScreenPreview() {
             author = "고양이집사",
             timeAgo = "3시간 전",
             content = "선생님이 정말 친절하세요!",
-            authorImage = ""
+            authorImage = "",
+            authorId = -1,
         )
     )
 
