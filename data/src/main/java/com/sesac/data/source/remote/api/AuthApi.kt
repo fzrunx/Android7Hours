@@ -1,4 +1,4 @@
-package com.sesac.data.source.api
+package com.sesac.data.source.remote.api
 
 import com.sesac.data.dto.AuthDTO
 import com.sesac.data.dto.KakaoLoginRequestDTO

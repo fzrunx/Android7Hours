@@ -3,11 +3,11 @@ package com.sesac.data.di
 import com.sesac.data.dto.BookmarkedObject
 import com.sesac.data.dto.BookmarkedPathDTO
 import com.sesac.data.dto.PostDTO
-import com.sesac.data.source.api.AuthApi
-import com.sesac.data.source.api.BookmarkApi
-import com.sesac.data.source.api.PathApi
-import com.sesac.data.source.api.PetsApi
-import com.sesac.data.source.api.PostApi
+import com.sesac.data.source.remote.api.AuthApi
+import com.sesac.data.source.remote.api.BookmarkApi
+import com.sesac.data.source.remote.api.PathApi
+import com.sesac.data.source.remote.api.PetsApi
+import com.sesac.data.source.remote.api.PostApi
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.adapters.PolymorphicJsonAdapterFactory
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory

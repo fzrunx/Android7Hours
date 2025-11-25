@@ -1,9 +1,12 @@
 package com.sesac.data.mapper
 
+import com.naver.maps.geometry.LatLng
 import com.sesac.data.dto.PathDTO
 import com.sesac.data.dto.CoordRequestDTO
 import com.sesac.data.dto.PathCreateRequestDTO
 import com.sesac.data.dto.PathUpdateRequestDTO
+import com.sesac.data.dto.PathUploadDto
+import com.sesac.data.util.PolylineEncoder
 import com.sesac.domain.model.Path
 
 fun PathDTO.toPath() = Path(
@@ -61,6 +64,22 @@ fun Path.toPathUpdateRequestDTO(): PathUpdateRequestDTO {
         duration = this.duration,
         thumbnail = this.thumbnail,
         isPrivate = this.isPrivate,
+    )
+}
+fun Path.toUploadDto(): PathUploadDto {
+    return PathUploadDto(
+        pathName = this.pathName,
+        distance = this.distance,
+        duration = this.duration,
+
+        // ✅ 좌표 10,000개를 20KB 문자열로 압축
+        polyline = PolylineEncoder.encode(
+            this.coord?.map { LatLng(it.latitude, it.longitude) } ?: emptyList()
+        ),
+
+        markers = this.markers?.map {
+            listOf(it.latitude, it.longitude, it.memo ?: "")
+        }
     )
 }
 

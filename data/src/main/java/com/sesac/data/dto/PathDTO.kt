@@ -58,6 +58,18 @@ data class PathUpdateRequestDTO(
     val isPrivate: Boolean = false,
 )
 
+@JsonClass(generateAdapter = true)
+data class PathUploadDto(
+    @Json(name = "path_name") val pathName: String,
+    @Json(name = "distance") val distance: Float,
+    @Json(name = "duration") val duration: Int,
+
+    // ✅ 좌표는 인코딩된 문자열로 전송 (95% 압축!)
+    @Json(name = "polyline") val polyline: String,
+
+    // 마커는 개수가 적으므로 일반 배열
+    @Json(name = "markers") val markers: List<List<Any>>?
+)
 
 @JsonClass(generateAdapter = true)
 data class CoordDTO(

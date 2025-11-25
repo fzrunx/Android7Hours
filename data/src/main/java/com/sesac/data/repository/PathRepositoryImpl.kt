@@ -3,6 +3,7 @@ package com.sesac.data.repository
 import android.util.Log
 import com.sesac.data.mapper.toBookmarkResponse
 import com.sesac.data.dao.PathDao
+import com.sesac.data.dto.PathUploadDto
 import com.sesac.data.mapper.toMyRecord
 import com.sesac.data.mapper.toPathCreateRequestDTO
 import com.sesac.data.mapper.toPathEntity
@@ -10,9 +11,9 @@ import com.sesac.data.mapper.toPathUpdateRequestDTO
 import com.sesac.data.mapper.toPath
 import com.sesac.data.mapper.toPathList
 import com.sesac.data.mapper.toUserPath
-import com.sesac.data.source.api.PathApi
+import com.sesac.data.source.remote.api.PathApi
 import com.sesac.data.type.DraftStatus
-import com.sesac.data.source.local.datasource.MockTrail
+import com.sesac.data.util.PolylineEncoder
 import com.sesac.domain.model.BookmarkResponse
 import com.sesac.domain.model.Coord
 import com.sesac.domain.model.MyRecord
@@ -24,6 +25,7 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
+import com.naver.maps.geometry.LatLng
 
 class PathRepositoryImpl @Inject constructor(
     private val pathApi: PathApi,
@@ -124,6 +126,29 @@ class PathRepositoryImpl @Inject constructor(
     override suspend fun clearAllDrafts(): Flow<Boolean> = flow {
         pathDao.clearAllDrafts()
         emit(true)
+    }
+
+    override suspend fun uploadPath(path: Path): Flow<AuthResult<Unit>> = flow {
+        emit(AuthResult.Loading)
+
+        val polyline = PolylineEncoder.encode(
+            path.coord?.map { LatLng(it.latitude, it.longitude) } ?: emptyList()
+        )
+
+        val markers = path.markers?.map { listOf(it.latitude, it.longitude, it.memo) }
+
+        val dto = PathUploadDto(
+            pathName = path.pathName,
+            distance = path.distance,
+            duration = path.duration,
+            polyline = polyline,
+            markers = markers
+        )
+
+        pathApi.uploadPath(dto)
+        emit(AuthResult.Success(Unit))
+    }.catch {
+        emit(AuthResult.NetworkError(it))
     }
 
 }

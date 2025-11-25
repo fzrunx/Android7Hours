@@ -1,6 +1,6 @@
 package com.sesac.data.di
 
-import com.sesac.data.source.api.KakaoUserApiService
+import com.sesac.data.source.remote.api.KakaoUserApiService
 import com.squareup.moshi.Moshi
 import dagger.Module
 import dagger.Provides

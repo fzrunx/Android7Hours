@@ -2,7 +2,7 @@ package com.sesac.data.repository
 
 import android.util.Log
 import com.sesac.data.mapper.toDomain
-import com.sesac.data.source.api.BookmarkApi
+import com.sesac.data.source.remote.api.BookmarkApi
 import com.sesac.domain.model.Bookmark
 import com.sesac.domain.repository.BookmarkRepository
 import com.sesac.domain.result.AuthResult

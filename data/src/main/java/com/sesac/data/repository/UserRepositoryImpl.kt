@@ -3,7 +3,7 @@ package com.sesac.data.repository
 import android.util.Log
 import com.sesac.data.mapper.toAuthDTO
 import com.sesac.data.mapper.toUserList
-import com.sesac.data.source.api.AuthApi
+import com.sesac.data.source.remote.api.AuthApi
 import com.sesac.domain.model.Auth
 import com.sesac.domain.repository.UserRepository
 import com.sesac.domain.result.AuthResult

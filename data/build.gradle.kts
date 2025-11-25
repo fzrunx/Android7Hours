@@ -65,4 +65,7 @@ dependencies {
 
     ksp(libs.androidx.room.compiler)
     ksp(libs.hilt.compiler)
+    implementation("com.google.maps:google-maps-services:2.2.0")
+    // --- Map SDK ---
+    implementation(libs.map.sdk)
 }

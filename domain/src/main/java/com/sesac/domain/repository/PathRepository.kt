@@ -22,4 +22,6 @@ interface PathRepository {
     suspend fun getAllDrafts(): Flow<List<Path>>                 // 저장된 Draft 불러오기
     suspend fun deleteDraft(draft: Path): Flow<Boolean>         // Draft 삭제
     suspend fun clearAllDrafts(): Flow<Boolean>
+    // server 관련 추가
+    suspend fun uploadPath(path: Path): Flow<AuthResult<Unit>>
 }

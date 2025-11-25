@@ -1,4 +1,4 @@
-package com.sesac.data.source.api
+package com.sesac.data.source.remote.api
 
 import com.sesac.data.dto.BookmarkResponseDTO
 import com.sesac.data.dto.CommentDTO
@@ -6,6 +6,7 @@ import com.sesac.data.dto.CommentRequestDTO
 import com.sesac.data.dto.PathDTO
 import com.sesac.data.dto.PathCreateRequestDTO
 import com.sesac.data.dto.PathUpdateRequestDTO
+import com.sesac.data.dto.PathUploadDto
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
@@ -88,4 +89,11 @@ interface PathApi {
         @Path("id") pathId: Int,
         @Path("commentId") commentId: Int,
     )
+
+    // ========== server ==========
+
+    @POST("path/upload")
+    suspend fun uploadPath(
+        @Body request: PathUploadDto
+    ): PathUploadDto
 }
