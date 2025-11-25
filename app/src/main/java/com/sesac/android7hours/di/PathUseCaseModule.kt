@@ -9,6 +9,7 @@ import com.sesac.domain.usecase.path.GetAllDraftsUseCase
 import com.sesac.domain.usecase.path.GetAllMyRecordUseCase
 import com.sesac.domain.usecase.path.GetAllRecommendedPathsUseCase
 import com.sesac.domain.usecase.path.GetMyPaths
+import com.sesac.domain.usecase.path.GetPathById
 import com.sesac.domain.usecase.path.PathUseCase
 import com.sesac.domain.usecase.path.SaveDraftUseCase
 import com.sesac.domain.usecase.path.UpdatePathUseCase
@@ -26,6 +27,7 @@ object PathUseCaseModule {
     fun providePathUseCase(repository: PathRepository): PathUseCase {
         return PathUseCase(
             getAllMyRecordUseCase = GetAllMyRecordUseCase(repository),
+            getPathById = GetPathById(repository),
             createPathUseCase = CreatePathUseCase(repository),
             updatePathUseCase = UpdatePathUseCase(repository),
             deletePathUseCase = DeletePathUseCase(repository),

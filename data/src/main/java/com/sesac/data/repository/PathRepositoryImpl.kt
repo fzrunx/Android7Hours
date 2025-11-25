@@ -43,6 +43,15 @@ class PathRepositoryImpl @Inject constructor(
         emit(AuthResult.NetworkError(it))
     }
 
+    override suspend fun getPathById(id: Int): Flow<AuthResult<Path>> = flow {
+        emit(AuthResult.Loading)
+        val result = pathApi.getPathById(id).toPath()
+        emit(AuthResult.Success(result))
+    }.catch {
+        Log.d("TAG-TrailRepository", "GET Path error : $it")
+        emit(AuthResult.NetworkError(it))
+    }
+
     override suspend fun getMyPaths(token: String): Flow<AuthResult<List<Path>>> = flow {
         emit(AuthResult.Loading)
         val result = pathApi.getMyPaths("Bearer $token").toPathList()

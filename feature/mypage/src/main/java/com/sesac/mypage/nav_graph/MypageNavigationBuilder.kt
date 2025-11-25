@@ -4,6 +4,7 @@ import androidx.compose.runtime.snapshots.SnapshotStateMap
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
+import com.sesac.common.model.PathParceler
 import com.sesac.domain.result.AuthUiState
 import com.sesac.mypage.presentation.ui.AddPetScreen
 import com.sesac.mypage.presentation.ui.MypageDetailScreen
@@ -15,6 +16,7 @@ import com.sesac.mypage.presentation.ui.MypageSettingScreen
 fun NavGraphBuilder.mypageRoute(
     navController: NavController,
     nav2LoginScreen: () -> Unit,
+    onNavigateToPathDetail: (PathParceler) -> Unit,
     uiState: AuthUiState,
     permissionState: SnapshotStateMap<String, Boolean>,
     ) {
@@ -29,7 +31,7 @@ fun NavGraphBuilder.mypageRoute(
         MypageManageScreen()
     }
     composable<MypageNavigationRoute.FavoriteTab> {
-        MypageFavoriteScreen(uiStatus = uiState)
+        MypageFavoriteScreen(uiStatus = uiState, onNavigateToPathDetail = onNavigateToPathDetail)
     }
     composable<MypageNavigationRoute.SettingTab> {
         MypageSettingScreen(permissionStates = permissionState)

@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.Flow
 
 interface PathRepository {
     suspend fun getAllRecommendedPaths(coord: Coord?, radius: Float?): Flow<AuthResult<List<Path>>>
+    suspend fun getPathById(id: Int): Flow<AuthResult<Path>>
     suspend fun getMyPaths(token: String): Flow<AuthResult<List<Path>>>
     suspend fun createPath(token: String, path: Path): Flow<AuthResult<Path>>
     suspend fun updatePath(token: String, id: Int, updatedPath: Path): Flow<AuthResult<Path>>

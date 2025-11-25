@@ -78,6 +78,7 @@ fun AppNavHost(
         mypageRoute(
             navController = navController,
             nav2LoginScreen = nav2LoginScreen,
+            onNavigateToPathDetail = onNavigateToPathDetail,
             permissionState = permissionState,
             uiState = uiState,
         )

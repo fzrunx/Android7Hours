@@ -31,7 +31,7 @@ interface PathApi {
 
     @GET("paths/{id}/")
     suspend fun getPathById(
-        @Header("Authorization") token: String,
+//        @Header("Authorization") token: String,
         @Path("id") id: Int
     ): PathDTO
 

@@ -1,7 +1,6 @@
 package com.sesac.mypage.presentation
 
 import android.util.Log
-import androidx.compose.ui.graphics.Path
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.sesac.domain.model.BookmarkType
@@ -11,6 +10,7 @@ import com.sesac.domain.model.FavoriteCommunityPost
 import com.sesac.domain.model.FavoriteWalkPath
 import com.sesac.domain.model.MypageSchedule
 import com.sesac.domain.model.MypageStat
+import com.sesac.domain.model.Path
 import com.sesac.domain.usecase.mypage.MypageUseCase
 import com.sesac.domain.model.User
 import com.sesac.domain.model.Pet
@@ -19,6 +19,7 @@ import com.sesac.domain.result.JoinUiState
 import com.sesac.domain.result.ResponseUiState
 import com.sesac.domain.usecase.auth.AuthUseCase
 import com.sesac.domain.usecase.bookmark.BookmarkUseCase
+import com.sesac.domain.usecase.path.PathUseCase
 import com.sesac.domain.usecase.pet.PetUseCase
 import com.sesac.domain.usecase.session.SessionUseCase
 import com.sesac.domain.usecase.user.UserUseCase
@@ -40,9 +41,10 @@ class MypageViewModel @Inject constructor(
     private val userUseCase: UserUseCase,
     private val sessionUseCase: SessionUseCase,
     private val bookmarkUseCase: BookmarkUseCase,
+    private val petUseCase: PetUseCase,
+    private val pathUseCase: PathUseCase,
 
     private val mypageUseCase: MypageUseCase,
-    private val petUseCase: PetUseCase,
 ) : ViewModel() {
     val tabLabels = listOf("산책로", "커뮤니티")
     private val _activeFilter = MutableStateFlow<String>(tabLabels[0])
@@ -59,6 +61,9 @@ class MypageViewModel @Inject constructor(
 //    private val _bookmarkedPaths = MutableStateFlow<AuthResult<List<BookmarkedPath?>>>(AuthResult.NoConstructor)
     private val _bookmarkedPaths = MutableStateFlow<ResponseUiState<List<BookmarkedPath>>>(ResponseUiState.Idle)
     val bookmarkedPaths = _bookmarkedPaths.asStateFlow()
+    private val _selectedPath = MutableStateFlow<ResponseUiState<Path>>(ResponseUiState.Idle)
+    val selectedPath = _selectedPath.asStateFlow()
+
 
 
     // MypageFavoriteScreen
@@ -94,6 +99,30 @@ class MypageViewModel @Inject constructor(
                 }
             }
         }
+    }
+
+    fun getPathInfo(pathId: Int) {
+        viewModelScope.launch {
+            _selectedPath.value = ResponseUiState.Loading // 시작 시 Loading 상태로 변경
+            pathUseCase.getPathById(pathId)
+                .catch { e ->
+                    _selectedPath.value = ResponseUiState.Error(e.message ?: "알 수 없는 오류가 발생했습니다.")
+                }
+                .collectLatest { path ->
+                    when(path) {
+                        is AuthResult.Success -> {
+                            val selectedPath = path.resultData
+                            _selectedPath.value = ResponseUiState.Success("포스트 불러오기 성공", selectedPath)
+                        }
+                        is AuthResult.NetworkError -> _selectedPath.value = ResponseUiState.Error(path.exception.message ?: "unknown")
+                        else -> {} // AuthResult.Loading은 이미 처리했으므로 생략
+                    }
+                }
+        }
+    }
+
+    fun resetSelectedPathState() {
+        _selectedPath.value = ResponseUiState.Idle
     }
 
     fun getAllUserPets(token: String) {
