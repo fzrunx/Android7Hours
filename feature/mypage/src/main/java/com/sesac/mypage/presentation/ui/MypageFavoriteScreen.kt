@@ -38,7 +38,7 @@ fun MypageFavoriteScreen(
     val bookmarkedPaths by viewModel.bookmarkedPaths.collectAsStateWithLifecycle()
     val favoritePosts by viewModel.favoritePosts.collectAsStateWithLifecycle()
 
-    LaunchedEffect(Unit) {
+    LaunchedEffect(uiStatus) {
         viewModel.getUserBookmarkedPaths(uiStatus.token)
         viewModel.getFavoriteCommunityPost()
     }

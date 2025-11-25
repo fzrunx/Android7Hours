@@ -16,6 +16,7 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -38,6 +39,8 @@ import com.sesac.common.ui.theme.paddingLarge
 import com.sesac.common.ui.theme.paddingSmall
 import com.sesac.domain.result.AuthUiState
 import com.sesac.domain.model.MypageMenuItem
+import com.sesac.domain.result.ResponseUiState
+import com.sesac.mypage.model.MyPathStats
 import com.sesac.mypage.nav_graph.MypageNavigationRoute
 import com.sesac.mypage.presentation.MypageViewModel
 
@@ -60,7 +63,9 @@ fun MypageMainScreen(
     Log.d("TAG-MypageMainScreen", "user : $uiState")
 
     LaunchedEffect(uiState) {
-        if (!uiState.isLoggedIn){
+        if (uiState.isLoggedIn){
+            viewModel.getStats()
+        } else {
             nav2LoginScreen()
         }
     }
@@ -80,7 +85,12 @@ fun MypageMainScreen(
         }
 
         item {
-            StatsSectionView(stats = stats)
+            when (stats) {
+                is ResponseUiState.Loading -> CircularProgressIndicator()
+                is ResponseUiState.Success -> StatsSectionView(stats = (stats as ResponseUiState.Success<List<MyPathStats>>).result)
+                is ResponseUiState.Error -> Text((stats as ResponseUiState.Error).message)
+                else -> {}
+            }
         }
 
         item {

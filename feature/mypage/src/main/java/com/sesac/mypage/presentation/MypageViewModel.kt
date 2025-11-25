@@ -22,12 +22,15 @@ import com.sesac.domain.usecase.bookmark.BookmarkUseCase
 import com.sesac.domain.usecase.pet.PetUseCase
 import com.sesac.domain.usecase.session.SessionUseCase
 import com.sesac.domain.usecase.user.UserUseCase
+import com.sesac.mypage.model.MyPathStats
+import com.sesac.mypage.utils.getMyPathStatsUtils
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.first
 import org.threeten.bp.LocalDate
 import javax.inject.Inject
 
@@ -45,7 +48,7 @@ class MypageViewModel @Inject constructor(
     private val _activeFilter = MutableStateFlow<String>(tabLabels[0])
     val activeFilter get() = _activeFilter.asStateFlow()
     // MypageMainScreen
-    private val _stats = MutableStateFlow<List<MypageStat>>(emptyList())
+    private val _stats = MutableStateFlow<ResponseUiState<List<MyPathStats>>>(ResponseUiState.Idle)
     val stats = _stats.asStateFlow()
     // MypageDetailScreen
     private val _userPets = MutableStateFlow<List<Pet>>(emptyList())
@@ -67,21 +70,21 @@ class MypageViewModel @Inject constructor(
     private val _schedules = MutableStateFlow<List<MypageSchedule>>(emptyList())
     val schedules get() = _schedules.asStateFlow()
 
-    init {
-        viewModelScope.launch {
-            getStats()
-        }
-    }
+//    init {
+//        viewModelScope.launch {
+//            getStats()
+//        }
+//    }
 
     fun onFilterChange(filter: String) {
         _activeFilter.value = filter
     }
 
-    fun getStats() {
-        viewModelScope.launch {
-            mypageUseCase.getMypageStatsUseCase().collectLatest { _stats.value = it }
-        }
-    }
+//    fun getStats() {
+//        viewModelScope.launch {
+//            mypageUseCase.getMypageStatsUseCase().collectLatest { _stats.value = it }
+//        }
+//    }
 
     fun getUserPets(userId: Int) {
         viewModelScope.launch {
@@ -153,6 +156,41 @@ class MypageViewModel @Inject constructor(
                         }
                         else -> {
                             // Other AuthResult states are not handled here.
+                        }
+                    }
+                }
+        }
+    }
+
+    /**
+     * 북마크된 산책로 목록을 가져와 통계를 계산하고 UI 상태를 업데이트합니다.
+     */
+    fun getStats() {
+        viewModelScope.launch {
+            _stats.value = ResponseUiState.Loading
+            val token = sessionUseCase.getAccessToken().first()
+            if (token == null) {
+                _stats.value = ResponseUiState.Error("로그인이 필요합니다.")
+                return@launch
+            }
+
+            bookmarkUseCase.getMyBookmarksUseCase(token)
+                .catch { e ->
+                    _stats.value = ResponseUiState.Error(e.message ?: "알 수 없는 오류가 발생했습니다.")
+                }
+                .collectLatest { bookmarksResult ->
+                    when (bookmarksResult) {
+                        is AuthResult.Success -> {
+                            val pathList = bookmarksResult.resultData.mapNotNull { it.bookmarkedItem as? BookmarkedPath }
+                            val myPathStats = getMyPathStatsUtils(pathList)
+                            _stats.value = ResponseUiState.Success("마이페이지 스탯을 불러왔습니다", myPathStats)
+                        }
+
+                        is AuthResult.NetworkError -> {
+                            _stats.value = ResponseUiState.Error(bookmarksResult.exception.message ?: "unknown")
+                        }
+                        else -> {
+                            _stats.value = ResponseUiState.Error("데이터를 불러오는데 실패했습니다.")
                         }
                     }
                 }

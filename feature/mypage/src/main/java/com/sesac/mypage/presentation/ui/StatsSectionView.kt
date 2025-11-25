@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -24,25 +25,30 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow // Add this import
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle // Add this import
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import com.sesac.common.ui.theme.Android7HoursTheme
 import com.sesac.common.ui.theme.StatBlue
 import com.sesac.common.ui.theme.StatGreen
 import com.sesac.common.ui.theme.StatPurple
+import com.sesac.common.ui.theme.White
 import com.sesac.common.ui.theme.elevationSmall
 import com.sesac.common.ui.theme.iconSizeLarge
 import com.sesac.common.ui.theme.paddingLarge
 import com.sesac.common.ui.theme.paddingMedium
 import com.sesac.common.ui.theme.paddingMicro
 import com.sesac.common.ui.theme.paddingSmall
-import com.sesac.domain.model.MypageStat
+import com.sesac.mypage.model.MyPathStats
 import com.sesac.common.R as cR
 
 @Composable
-fun StatsSectionView(stats: List<MypageStat>) {
+fun StatsSectionView(stats: List<MyPathStats>) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -69,44 +75,34 @@ fun StatsSectionView(stats: List<MypageStat>) {
 }
 
 @Composable
-fun StatCard(item: MypageStat, modifier: Modifier = Modifier) {
-    val icon = when (item.iconName) {
-        "LocationOn" -> Icons.Default.LocationOn
-        "Schedule" -> Icons.Default.Schedule
-        "CalendarToday" -> Icons.Default.CalendarToday
-        else -> Icons.Default.LocationOn
-    }
-    val brush = when (item.colorName) {
-        "Purple" -> StatPurple
-        "Blue" -> StatBlue
-        "Green" -> StatGreen
-        else -> StatPurple
-    }
-
+fun StatCard(item: MyPathStats, modifier: Modifier = Modifier) {
     Card(
         modifier = modifier
             .padding(horizontal = paddingMicro)
-            .fillMaxHeight(),
+//            .fillMaxHeight(),
+            .height(125.dp),
         shape = MaterialTheme.shapes.medium,
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = White),
         elevation = CardDefaults.cardElevation(defaultElevation = elevationSmall)
     ) {
         Column(
-            modifier = Modifier.fillMaxWidth()
-            .padding(vertical = paddingMedium),
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(vertical = paddingMedium),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Box(
                 modifier = Modifier
                     .size(iconSizeLarge)
+                    .shadow(elevation = 4.dp, shape = MaterialTheme.shapes.medium) // Shadow added here
                     .clip(MaterialTheme.shapes.medium)
-                    .background(brush),
+                    .background(item.color as Color),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
-                    imageVector = icon,
+                    imageVector = item.icon,
                     contentDescription = item.label,
-                    tint = Color.White
+                    tint = White
                 )
             }
             Spacer(modifier = Modifier.height(paddingSmall))
@@ -116,8 +112,10 @@ fun StatCard(item: MypageStat, modifier: Modifier = Modifier) {
             )
             Text(
                 text = item.value,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
+                style = MaterialTheme.typography.titleMedium.copy(
+                    fontWeight = FontWeight.Bold,
+                    fontFeatureSettings = "tnum" // Added for consistent number spacing
+                )
             )
         }
     }
@@ -127,9 +125,9 @@ fun StatCard(item: MypageStat, modifier: Modifier = Modifier) {
 @Composable
 fun StatsSectionPreview() {
     val previewStats = listOf(
-        MypageStat("LocationOn", "산책 거리", "42.5km", "Purple"),
-        MypageStat("Schedule", "산책 시간", "12.5시간", "Blue"),
-        MypageStat("CalendarToday", "산책 횟수", "28회", "Green")
+        MyPathStats(Icons.Default.LocationOn, "산책 거리", "42.5km", StatPurple),
+        MyPathStats(Icons.Default.Schedule, "산책 시간", "12.5시간", StatBlue),
+        MyPathStats(Icons.Default.CalendarToday, "산책 횟수", "28회", StatGreen),
     )
     Android7HoursTheme {
         StatsSectionView(
