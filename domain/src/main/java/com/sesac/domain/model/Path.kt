@@ -13,7 +13,7 @@ data class RecommendedPath(
 )
 
 data class Path(
-    val id: Int,
+    val id: Int = -1,
     val uploader: String,
     val pathName: String,
     val pathComment: String? = null,

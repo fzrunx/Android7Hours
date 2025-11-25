@@ -94,9 +94,9 @@ fun TrailDetailScreen(
     }
 
     LaunchedEffect(selectedDetailPath) {
-        selectedDetailPath?.let {
-            viewModel.updateSelectedPath(it)
-            viewModel.getComments(it.id)
+        selectedDetailPath?.let { selected ->
+            viewModel.updateSelectedPath(selected)
+            viewModel.getComments(selected.id)
             viewModel.getUserBookmarkedPaths(uiState.token)
         }
     }
@@ -107,8 +107,6 @@ fun TrailDetailScreen(
             val message = if (isBookmarked) "즐겨찾기에서 제거합니다." else "즐겨찾기에 추가합니다."
             Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
         }
-
-        val isMine = true
 
         Column(
             modifier = Modifier
@@ -154,20 +152,18 @@ fun TrailDetailScreen(
                                 color = GrayTabText
                             )
                         }
-                        if (isMine) {
-                            Row {
-                                TextButton(
-                                    onClick = { onEditClick(selected) },
-                                    modifier = Modifier.height(32.dp)
-                                ) {
-                                    Text("수정", color = GrayTabText, fontSize = 14.sp)
-                                }
-                                TextButton(
-                                    onClick = { onDeleteClick(selected) },
-                                    modifier = Modifier.height(32.dp)
-                                ) {
-                                    Text("삭제", color = GrayTabText, fontSize = 14.sp)
-                                }
+                        Row {
+                            TextButton(
+                                onClick = { onEditClick(selected) },
+                                modifier = Modifier.height(32.dp)
+                            ) {
+                                Text("수정", color = GrayTabText, fontSize = 14.sp)
+                            }
+                            TextButton(
+                                onClick = { onDeleteClick(selected) },
+                                modifier = Modifier.height(32.dp)
+                            ) {
+                                Text("삭제", color = GrayTabText, fontSize = 14.sp)
                             }
                         }
                     }

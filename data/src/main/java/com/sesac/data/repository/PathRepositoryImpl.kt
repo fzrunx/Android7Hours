@@ -39,7 +39,7 @@ class PathRepositoryImpl @Inject constructor(
         ).map { it.toPath() }
         emit(AuthResult.Success(paths))
     }.catch {
-        Log.d("TAG-TrailRepository", "Recommend Path error : $it")
+        Log.d("TAG-PathRepository", "Recommend Path error : $it")
         emit(AuthResult.NetworkError(it))
     }
 
@@ -48,7 +48,7 @@ class PathRepositoryImpl @Inject constructor(
         val result = pathApi.getPathById(id).toPath()
         emit(AuthResult.Success(result))
     }.catch {
-        Log.d("TAG-TrailRepository", "GET Path error : $it")
+        Log.d("TAG-PathRepository", "GET Path error : $it")
         emit(AuthResult.NetworkError(it))
     }
 
@@ -57,7 +57,7 @@ class PathRepositoryImpl @Inject constructor(
         val result = pathApi.getMyPaths("Bearer $token").toPathList()
         emit(AuthResult.Success(result))
     }.catch {
-        Log.d("TAG-TrailRepository", "My Path error : $it")
+        Log.d("TAG-PathRepository", "My Path error : $it")
         emit(AuthResult.NetworkError(it))
     }
 
@@ -69,16 +69,17 @@ class PathRepositoryImpl @Inject constructor(
         )
         emit(AuthResult.Success(createdPath.toPath()))
     }.catch {
-        Log.d("TAG-TrailRepository", "Create Path error : $it")
+        Log.d("TAG-PathRepository", "Create Path error : $it")
         emit(AuthResult.NetworkError(it))
     }
 
     override suspend fun updatePath(token: String, id: Int, updatedPath: Path): Flow<AuthResult<Path>> = flow {
         emit(AuthResult.Loading)
         val result = pathApi.updatePath("Bearer $token", id, updatedPath.toPathUpdateRequestDTO()).toPath()
+        Log.d("TAG-PathRepository", "result = $result")
         emit(AuthResult.Success(result))
     }.catch {
-        Log.d("TAG-TrailRepository", "Update Path error : $it")
+        Log.d("TAG-PathRepository", "Update Path error : $it")
         emit(AuthResult.NetworkError(it))
     }
 
@@ -87,7 +88,7 @@ class PathRepositoryImpl @Inject constructor(
         pathApi.deletePath("Bearer $token", id)
         emit(AuthResult.Success(Unit))
     }.catch {
-        Log.d("TAG-TrailRepository", "Delete Path error : $it")
+        Log.d("TAG-PathRepository", "Delete Path error : $it")
         emit(AuthResult.NetworkError(it))
     }
 
@@ -99,7 +100,7 @@ class PathRepositoryImpl @Inject constructor(
         val result = pathApi.bookmarkToggle("Bearer $token", id).toBookmarkResponse()
         emit(AuthResult.Success(result))
     }.catch {
-        Log.d("TAG-TrailRepository", "Toggle Bookmark error : $it")
+        Log.d("TAG-PathRepository", "Toggle Bookmark error : $it")
         emit(AuthResult.NetworkError(it))
     }
 

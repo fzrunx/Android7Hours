@@ -28,10 +28,10 @@ fun NavGraphBuilder.trailNestedNavGraph(
             navController = navController,
             selectedDetailPath = selectedDetailPath,
             onStartFollowing = onStartFollowing,
-            onEditClick = {path ->
+            onEditClick = { path ->
                 navController.navigate(TrailNavigationRoute.TrailCreateTab)
             },
-            onDeleteClick = {path ->
+            onDeleteClick = { path ->
                 trailViewModel.deletePath(uiState.token, path.id)
                 navController.popBackStack()
             }

@@ -5,7 +5,7 @@ import com.squareup.moshi.JsonClass
 
 @JsonClass(generateAdapter = true)
 data class PathDTO(
-    val id: Int,
+    val id: Int = -1,
     val source: String,
     @Json(name = "auth_user_nickname")
     val authUserNickname: String,

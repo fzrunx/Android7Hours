@@ -296,6 +296,9 @@ class TrailViewModel @Inject constructor(
     // =================================================================
     // 📌 6. 경로 CRUD (생성, 수정, 삭제)
     // =================================================================
+    
+    private val _updateState = MutableStateFlow<ResponseUiState<Path>>(ResponseUiState.Idle)
+    val updateState = _updateState.asStateFlow()
 
     // ✅ 수정: CreateScreen에서 사용 (녹화 완료 후 저장)
     fun savePath(token: String?, currentCoord: Coord?, radius: Float = 5000f) {
@@ -333,13 +336,28 @@ class TrailViewModel @Inject constructor(
                 return@launch
             }
             _selectedPath.value?.let { path ->
-                pathUseCase.updatePathUseCase(token, path.id, path).collectLatest { result ->
-                    if (result is AuthResult.Success) {
-                        getMyPaths(token)
+                _updateState.value = ResponseUiState.Loading
+                pathUseCase.updatePathUseCase(token, path.id, path)
+                    .catch { e ->
+                        _updateState.value = ResponseUiState.Error(e.message ?: "알 수 없는 오류")
+                    }
+                    .collectLatest { result ->
+                    when (result) {
+                        is AuthResult.Success -> {
+                            _updateState.value = ResponseUiState.Success("산책로가 수정되었습니다.", result.resultData)
+                        }
+                        is AuthResult.NetworkError -> {
+                            _updateState.value = ResponseUiState.Error(result.exception.message ?: "네트워크 오류")
+                        }
+                        else -> {}
                     }
                 }
             }
         }
+    }
+    
+    fun resetUpdateState() {
+        _updateState.value = ResponseUiState.Idle
     }
 
     fun deletePath(token: String?, pathId: Int) {

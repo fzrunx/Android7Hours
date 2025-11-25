@@ -4,6 +4,7 @@ import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import com.sesac.common.component.CommonMapLifecycle
+import com.sesac.common.model.PathParceler
 import com.sesac.domain.result.AuthUiState
 import com.sesac.trail.presentation.TrailViewModel
 import com.sesac.trail.presentation.ui.TrailCreateScreen

@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -62,6 +63,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import coil3.compose.AsyncImage
+import com.sesac.common.model.PathParceler
 import com.sesac.common.ui.theme.Border
 import com.sesac.common.ui.theme.GrayTabText
 import com.sesac.common.ui.theme.NoteBox
@@ -77,7 +79,12 @@ import com.sesac.common.ui.theme.paddingMicro
 import com.sesac.common.ui.theme.paddingNone
 import com.sesac.common.ui.theme.paddingSmall
 import com.sesac.common.model.UiEvent
+import com.sesac.common.model.toPathParceler
+import com.sesac.domain.model.Path
 import com.sesac.domain.result.AuthUiState
+import com.sesac.domain.result.ResponseUiState
+import com.sesac.trail.nav_graph.NestedNavigationRoute
+import com.sesac.trail.nav_graph.TrailNavigationRoute
 import com.sesac.trail.presentation.TrailViewModel
 import com.sesac.trail.presentation.component.TagFlow
 import kotlinx.coroutines.flow.collectLatest
@@ -99,19 +106,44 @@ fun TrailCreateScreen(
     uiState: AuthUiState,
 ) {
     val context = LocalContext.current
-    val path by viewModel.selectedPath.collectAsStateWithLifecycle()
-    Log.d("Tag-TrailCreateScreen", "selectedCreatePath = $path")
+    val selectedPath by viewModel.selectedPath.collectAsStateWithLifecycle()
+    val updateState by viewModel.updateState.collectAsStateWithLifecycle()
+    val isLoading = updateState is ResponseUiState.Loading
+
+    Log.d("Tag-TrailCreateScreen", "selectedCreatePath = $selectedPath")
 
     val scope = rememberCoroutineScope()
     var validationState by remember { mutableStateOf(ValidationState()) }
 
+    LaunchedEffect(key1 = updateState) {
+        when(val state = updateState) {
+            is ResponseUiState.Success -> {
+                val updatedPath = state.result
+                Toast.makeText(context, "산책로가 수정되었습니다!", Toast.LENGTH_SHORT).show()
+
+                // 수정 화면 스택에서 제거하고, 수정된 상세 화면으로 이동
+                navController.navigate(NestedNavigationRoute.TrailDetail(updatedPath.toPathParceler())) {
+                    popUpTo(navController.currentDestination!!.id) {
+                        inclusive = true
+                    }
+                }
+                viewModel.resetUpdateState()
+            }
+            is ResponseUiState.Error -> {
+                Toast.makeText(context, state.message, Toast.LENGTH_SHORT).show()
+                viewModel.resetUpdateState()
+            }
+            else -> {}
+        }
+    }
+    
     LaunchedEffect(Unit) {
         viewModel.invalidToken.collectLatest { event ->
             if (event is UiEvent.ToastEvent) Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
         }
     }
 
-    if (path == null) {
+    if (selectedPath == null) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             CircularProgressIndicator()
         }
@@ -119,12 +151,12 @@ fun TrailCreateScreen(
     }
 
     var uploadedImageUri by remember { mutableStateOf<String?>(null) }
-    var distanceString by remember { mutableStateOf(path?.distance?.takeIf { it > 0f }?.toString() ?: "") }
-    var timeString by remember { mutableStateOf(path?.duration?.takeIf { it > 0 }?.toString() ?: "") }
+    var distanceString by remember { mutableStateOf(selectedPath?.distance?.takeIf { it > 0f }?.toString() ?: "") }
+    var timeString by remember { mutableStateOf(selectedPath?.duration?.takeIf { it > 0 }?.toString() ?: "") }
 
-    LaunchedEffect(path) {
-        distanceString = path?.distance?.takeIf { it > 0f }?.toString() ?: ""
-        timeString = path?.duration?.takeIf { it > 0 }?.toString() ?: ""
+    LaunchedEffect(selectedPath) {
+        distanceString = selectedPath?.distance?.takeIf { it > 0f }?.toString() ?: ""
+        timeString = selectedPath?.duration?.takeIf { it > 0 }?.toString() ?: ""
     }
 
     val imagePickerLauncher = rememberLauncherForActivityResult(
@@ -137,7 +169,7 @@ fun TrailCreateScreen(
     }
 
     val handleTagToggle: (String) -> Unit = { tag ->
-        path?.let {
+        selectedPath?.let {
             val newTags = if (it.tags.contains(tag)) {
                 it.tags - tag
             } else {
@@ -156,10 +188,10 @@ fun TrailCreateScreen(
 
     fun handleSave() {
         scope.launch {
-            path?.let {
-                val isNameInvalid = it.pathName.isBlank()
-                val isDistanceInvalid = it.distance <= 0f
-                val isTimeInvalid = it.duration <= 0
+            selectedPath?.let { selected ->
+                val isNameInvalid = selected.pathName.isBlank()
+                val isDistanceInvalid = selected.distance <= 0f
+                val isTimeInvalid = selected.duration <= 0
 
                 validationState = ValidationState(
                     isNameInvalid = isNameInvalid,
@@ -176,27 +208,24 @@ fun TrailCreateScreen(
                     return@launch
                 }
 
-                if (it.id != -1) {
-                    // 기존 경로 수정
+                if (selected.id != -1) {
+                    // 기존 경로 수정 -> ViewModel에 위임
                     viewModel.updatePath(uiState.token)
-                    Toast.makeText(context, "산책로가 수정되었습니다!", Toast.LENGTH_SHORT).show()
                 } else {
                     // 신규 경로: Draft 생성 → RoomDB 저장
-                    viewModel.createDraftPath(it.pathName, it.pathComment)
+                    viewModel.createDraftPath(selected.pathName, selected.pathComment)
                     viewModel.draftPath.value?.let { draft ->
                         viewModel.savePathToRoom(draft)
                     }
                     Toast.makeText(context, "산책로가 저장되었습니다!", Toast.LENGTH_SHORT).show()
+                    viewModel.clearSelectedPath()
+                    navController.popBackStack()
                 }
-
-                // ✅ 중요: 저장 후 selectedPath 초기화
-                viewModel.clearSelectedPath()
-                navController.popBackStack()
             }
         }
     }
 
-    path?.let { pathContent ->
+    selectedPath?.let { pathContent ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -286,10 +315,10 @@ fun TrailCreateScreen(
                 onSave = {
                     handleSave()
                 },
-                isEditing = pathContent.id != -1
+                isEditing = pathContent.id != -1,
+                isLoading = isLoading
             )
         }
-
     }
 }
 
@@ -300,7 +329,8 @@ fun TrailCreateScreen(
 fun CreateBottomActions(
     onCancel: () -> Unit,
     onSave: () -> Unit,
-    isEditing: Boolean
+    isEditing: Boolean,
+    isLoading: Boolean,
 ) {
     Surface(
         color = Color.Transparent,
@@ -314,6 +344,7 @@ fun CreateBottomActions(
         ) {
             Button(
                 onClick = onSave,
+                enabled = !isLoading,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Purple600
                 ),
@@ -321,7 +352,11 @@ fun CreateBottomActions(
                     .weight(1f)
                     .height(48.dp)
             ) {
-                Text(if (isEditing) "수정하기" else "등록하기")
+                if (isLoading) {
+                    CircularProgressIndicator(modifier = Modifier.size(24.dp), color = White)
+                } else {
+                    Text(if (isEditing) "수정하기" else "등록하기")
+                }
             }
         }
     }
