@@ -1,8 +1,8 @@
 package com.sesac.auth.utils
 
 import com.sesac.common.utils.FormValidationUtils
-import com.sesac.domain.model.FormField
-import com.sesac.domain.model.FormValidationResult
+import com.sesac.common.model.FormField
+import com.sesac.common.model.FormValidationResult
 import com.sesac.domain.model.JoinFormState
 
 /**

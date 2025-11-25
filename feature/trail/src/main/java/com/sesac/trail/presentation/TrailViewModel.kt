@@ -4,7 +4,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.sesac.domain.model.Coord
-import com.sesac.domain.model.UiEvent
+import com.sesac.common.model.UiEvent
 import com.sesac.domain.model.Path
 import com.sesac.domain.result.AuthResult
 import com.sesac.domain.usecase.path.PathUseCase
@@ -27,6 +27,7 @@ import androidx.compose.runtime.setValue
 import com.sesac.domain.model.BookmarkType
 import com.sesac.domain.model.BookmarkedPath
 import com.sesac.domain.model.Comment
+import com.sesac.domain.model.CommentType
 import com.sesac.domain.model.Post
 import com.sesac.domain.result.ResponseUiState
 import com.sesac.domain.usecase.bookmark.BookmarkUseCase
@@ -561,7 +562,7 @@ class TrailViewModel @Inject constructor(
     fun getComments(pathId: Int) {
         viewModelScope.launch {
             _commentsState.value = ResponseUiState.Loading
-            commentUseCases.getCommentsUseCase("paths", pathId)
+            commentUseCases.getCommentsUseCase(pathId, CommentType.PATH)
                 .catch { e ->
                     _commentsState.value = ResponseUiState.Error(e.message ?: "알 수 없는 오류가 발생했습니다.")
                 }
@@ -581,7 +582,7 @@ class TrailViewModel @Inject constructor(
 
     fun createComment(token: String, pathId: Int, content: String) {
         viewModelScope.launch {
-            commentUseCases.createCommentUseCase(token, "paths", pathId, content)
+            commentUseCases.createCommentUseCase(token, pathId, content, CommentType.PATH)
                 .collectLatest { result ->
                     when (result) {
                         is AuthResult.Success -> getComments(pathId) // Refresh comments list
@@ -596,7 +597,7 @@ class TrailViewModel @Inject constructor(
 
     fun updateComment(token: String, pathId: Int, commentId: Int, content: String) {
         viewModelScope.launch {
-            commentUseCases.updateCommentUseCase(token, "paths", pathId, commentId, content)
+            commentUseCases.updateCommentUseCase(token, pathId, commentId, content, CommentType.PATH)
                 .collectLatest { result ->
                     when (result) {
                         is AuthResult.Success -> getComments(pathId) // Refresh comments list
@@ -610,7 +611,7 @@ class TrailViewModel @Inject constructor(
 
     fun deleteComment(token: String, pathId: Int, commentId: Int) {
         viewModelScope.launch {
-            commentUseCases.deleteCommentUseCase(token, "paths", pathId, commentId)
+            commentUseCases.deleteCommentUseCase(token, pathId, commentId, CommentType.PATH)
                 .collectLatest { result ->
                     when (result) {
                         is AuthResult.Success -> getComments(pathId) // Refresh comments list

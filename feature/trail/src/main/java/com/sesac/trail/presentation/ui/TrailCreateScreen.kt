@@ -39,7 +39,6 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -77,8 +76,7 @@ import com.sesac.common.ui.theme.paddingLarge
 import com.sesac.common.ui.theme.paddingMicro
 import com.sesac.common.ui.theme.paddingNone
 import com.sesac.common.ui.theme.paddingSmall
-import com.sesac.domain.model.Coord
-import com.sesac.domain.model.UiEvent
+import com.sesac.common.model.UiEvent
 import com.sesac.domain.result.AuthUiState
 import com.sesac.trail.presentation.TrailViewModel
 import com.sesac.trail.presentation.component.TagFlow

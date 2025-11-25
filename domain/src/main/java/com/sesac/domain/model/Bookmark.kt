@@ -2,11 +2,6 @@ package com.sesac.domain.model
 
 import java.util.Date
 
-enum class BookmarkType {
-    PATH,
-    POST
-}
-
 /**
  * A sealed interface to represent the different types of items that can be bookmarked.
  * This allows for exhaustive 'when' checks in the UI layer.

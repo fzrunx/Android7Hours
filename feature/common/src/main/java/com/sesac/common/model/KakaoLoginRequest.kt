@@ -1,4 +1,4 @@
-package com.sesac.domain.model
+package com.sesac.common.model
 
 data class KakaoLoginRequest(
     val accessToken: String,

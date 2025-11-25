@@ -1,8 +1,8 @@
 package com.sesac.common.utils
 
-import com.sesac.domain.model.FormField
-import com.sesac.domain.model.FormValidationResult
-import com.sesac.domain.model.ValidationResult
+import com.sesac.common.model.FormField
+import com.sesac.common.model.FormValidationResult
+import com.sesac.common.model.ValidationResult
 
 /**
  * 폼 유효성 검사 유틸리티

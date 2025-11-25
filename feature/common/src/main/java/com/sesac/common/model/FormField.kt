@@ -1,4 +1,4 @@
-package com.sesac.domain.model
+package com.sesac.common.model
 
 /**
  * 폼 필드의 유효성 검사 결과

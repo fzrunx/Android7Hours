@@ -7,6 +7,7 @@ import com.sesac.data.mapper.toDomain
 import com.sesac.data.source.api.PathApi
 import com.sesac.data.source.api.PostApi
 import com.sesac.domain.model.Comment
+import com.sesac.domain.model.CommentType
 import com.sesac.domain.repository.CommentRepository
 import com.sesac.domain.result.AuthResult
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -20,11 +21,11 @@ class CommentRepositoryImpl @Inject constructor(
     private val postApi: PostApi,
     @ApplicationContext private val context: Context
 ) : CommentRepository {
-    override suspend fun getComments(type: String, objectId: Int): Flow<AuthResult<List<Comment>>> = flow {
+    override suspend fun getComments(objectId: Int, type: CommentType,): Flow<AuthResult<List<Comment>>> = flow {
         emit(AuthResult.Loading)
         val response = when (type) {
-            "paths" -> pathApi.getComments(pathId = objectId)
-            "posts" -> postApi.getComments(postId = objectId)
+            CommentType.PATH -> pathApi.getComments(pathId = objectId)
+            CommentType.POST -> postApi.getComments(postId = objectId)
             else -> throw IllegalArgumentException("Unknown comment type: $type")
         }
         val domainModel = response.map { it.toDomain(context, objectId) }
@@ -35,15 +36,15 @@ class CommentRepositoryImpl @Inject constructor(
 
     override suspend fun createComment(
         token: String,
-        type: String,
         objectId: Int,
-        content: String
+        content: String,
+        type: CommentType,
     ): Flow<AuthResult<Comment>> = flow {
         emit(AuthResult.Loading)
         val request = CommentRequestDTO(content = content)
         val response = when (type) {
-            "paths" -> pathApi.createComment("Bearer $token", pathId = objectId, request = request)
-            "posts" -> postApi.createComment("Bearer $token", postId = objectId, request = request)
+            CommentType.PATH -> pathApi.createComment("Bearer $token", pathId = objectId, request = request)
+            CommentType.POST -> postApi.createComment("Bearer $token", postId = objectId, request = request)
             else -> throw IllegalArgumentException("Unknown comment type: $type")
         }
         val domainModel = response.toDomain(context, objectId)
@@ -54,16 +55,16 @@ class CommentRepositoryImpl @Inject constructor(
 
     override suspend fun updateComment(
         token: String,
-        type: String,
         objectId: Int,
         commentId: Int,
-        content: String
+        content: String,
+        type: CommentType,
     ): Flow<AuthResult<Comment>> = flow {
         emit(AuthResult.Loading)
         val request = CommentRequestDTO(content = content)
         val response = when (type) {
-            "paths" -> pathApi.updateComment("Bearer $token", pathId = objectId, commentId = commentId, request = request)
-            "posts" -> postApi.updateComment("Bearer $token", postId = objectId, commentId = commentId, request = request)
+            CommentType.PATH -> pathApi.updateComment("Bearer $token", pathId = objectId, commentId = commentId, request = request)
+            CommentType.POST -> postApi.updateComment("Bearer $token", postId = objectId, commentId = commentId, request = request)
             else -> throw IllegalArgumentException("Unknown comment type: $type")
         }
         val domainModel = response.toDomain(context, objectId)
@@ -74,14 +75,14 @@ class CommentRepositoryImpl @Inject constructor(
 
     override suspend fun deleteComment(
         token: String,
-        type: String,
         objectId: Int,
-        commentId: Int
+        commentId: Int,
+        type: CommentType,
     ): Flow<AuthResult<Unit>> = flow {
         emit(AuthResult.Loading)
         when (type) {
-            "paths" -> pathApi.deleteComment("Bearer $token", pathId = objectId, commentId = commentId)
-            "posts" -> postApi.deleteComment("Bearer $token", postId = objectId, commentId = commentId)
+            CommentType.PATH -> pathApi.deleteComment("Bearer $token", pathId = objectId, commentId = commentId)
+            CommentType.POST -> postApi.deleteComment("Bearer $token", postId = objectId, commentId = commentId)
             else -> throw IllegalArgumentException("Unknown comment type: $type")
         }
         emit(AuthResult.Success(Unit))
