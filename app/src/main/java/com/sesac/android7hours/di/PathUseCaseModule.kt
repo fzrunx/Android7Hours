@@ -1,7 +1,6 @@
 package com.sesac.android7hours.di
 
 import com.sesac.domain.repository.PathRepository
-import com.sesac.domain.usecase.path.ClearAllDraftsUseCase
 import com.sesac.domain.usecase.path.CreatePathUseCase
 import com.sesac.domain.usecase.path.DeleteDraftUseCase
 import com.sesac.domain.usecase.path.DeletePathUseCase
@@ -12,6 +11,7 @@ import com.sesac.domain.usecase.path.GetMyPaths
 import com.sesac.domain.usecase.path.PathUseCase
 import com.sesac.domain.usecase.path.SaveDraftUseCase
 import com.sesac.domain.usecase.path.UpdatePathUseCase
+import com.sesac.domain.usecase.path.UploadPathUseCase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -34,7 +34,7 @@ object PathUseCaseModule {
             saveDraftUseCase = SaveDraftUseCase(repository),       // ⭐ 추가
             getAllDraftsUseCase = GetAllDraftsUseCase(repository), // ⭐ Draft 목록 불러오기
             deleteDraftUseCase = DeleteDraftUseCase(repository),   // ⭐ Draft 삭제
-            clearAllDraftsUseCase = ClearAllDraftsUseCase(repository) // ⭐ 전체 삭제
+            uploadPathUseCase = UploadPathUseCase(repository)
         )
     }
 }

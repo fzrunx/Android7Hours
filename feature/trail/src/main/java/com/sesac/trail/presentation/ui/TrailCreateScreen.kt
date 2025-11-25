@@ -156,10 +156,10 @@ fun TrailCreateScreen(
 
     fun handleSave() {
         scope.launch {
-            path?.let {
-                val isNameInvalid = it.pathName.isBlank()
-                val isDistanceInvalid = it.distance <= 0f
-                val isTimeInvalid = it.duration <= 0
+            path?.let { currentPath ->
+                val isNameInvalid = currentPath.pathName.isBlank()
+                val isDistanceInvalid = currentPath.distance <= 0f
+                val isTimeInvalid = currentPath.duration <= 0
 
                 validationState = ValidationState(
                     isNameInvalid = isNameInvalid,
@@ -168,24 +168,24 @@ fun TrailCreateScreen(
                 )
 
                 if (isNameInvalid || isDistanceInvalid || isTimeInvalid) {
-                    Toast.makeText(
-                        context,
-                        "필수 항목을 모두 입력해주세요",
-                        Toast.LENGTH_SHORT
-                    ).show()
+                    Toast.makeText(context, "필수 항목을 모두 입력해주세요", Toast.LENGTH_SHORT).show()
                     return@launch
                 }
 
-                if (it.id != -1) {
+                val token = uiState.token
+                if (token.isNullOrBlank()) {
+                    Toast.makeText(context, "로그인이 필요합니다", Toast.LENGTH_SHORT).show()
+                    return@launch
+                }
+
+                if (currentPath.id != -1) {
                     // 기존 경로 수정
-                    viewModel.updatePath(uiState.token)
+                    viewModel.updatePath(token)
                     Toast.makeText(context, "산책로가 수정되었습니다!", Toast.LENGTH_SHORT).show()
                 } else {
                     // 신규 경로: Draft 생성 → RoomDB 저장
-                    viewModel.createDraftPath(it.pathName, it.pathComment)
-                    viewModel.draftPath.value?.let { draft ->
-                        viewModel.savePathToRoom(draft)
-                    }
+                    val newDraft = viewModel.createDraftPath(currentPath.pathName, currentPath.pathComment)
+                    viewModel.savePathAndUpload(newDraft, token)
                     Toast.makeText(context, "산책로가 저장되었습니다!", Toast.LENGTH_SHORT).show()
                 }
 
