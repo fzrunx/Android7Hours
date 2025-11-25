@@ -9,13 +9,11 @@ import com.sesac.domain.model.Breed
 import com.sesac.domain.model.FavoriteCommunityPost
 import com.sesac.domain.model.FavoriteWalkPath
 import com.sesac.domain.model.MypageSchedule
-import com.sesac.domain.model.MypageStat
 import com.sesac.domain.model.Path
 import com.sesac.domain.usecase.mypage.MypageUseCase
 import com.sesac.domain.model.User
 import com.sesac.domain.model.Pet
 import com.sesac.domain.result.AuthResult
-import com.sesac.domain.result.JoinUiState
 import com.sesac.domain.result.ResponseUiState
 import com.sesac.domain.usecase.auth.AuthUseCase
 import com.sesac.domain.usecase.bookmark.BookmarkUseCase
@@ -55,16 +53,25 @@ class MypageViewModel @Inject constructor(
     // MypageDetailScreen
     private val _userPets = MutableStateFlow<List<Pet>>(emptyList())
     val userPets = _userPets.asStateFlow()
+    private val _selectedPet = MutableStateFlow<Pet?>(null)
+    val selectedPet = _selectedPet.asStateFlow()
+
+    private val _addPetState = MutableStateFlow<ResponseUiState<Unit>>(ResponseUiState.Idle)
+    val addPetState = _addPetState.asStateFlow()
+
+    private val _updatePetState = MutableStateFlow<ResponseUiState<Unit>>(ResponseUiState.Idle)
+    val updatePetState = _updatePetState.asStateFlow()
+
+    private val _deletePetState = MutableStateFlow<ResponseUiState<Unit>>(ResponseUiState.Idle)
+    val deletePetState = _deletePetState.asStateFlow()
+
     // AddPetScreen
     private val _breeds = MutableStateFlow<List<Breed>>(emptyList())
     val breeds = _breeds.asStateFlow()
-//    private val _bookmarkedPaths = MutableStateFlow<AuthResult<List<BookmarkedPath?>>>(AuthResult.NoConstructor)
     private val _bookmarkedPaths = MutableStateFlow<ResponseUiState<List<BookmarkedPath>>>(ResponseUiState.Idle)
     val bookmarkedPaths = _bookmarkedPaths.asStateFlow()
     private val _selectedPath = MutableStateFlow<ResponseUiState<Path>>(ResponseUiState.Idle)
     val selectedPath = _selectedPath.asStateFlow()
-
-
 
     // MypageFavoriteScreen
     private val _favoriteWalkPaths = MutableStateFlow<List<FavoriteWalkPath>>(emptyList())
@@ -75,21 +82,9 @@ class MypageViewModel @Inject constructor(
     private val _schedules = MutableStateFlow<List<MypageSchedule>>(emptyList())
     val schedules get() = _schedules.asStateFlow()
 
-//    init {
-//        viewModelScope.launch {
-//            getStats()
-//        }
-//    }
-
     fun onFilterChange(filter: String) {
         _activeFilter.value = filter
     }
-
-//    fun getStats() {
-//        viewModelScope.launch {
-//            mypageUseCase.getMypageStatsUseCase().collectLatest { _stats.value = it }
-//        }
-//    }
 
     fun getUserPets(userId: Int) {
         viewModelScope.launch {
@@ -103,7 +98,7 @@ class MypageViewModel @Inject constructor(
 
     fun getPathInfo(pathId: Int) {
         viewModelScope.launch {
-            _selectedPath.value = ResponseUiState.Loading // 시작 시 Loading 상태로 변경
+            _selectedPath.value = ResponseUiState.Loading
             pathUseCase.getPathById(pathId)
                 .catch { e ->
                     _selectedPath.value = ResponseUiState.Error(e.message ?: "알 수 없는 오류가 발생했습니다.")
@@ -112,10 +107,10 @@ class MypageViewModel @Inject constructor(
                     when(path) {
                         is AuthResult.Success -> {
                             val selectedPath = path.resultData
-                            _selectedPath.value = ResponseUiState.Success("포스트 불러오기 성공", selectedPath)
+                            _selectedPath.value = ResponseUiState.Success("산책로 불러오기 성공", selectedPath)
                         }
                         is AuthResult.NetworkError -> _selectedPath.value = ResponseUiState.Error(path.exception.message ?: "unknown")
-                        else -> {} // AuthResult.Loading은 이미 처리했으므로 생략
+                        else -> {}
                     }
                 }
         }
@@ -125,11 +120,23 @@ class MypageViewModel @Inject constructor(
         _selectedPath.value = ResponseUiState.Idle
     }
 
-    fun getAllUserPets(token: String) {
+    fun loadPetForEditing(petId: Int) {
+        val petToEdit = _userPets.value.find { it.id == petId }
+        _selectedPet.value = petToEdit
+    }
+
+    fun clearSelectedPet() {
+        _selectedPet.value = null
+    }
+
+    fun getAllUserPets() {
         viewModelScope.launch {
+            val token = sessionUseCase.getAccessToken().first() ?: return@launch
             petUseCase.getUserPetsUseCase(token).collectLatest { result ->
                 if (result is AuthResult.Success) {
                     _userPets.value = result.resultData
+                } else {
+                    // TODO: Pet list loading failure error handling
                 }
             }
         }
@@ -145,21 +152,86 @@ class MypageViewModel @Inject constructor(
         }
     }
 
-    fun addPet(token: String, pet: Pet, onResult: (Boolean) -> Unit) {
+    fun addPet(pet: Pet) {
         viewModelScope.launch {
+            _addPetState.value = ResponseUiState.Loading
+            val token = sessionUseCase.getAccessToken().first()
+            if (token == null) {
+                _addPetState.value = ResponseUiState.Error("로그인이 필요합니다.")
+                return@launch
+            }
             petUseCase.postUserPetUseCase(token, pet).collectLatest { result ->
                 when(result) {
                     is AuthResult.Success -> {
-                        // Refresh user's pet list
-                        pet.owner.toIntOrNull()?.let { getAllUserPets(token) }
-                        onResult(true)
+                        getAllUserPets()
+                        _addPetState.value = ResponseUiState.Success("반려견이 추가되었습니다.", Unit)
                     }
+                    is AuthResult.NetworkError -> {
+                        _addPetState.value = ResponseUiState.Error(result.exception.message ?: "오류가 발생했습니다.")
+                    }
+                    is AuthResult.Loading -> {}
                     else -> {
-                        onResult(false)
+                        _addPetState.value = ResponseUiState.Error("알 수 없는 오류가 발생했습니다.")
                     }
                 }
             }
         }
+    }
+
+    fun updatePet(pet: Pet) {
+        viewModelScope.launch {
+            _updatePetState.value = ResponseUiState.Loading
+            val token = sessionUseCase.getAccessToken().first()
+            if (token == null) {
+                _updatePetState.value = ResponseUiState.Error("로그인이 필요합니다.")
+                return@launch
+            }
+
+            petUseCase.updatePetUseCase(token, pet.id, pet).collectLatest { result ->
+                when(result) {
+                    is AuthResult.Success -> {
+                        getAllUserPets()
+                        _updatePetState.value = ResponseUiState.Success("반려견 정보가 수정되었습니다.", Unit)
+                    }
+                    is AuthResult.Loading -> {}
+                    else -> _updatePetState.value = ResponseUiState.Error("수정에 실패했습니다.")
+                }
+            }
+        }
+    }
+
+    fun deletePet(petId: Int) {
+        viewModelScope.launch {
+            _deletePetState.value = ResponseUiState.Loading
+            val token = sessionUseCase.getAccessToken().first()
+            if (token == null) {
+                _deletePetState.value = ResponseUiState.Error("로그인이 필요합니다.")
+                return@launch
+            }
+
+            petUseCase.deletePetUseCase(token, petId).collectLatest { result ->
+                when(result) {
+                    is AuthResult.Success -> {
+                        getAllUserPets()
+                        _deletePetState.value = ResponseUiState.Success("반려견이 삭제되었습니다.", Unit)
+                    }
+                    is AuthResult.Loading -> {}
+                    else -> _deletePetState.value = ResponseUiState.Error("삭제에 실패했습니다.")
+                }
+            }
+        }
+    }
+
+    fun resetAddPetState() {
+        _addPetState.value = ResponseUiState.Idle
+    }
+
+    fun resetUpdatePetState() {
+        _updatePetState.value = ResponseUiState.Idle
+    }
+
+    fun resetDeletePetState() {
+        _deletePetState.value = ResponseUiState.Idle
     }
 
     fun getUserBookmarkedPaths(token: String?) {
@@ -191,9 +263,6 @@ class MypageViewModel @Inject constructor(
         }
     }
 
-    /**
-     * 북마크된 산책로 목록을 가져와 통계를 계산하고 UI 상태를 업데이트합니다.
-     */
     fun getStats() {
         viewModelScope.launch {
             _stats.value = ResponseUiState.Loading
@@ -287,9 +356,6 @@ class MypageViewModel @Inject constructor(
             }
         }
     }
-
-    // MypageSettingScreen
-//    val permissions = getMypagePermissionsUseCase()
 
     fun updatePermission(key: String, isEnabled: Boolean) {
         viewModelScope.launch {

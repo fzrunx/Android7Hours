@@ -39,6 +39,7 @@ import com.sesac.community.presentation.CommunityViewModel
 import com.sesac.home.nav_graph.EntryPointScreen
 import com.sesac.home.nav_graph.HomeNavigationRoute
 import com.sesac.home.nav_graph.TopBarAction
+import com.sesac.mypage.presentation.MypageViewModel
 import com.sesac.trail.nav_graph.NestedNavigationRoute
 import com.sesac.trail.presentation.TrailViewModel
 import dagger.hilt.android.AndroidEntryPoint
@@ -60,8 +61,9 @@ class MainActivity : ComponentActivity() {
             val commonMapView = remember { CommonMapView.getMapView(context) }
             val lifecycle = LocalLifecycleOwner.current.lifecycle
             val commonMapLifecycle = remember { CommonMapLifecycle(lifecycle) }
-            val communityViewModel = hiltViewModel<CommunityViewModel>()
             val trailViewModel = hiltViewModel<TrailViewModel>()
+            val communityViewModel = hiltViewModel<CommunityViewModel>()
+            val mypageViewModel = hiltViewModel<MypageViewModel>()
             val navController = rememberNavController()
             val startDestination = HomeNavigationRoute.HomeTab
             val navBackStackEntry by navController.currentBackStackEntryAsState()
@@ -133,6 +135,7 @@ class MainActivity : ComponentActivity() {
                         AppNavHost(
                             trailViewModel = trailViewModel,
                             communityViewModel = communityViewModel,
+                            mypageViewModel = mypageViewModel,
                             paddingValues = paddingValues,
                             navController = navController,
                             nav2Home = { navController.navigate(HomeNavigationRoute.HomeTab) },

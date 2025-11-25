@@ -60,7 +60,6 @@ fun MypageMainScreen(
     uiState: AuthUiState,
 ) {
     val stats by viewModel.stats.collectAsStateWithLifecycle()
-    Log.d("TAG-MypageMainScreen", "user : $uiState")
 
     LaunchedEffect(uiState) {
         if (uiState.isLoggedIn){
@@ -85,10 +84,10 @@ fun MypageMainScreen(
         }
 
         item {
-            when (stats) {
+            when (val s = stats) {
                 is ResponseUiState.Loading -> CircularProgressIndicator()
-                is ResponseUiState.Success -> StatsSectionView(stats = (stats as ResponseUiState.Success<List<MyPathStats>>).result)
-                is ResponseUiState.Error -> Text((stats as ResponseUiState.Error).message)
+                is ResponseUiState.Success -> StatsSectionView(stats = s.result)
+                is ResponseUiState.Error -> Text(s.message)
                 else -> {}
             }
         }

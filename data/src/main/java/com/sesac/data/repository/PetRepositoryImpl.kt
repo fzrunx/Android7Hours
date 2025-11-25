@@ -2,6 +2,7 @@ package com.sesac.data.repository
 
 import android.util.Log
 import com.sesac.data.mapper.toBreedsList
+import com.sesac.data.mapper.toPet
 import com.sesac.data.mapper.toPetDTO
 import com.sesac.data.mapper.toPetList
 import com.sesac.data.source.api.PetsApi
@@ -19,10 +20,20 @@ class PetRepositoryImpl @Inject constructor(
 ): PetRepository {
     override suspend fun getUserPets(token: String): Flow<AuthResult<List<Pet>>> = flow {
         emit(AuthResult.Loading)
-        val result = petsApi.getUserPets(token).toPetList()
+        val result = petsApi.getUserPets("Bearer $token").toPetList()
         emit(AuthResult.Success(result))
     }.catch {
-        Log.d("TAG-PetRepostioryImpl", "getPets(): error: $it")
+        Log.d("TAG-PetRepositoryImpl", "getPets(): error: $it")
+        emit(AuthResult.NetworkError(it))
+    }
+
+    override suspend fun postUserPet(token: String, pet: Pet): Flow<AuthResult<Unit>> = flow {
+        emit(AuthResult.Loading)
+        val result = petsApi.postPet("Bearer $token", pet.toPetDTO())
+        Log.d("TAG-PetRepositoryImpl", "result : $result")
+        emit(AuthResult.Success(Unit))
+    }.catch {
+        Log.d("TAG-PetRepositoryImpl", "postUserPets(): error: $it")
         emit(AuthResult.NetworkError(it))
     }
 
@@ -31,16 +42,25 @@ class PetRepositoryImpl @Inject constructor(
         val result = petsApi.getPetInfo(petId).toPetList()
         emit(AuthResult.Success(result))
     }.catch {
-        Log.d("TAG-PetRepostioryImpl", "getUserPets(): error: $it")
+        Log.d("TAG-PetRepositoryImpl", "getUserPets(): error: $it")
         emit(AuthResult.NetworkError(it))
     }
 
-    override suspend fun postUserPet(token: String, pet: Pet): Flow<AuthResult<Unit>> =flow {
+    override suspend fun updatePet(token: String, petId: Int, pet: Pet): Flow<AuthResult<Pet>> = flow {
         emit(AuthResult.Loading)
-        petsApi.postPet(token, pet.toPetDTO())
+        val result = petsApi.updatePet("Bearer $token", petId, pet.toPetDTO()).toPet()
+        emit(AuthResult.Success(result))
+    }.catch {
+        Log.d("TAG-PetRepostioryImpl", "updatePets(): error: $it")
+        emit(AuthResult.NetworkError(it))
+    }
+
+    override suspend fun deletePet(token: String, petId: Int): Flow<AuthResult<Unit>> = flow {
+        emit(AuthResult.Loading)
+        petsApi.deletePet("Bearer $token", petId)
         emit(AuthResult.Success(Unit))
     }.catch {
-        Log.d("TAG-PetRepostioryImpl", "postUserPets(): error: $it")
+        Log.d("TAG-PetRepostioryImpl", "deletePets(): error: $it")
         emit(AuthResult.NetworkError(it))
     }
 

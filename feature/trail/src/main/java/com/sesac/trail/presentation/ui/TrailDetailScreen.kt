@@ -152,18 +152,20 @@ fun TrailDetailScreen(
                                 color = GrayTabText
                             )
                         }
-                        Row {
-                            TextButton(
-                                onClick = { onEditClick(selected) },
-                                modifier = Modifier.height(32.dp)
-                            ) {
-                                Text("수정", color = GrayTabText, fontSize = 14.sp)
-                            }
-                            TextButton(
-                                onClick = { onDeleteClick(selected) },
-                                modifier = Modifier.height(32.dp)
-                            ) {
-                                Text("삭제", color = GrayTabText, fontSize = 14.sp)
+                        if (selected.uploader == uiState.nickname) {
+                            Row {
+                                TextButton(
+                                    onClick = { onEditClick(selected) },
+                                    modifier = Modifier.height(32.dp)
+                                ) {
+                                    Text("수정", color = GrayTabText, fontSize = 14.sp)
+                                }
+                                TextButton(
+                                    onClick = { onDeleteClick(selected) },
+                                    modifier = Modifier.height(32.dp)
+                                ) {
+                                    Text("삭제", color = GrayTabText, fontSize = 14.sp)
+                                }
                             }
                         }
                     }

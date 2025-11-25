@@ -1,12 +1,14 @@
 package com.sesac.mypage.presentation.ui
 
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -25,24 +27,33 @@ import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.PhotoCamera
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Divider
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -67,6 +78,7 @@ import com.sesac.common.ui.theme.paddingMedium
 import com.sesac.common.ui.theme.paddingSmall
 import com.sesac.domain.result.AuthUiState
 import com.sesac.domain.model.Pet
+import com.sesac.domain.result.ResponseUiState
 import com.sesac.mypage.nav_graph.MypageNavigationRoute
 import com.sesac.mypage.presentation.MypageViewModel
 import com.sesac.common.R as cR
@@ -78,55 +90,89 @@ fun MypageDetailScreen(
     uiState: AuthUiState,
 ) {
     val pets by viewModel.userPets.collectAsStateWithLifecycle()
+    val deletePetState by viewModel.deletePetState.collectAsStateWithLifecycle()
+    val context = LocalContext.current
 
     LaunchedEffect(uiState.id) {
-        if (uiState.id != -1 && !uiState.token.isNullOrEmpty()) {
-//            viewModel.getUserPets(uiState.id)
-            viewModel.getAllUserPets(uiState.token!!)
+        if (uiState.id != -1) {
+            viewModel.getAllUserPets()
+            viewModel.clearSelectedPet()
             Log.d("TAG-MypageDetailScreen", "pets : $pets")
         }
     }
 
-    LazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Background),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        item {
-            MypageDetailHeader(
-                name = uiState.fullName ?: "-",
-                // The image doesn't contain a description for the user, so I'm using a placeholder
-                description = "반려견과 함께하는 즐거운 산책",
-                imageUrl = null // No image URL in uiState
-            )
+    LaunchedEffect(deletePetState) {
+        when(val state = deletePetState) {
+            is ResponseUiState.Success -> {
+                Toast.makeText(context, state.message, Toast.LENGTH_SHORT).show()
+                viewModel.resetDeletePetState()
+            }
+            is ResponseUiState.Error -> {
+                Toast.makeText(context, state.message, Toast.LENGTH_SHORT).show()
+                viewModel.resetDeletePetState()
+            }
+            else -> {}
+        }
+    }
+
+    Box(modifier = Modifier.fillMaxSize()) {
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Background),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            contentPadding = PaddingValues(bottom = 80.dp) // FAB에 가려지지 않도록 패딩 추가
+        ) {
+            item {
+                MypageDetailHeader(
+                    name = uiState.fullName ?: "-",
+                    description = "반려견과 함께하는 즐거운 산책",
+                    imageUrl = null
+                )
+            }
+
+            item { Spacer(modifier = Modifier.height(paddingMedium)) }
+
+            item {
+                UserInfoSection(
+                    email = uiState.email ?: "-",
+                    phone = "-",
+                    address = "-"
+                )
+            }
+
+            item { Spacer(modifier = Modifier.height(paddingLarge)) }
+
+            item {
+                HorizontalDivider(thickness = 8.dp, color = Gray200)
+            }
+
+            item {
+                PetInfoSection(
+                    pets = pets,
+                    onEditPet = { pet ->
+                        navController.navigate(MypageNavigationRoute.AddPetScreen(petId = pet.id))
+                    },
+                    onDeletePet = { pet ->
+                        viewModel.deletePet(pet.id)
+                    }
+                )
+            }
         }
 
-        item { Spacer(modifier = Modifier.height(paddingMedium)) }
-
-        item {
-            UserInfoSection(
-                email = uiState.email ?: "-",
-                phone = "-", // Not available in uiState
-                address = "-" // Not available in uiState
-            )
-        }
-
-        item { Spacer(modifier = Modifier.height(paddingLarge)) }
-
-        item {
-            Divider(color = Gray200, thickness = 8.dp)
-        }
-
-        item {
-            PetInfoSection(
-                pets = pets,
-                uiState = uiState,
-                onAddPetClicked = { navController.navigate(MypageNavigationRoute.AddPetScreen) }
-            )
+        FloatingActionButton(
+            onClick = { navController.navigate(MypageNavigationRoute.AddPetScreen()) },
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(paddingLarge),
+            containerColor = Primary,
+            contentColor = White
+        ) {
+            Icon(imageVector = Icons.Default.Add, contentDescription = "Add Pet")
         }
     }
 }
+
 
 @Composable
 fun MypageDetailHeader(name: String, description: String, imageUrl: String?) {
@@ -215,8 +261,8 @@ fun UserInfoRow(icon: ImageVector, label: String, value: String, iconBgColor: Co
 @Composable
 fun PetInfoSection(
     pets: List<Pet>,
-    uiState: AuthUiState,
-    onAddPetClicked: () -> Unit,
+    onEditPet: (Pet) -> Unit,
+    onDeletePet: (Pet) -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -227,24 +273,15 @@ fun PetInfoSection(
         Spacer(modifier = Modifier.height(paddingMedium))
 
         if (pets.isEmpty()) {
-            EmptyPetView(onAddPetClicked = onAddPetClicked)
+            EmptyPetView()
         } else {
             Column(verticalArrangement = Arrangement.spacedBy(paddingMedium)) {
                 pets.forEach { pet ->
-                    pet.takeIf { it.owner == uiState.email }?.let {
-                        PetInfoCard(pet = it)
-                    }
-                }
-                Spacer(modifier = Modifier.height(paddingMedium))
-                Button(
-                    onClick = onAddPetClicked,
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFEEF0F2))
-                ) {
-                    Icon(imageVector = Icons.Default.Add, contentDescription = "Add Pet", tint = Gray500)
-                    Spacer(modifier = Modifier.width(paddingSmall))
-                    Text(text = "반려견 추가", color = Gray500, modifier = Modifier.padding(vertical = paddingSmall))
+                    PetInfoCard(
+                        pet = pet,
+                        onEditClicked = { onEditPet(pet) },
+                        onDeleteClicked = { onDeletePet(pet) }
+                    )
                 }
             }
         }
@@ -252,55 +289,116 @@ fun PetInfoSection(
 }
 
 @Composable
-fun PetInfoCard(pet: Pet) {
+fun PetInfoCard(
+    pet: Pet,
+    onEditClicked: () -> Unit,
+    onDeleteClicked: () -> Unit,
+) {
+    var expanded by remember { mutableStateOf(false) }
+    var showDeleteDialog by remember { mutableStateOf(false) }
+
+    if (showDeleteDialog) {
+        ConfirmDeleteDialog(
+            onConfirm = {
+                onDeleteClicked()
+                showDeleteDialog = false
+            },
+            onDismiss = { showDeleteDialog = false }
+        )
+    }
+
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = White),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
-        Column(modifier = Modifier.padding(paddingLarge)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                AsyncImage(
-                    model = cR.drawable.placeholder, // Pet model doesn't have an image URL
-                    contentDescription = pet.name,
-                    modifier = Modifier
-                        .size(64.dp)
-                        .clip(RoundedCornerShape(12.dp)),
-                    contentScale = ContentScale.Crop
-                )
-                Spacer(modifier = Modifier.width(paddingMedium))
-                Column {
-                    Text(text = pet.name, style = Typography.titleMedium, fontWeight = FontWeight.Bold)
-                    Text(text = pet.breed, style = Typography.bodyMedium, color = Gray500)
+        Box {
+            Column(modifier = Modifier.padding(paddingLarge)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    AsyncImage(
+                        model = cR.drawable.placeholder,
+                        contentDescription = pet.name,
+                        modifier = Modifier
+                            .size(64.dp)
+                            .clip(RoundedCornerShape(12.dp)),
+                        contentScale = ContentScale.Crop
+                    )
+                    Spacer(modifier = Modifier.width(paddingMedium))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(text = pet.name, style = Typography.titleMedium, fontWeight = FontWeight.Bold)
+                        Text(text = pet.breed, style = Typography.bodyMedium, color = Gray500)
+                    }
+                }
+                Spacer(modifier = Modifier.height(paddingMedium))
+                Row(horizontalArrangement = Arrangement.spacedBy(paddingMedium)) {
+                    PetDetailChip(
+                        modifier = Modifier.weight(1f),
+                        icon = Icons.Default.Cake,
+                        label = "생일",
+                        value = pet.birthday
+                    )
+                    PetDetailChip(
+                        modifier = Modifier.weight(1f),
+                        icon = Icons.Default.FavoriteBorder,
+                        label = "성별",
+                        value = pet.gender
+                    )
                 }
             }
-            Spacer(modifier = Modifier.height(paddingMedium))
-            Row(horizontalArrangement = Arrangement.spacedBy(paddingMedium)) {
-                PetDetailChip(
-                    modifier = Modifier.weight(1f),
-                    icon = Icons.Default.Cake,
-                    label = "생일",
-                    value = pet.birthday,
-                    bgColor = Color(0xFFFDF0F3)
-                )
-                PetDetailChip(
-                    modifier = Modifier.weight(1f),
-                    icon = Icons.Default.FavoriteBorder,
-                    label = "성별",
-                    value = pet.gender,
-                    bgColor = Color(0xFFEFF5FF)
-                )
+
+            Box(modifier = Modifier.align(Alignment.TopEnd)) {
+                IconButton(onClick = { expanded = true }) {
+                    Icon(imageVector = Icons.Default.MoreVert, contentDescription = "More Options")
+                }
+                DropdownMenu(
+                    expanded = expanded,
+                    onDismissRequest = { expanded = false }
+                ) {
+                    DropdownMenuItem(
+                        text = { Text("수정") },
+                        onClick = {
+                            onEditClicked()
+                            expanded = false
+                        }
+                    )
+                    DropdownMenuItem(
+                        text = { Text("삭제") },
+                        onClick = {
+                            showDeleteDialog = true
+                            expanded = false
+                        }
+                    )
+                }
             }
         }
     }
 }
 
 @Composable
-fun PetDetailChip(modifier: Modifier = Modifier, icon: ImageVector, label: String, value: String, bgColor: Color) {
+fun ConfirmDeleteDialog(onConfirm: () -> Unit, onDismiss: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("삭제 확인") },
+        text = { Text("정말 이 반려견의 정보를 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.") },
+        confirmButton = {
+            TextButton(onClick = onConfirm) {
+                Text("삭제")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("취소")
+            }
+        }
+    )
+}
+
+@Composable
+fun PetDetailChip(modifier: Modifier = Modifier, icon: ImageVector, label: String, value: String) {
     Row(
         modifier = modifier
-            .background(bgColor, RoundedCornerShape(12.dp))
+            .background(Gray200, RoundedCornerShape(12.dp))
             .padding(paddingMedium),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -313,9 +411,8 @@ fun PetDetailChip(modifier: Modifier = Modifier, icon: ImageVector, label: Strin
     }
 }
 
-
 @Composable
-fun EmptyPetView(onAddPetClicked: () -> Unit) {
+fun EmptyPetView() {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -324,7 +421,7 @@ fun EmptyPetView(onAddPetClicked: () -> Unit) {
         verticalArrangement = Arrangement.Center
     ) {
         Image(
-            painter = painterResource(id = cR.drawable.placeholder), // Using a placeholder image
+            painter = painterResource(id = cR.drawable.placeholder),
             contentDescription = "Empty Pet",
             modifier = Modifier.size(80.dp)
         )
@@ -337,21 +434,10 @@ fun EmptyPetView(onAddPetClicked: () -> Unit) {
         )
         Spacer(modifier = Modifier.height(paddingSmall))
         Text(
-            text = "반려견을 추가하고 산책을 기록해보세요",
+            text = "우측 하단의 '+' 버튼으로\n반려견을 추가하고 산책을 기록해보세요",
             fontSize = 14.sp,
             color = Gray300,
             textAlign = TextAlign.Center
         )
-        Spacer(modifier = Modifier.height(paddingLarge))
-        Button(
-            onClick = onAddPetClicked,
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(12.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = Primary)
-        ) {
-            Icon(imageVector = Icons.Default.Add, contentDescription = "Add Pet", tint = White)
-            Spacer(modifier = Modifier.width(paddingSmall))
-            Text(text = "반려견 추가하기", color = White, modifier = Modifier.padding(vertical = paddingSmall))
-        }
     }
 }

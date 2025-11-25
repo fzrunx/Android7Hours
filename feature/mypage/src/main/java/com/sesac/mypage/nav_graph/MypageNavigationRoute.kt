@@ -15,6 +15,6 @@ sealed interface MypageNavigationRoute {
     @Serializable
     data object DetailScreen: MypageNavigationRoute
     @Serializable
-    data object AddPetScreen: MypageNavigationRoute
+    data class AddPetScreen(val petId: Int = -1) : MypageNavigationRoute
 
 }

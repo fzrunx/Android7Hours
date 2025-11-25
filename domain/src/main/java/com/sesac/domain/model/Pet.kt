@@ -8,7 +8,19 @@ data class Pet(
     val birthday: String,
     val neutering: Boolean,
     val breed: String,
-)
+) {
+    companion object {
+        val EMPTY = Pet(
+            id = -1,
+            owner = "",
+            name = "",
+            gender = "남아",
+            birthday = "날짜를 선택해주세요",
+            neutering = false,
+            breed = "",
+        )
+    }
+}
 
 data class Breed(
     val id: Int = -1,

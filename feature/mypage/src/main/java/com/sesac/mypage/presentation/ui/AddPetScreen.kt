@@ -1,5 +1,6 @@
 package com.sesac.mypage.presentation.ui
 
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -11,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -19,6 +21,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DropdownMenuItem
@@ -35,6 +38,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -56,6 +60,7 @@ import com.sesac.common.ui.theme.paddingMedium
 import com.sesac.common.ui.theme.paddingSmall
 import com.sesac.domain.result.AuthUiState
 import com.sesac.domain.model.Pet
+import com.sesac.domain.result.ResponseUiState
 import com.sesac.mypage.presentation.MypageViewModel
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -64,12 +69,19 @@ import java.util.Locale
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddPetScreen(
+    petId: Int,
     navController: NavController,
     viewModel: MypageViewModel = hiltViewModel(),
     uiState: AuthUiState,
 ) {
     val context = LocalContext.current
+    val selectedPet by viewModel.selectedPet.collectAsStateWithLifecycle()
     val breeds by viewModel.breeds.collectAsStateWithLifecycle()
+    val addPetState by viewModel.addPetState.collectAsStateWithLifecycle()
+    val updatePetState by viewModel.updatePetState.collectAsStateWithLifecycle()
+
+    val isLoading = addPetState is ResponseUiState.Loading || updatePetState is ResponseUiState.Loading
+    val isEditMode = petId != -1
 
     var name by remember { mutableStateOf("") }
     var selectedGender by remember { mutableStateOf("남아") }
@@ -79,8 +91,63 @@ fun AddPetScreen(
     var isBreedDropdownExpanded by remember { mutableStateOf(false) }
     var showDatePicker by remember { mutableStateOf(false) }
 
-    LaunchedEffect(Unit) {
+    // Screen 진입 시 데이터 로딩
+    LaunchedEffect(petId) {
         viewModel.getBreeds()
+        if (isEditMode) {
+            viewModel.loadPetForEditing(petId)
+        }
+    }
+
+    // ViewModel의 selectedPet이 변경되면 UI 상태 업데이트
+    LaunchedEffect(selectedPet) {
+        if (isEditMode) {
+            selectedPet?.let { pet ->
+                name = pet.name
+                selectedGender = if (pet.gender == "M") "남아" else "여아"
+                birthday = pet.birthday
+                isNeutered = pet.neutering
+                selectedBreed = pet.breed
+            }
+        }
+    }
+
+    // Screen에서 벗어날 때 선택된 펫 정보 초기화
+    DisposableEffect(Unit) {
+        onDispose {
+            viewModel.clearSelectedPet()
+        }
+    }
+
+    // CUD 상태 변화 감지
+    LaunchedEffect(addPetState) {
+        when(val state = addPetState) {
+            is ResponseUiState.Success -> {
+                Toast.makeText(context, state.message, Toast.LENGTH_SHORT).show()
+                viewModel.resetAddPetState()
+                navController.popBackStack()
+            }
+            is ResponseUiState.Error -> {
+                Toast.makeText(context, state.message, Toast.LENGTH_SHORT).show()
+                viewModel.resetAddPetState()
+            }
+            else -> {}
+        }
+    }
+
+    LaunchedEffect(updatePetState) {
+        when(val state = updatePetState) {
+            is ResponseUiState.Success -> {
+                Toast.makeText(context, state.message, Toast.LENGTH_SHORT).show()
+                viewModel.resetUpdatePetState()
+                navController.popBackStack()
+            }
+            is ResponseUiState.Error -> {
+                Toast.makeText(context, state.message, Toast.LENGTH_SHORT).show()
+                viewModel.resetUpdatePetState()
+            }
+            else -> {}
+        }
     }
 
     Column(
@@ -94,42 +161,28 @@ fun AddPetScreen(
                 .weight(1f)
                 .verticalScroll(rememberScrollState())
         ) {
-            Text(text = "반려견 정보 입력", style = Typography.titleLarge, fontWeight = FontWeight.Bold)
+            Text(
+                text = if (isEditMode) "반려견 정보 수정" else "반려견 정보 입력",
+                style = Typography.titleLarge,
+                fontWeight = FontWeight.Bold
+            )
             Spacer(modifier = Modifier.height(paddingLarge))
 
-            // Name
+            // Form Items...
             AddPetFormItem(label = "이름") {
-                OutlinedTextField(
-                    value = name,
-                    onValueChange = { name = it },
-                    modifier = Modifier.fillMaxWidth(),
-                    placeholder = { Text("이름을 입력해주세요") }
-                )
+                OutlinedTextField(value = name, onValueChange = { name = it }, modifier = Modifier.fillMaxWidth(), placeholder = { Text("이름을 입력해주세요") })
             }
-
-            // Gender
             AddPetFormItem(label = "성별") {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     listOf("남아", "여아").forEach { gender ->
-                        RadioButton(
-                            selected = selectedGender == gender,
-                            onClick = { selectedGender = gender },
-                            colors = RadioButtonDefaults.colors(selectedColor = Primary)
-                        )
+                        RadioButton(selected = selectedGender == gender, onClick = { selectedGender = gender }, colors = RadioButtonDefaults.colors(selectedColor = Primary))
                         Text(text = gender, modifier = Modifier.padding(start = paddingSmall))
                         Spacer(modifier = Modifier.width(paddingMedium))
                     }
                 }
             }
-
-            // Birthday
             AddPetFormItem(label = "생일") {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable { showDatePicker = true }
-                        .padding(vertical = paddingMedium)
-                ) {
+                Box(modifier = Modifier.fillMaxWidth().clickable { showDatePicker = true }.padding(vertical = paddingMedium)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(imageVector = Icons.Default.CalendarToday, contentDescription = "Birthday")
                         Spacer(modifier = Modifier.width(paddingSmall))
@@ -137,46 +190,22 @@ fun AddPetScreen(
                     }
                 }
             }
-
-            // Neutered
             AddPetFormItem(label = "중성화") {
-                Switch(
-                    checked = isNeutered,
-                    onCheckedChange = { isNeutered = it },
-                    colors = SwitchDefaults.colors(checkedThumbColor = Primary)
-                )
+                Switch(checked = isNeutered, onCheckedChange = { isNeutered = it }, colors = SwitchDefaults.colors(checkedThumbColor = Primary))
             }
-
-            // Breed
             AddPetFormItem(label = "품종") {
-                ExposedDropdownMenuBox(
-                    expanded = isBreedDropdownExpanded,
-                    onExpandedChange = { isBreedDropdownExpanded = it }
-                ) {
+                ExposedDropdownMenuBox(expanded = isBreedDropdownExpanded, onExpandedChange = { isBreedDropdownExpanded = it }) {
                     OutlinedTextField(
                         value = selectedBreed,
                         onValueChange = {},
                         readOnly = true,
-                        trailingIcon = {
-                            ExposedDropdownMenuDefaults.TrailingIcon(expanded = isBreedDropdownExpanded)
-                        },
-                        modifier = Modifier
-                            .menuAnchor()
-                            .fillMaxWidth(),
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = isBreedDropdownExpanded) },
+                        modifier = Modifier.menuAnchor().fillMaxWidth(),
                         placeholder = { Text("품종을 선택해주세요") }
                     )
-                    ExposedDropdownMenu(
-                        expanded = isBreedDropdownExpanded,
-                        onDismissRequest = { isBreedDropdownExpanded = false }
-                    ) {
+                    ExposedDropdownMenu(expanded = isBreedDropdownExpanded, onDismissRequest = { isBreedDropdownExpanded = false }) {
                         breeds.forEach { breed ->
-                            DropdownMenuItem(
-                                text = { Text(breed.breedName) },
-                                onClick = {
-                                    selectedBreed = breed.breedName
-                                    isBreedDropdownExpanded = false
-                                }
-                            )
+                            DropdownMenuItem(text = { Text(breed.breedName) }, onClick = { selectedBreed = breed.breedName; isBreedDropdownExpanded = false })
                         }
                     }
                 }
@@ -191,35 +220,28 @@ fun AddPetScreen(
                 if (name.isBlank() || birthday == "날짜를 선택해주세요" || selectedBreed.isBlank()) {
                     Toast.makeText(context, "모든 정보를 입력해주세요.", Toast.LENGTH_SHORT).show()
                 } else {
-                    val genderValue = if (selectedGender == "남아") "M" else "F"
-                    val newPet = Pet(
-                        id = 0, // ID is usually generated by the server
+                    val pet = Pet(
+                        id = if (isEditMode) petId else 0,
                         name = name,
-                        gender = genderValue,
+                        gender = if (selectedGender == "남아") "M" else "F",
                         birthday = birthday,
                         neutering = isNeutered,
                         breed = selectedBreed,
                         owner = uiState.id.toString()
                     )
-                    uiState.token?.let {
-                        viewModel.addPet("Bearer $it", newPet) { success ->
-                            if (success) {
-                                Toast.makeText(context, "반려견이 추가되었습니다.", Toast.LENGTH_SHORT).show()
-                                navController.popBackStack()
-                            } else {
-                                Toast.makeText(context, "오류가 발생했습니다.", Toast.LENGTH_SHORT).show()
-                            }
-                        }
-                    }
+                    if (isEditMode) viewModel.updatePet(pet) else viewModel.addPet(pet)
                 }
             },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(56.dp),
+            modifier = Modifier.fillMaxWidth().height(56.dp),
             shape = RoundedCornerShape(12.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = Primary)
+            colors = ButtonDefaults.buttonColors(containerColor = Primary),
+            enabled = !isLoading
         ) {
-            Text(text = "저장", color = White)
+            if (isLoading) {
+                CircularProgressIndicator(modifier = Modifier.size(24.dp), color = White)
+            } else {
+                Text(text = "저장", color = White)
+            }
         }
     }
 
@@ -233,14 +255,10 @@ fun AddPetScreen(
                         birthday = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date(it))
                     }
                     showDatePicker = false
-                }) {
-                    Text("확인")
-                }
+                }) { Text("확인") }
             },
             dismissButton = {
-                TextButton(onClick = { showDatePicker = false }) {
-                    Text("취소")
-                }
+                TextButton(onClick = { showDatePicker = false }) { Text("취소") }
             }
         ) {
             DatePicker(state = datePickerState)
