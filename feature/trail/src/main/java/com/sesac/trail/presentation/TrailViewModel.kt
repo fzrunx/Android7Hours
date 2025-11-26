@@ -33,6 +33,7 @@ import com.sesac.domain.model.Post
 import com.sesac.domain.result.ResponseUiState
 import com.sesac.domain.usecase.bookmark.BookmarkUseCase
 import com.sesac.domain.usecase.comment.CommentUseCases
+import com.sesac.domain.usecase.session.SessionUseCase
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.catch
@@ -40,6 +41,7 @@ import kotlinx.coroutines.flow.update
 
 @HiltViewModel
 class TrailViewModel @Inject constructor(
+    private val sessionUseCase: SessionUseCase,
     private val pathUseCase: PathUseCase,
     private val bookmarkUseCase: BookmarkUseCase,
     private val commentUseCases: CommentUseCases
@@ -507,8 +509,9 @@ class TrailViewModel @Inject constructor(
 // =================================================================
 
     // ✅ 추가: RoomDB에만 저장 (서버 전송 X)
-    fun savePathAndUpload(path: Path, token: String) {
+    fun savePathAndUpload(path: Path) {
         viewModelScope.launch {
+            val token = sessionUseCase.getAccessToken().first()
             Log.d("TrailViewModel", "📦 === Starting savePathAndUpload ===")
             Log.d("TrailViewModel", "Path Name: ${path.pathName}")
             Log.d("TrailViewModel", "Token: $token")
@@ -526,26 +529,33 @@ class TrailViewModel @Inject constructor(
 
                 // 2️⃣ 서버 업로드
                 Log.d("TrailViewModel", "Attempting to upload path to server...")
-                pathUseCase.createPathUseCase(token, savedPathWithId)
-                    .collectLatest { result ->
-                        when (result) {
-                            is AuthResult.Success -> {
-                                Log.d("TrailViewModel", "Path uploaded successfully to server.")
-                                // 3️⃣ 서버 업로드 성공 시 RoomDB에서 삭제
-                                val deleted = deleteDraft(savedPathWithId)
-                                if (deleted) {
-                                    _invalidToken.send(UiEvent.ToastEvent("경로가 서버로 업로드되었습니다"))
-                                } else {
-                                    _invalidToken.send(UiEvent.ToastEvent("서버 업로드 완료, RoomDB 삭제 실패"))
+                token?.let {
+                    pathUseCase.createPathUseCase(token, savedPathWithId)
+                        .collectLatest { result ->
+                            when (result) {
+                                is AuthResult.Success -> {
+                                    Log.d("TrailViewModel", "Path uploaded successfully to server.")
+                                    // 3️⃣ 서버 업로드 성공 시 RoomDB에서 삭제
+                                    val deleted = deleteDraft(savedPathWithId)
+                                    if (deleted) {
+                                        _invalidToken.send(UiEvent.ToastEvent("경로가 서버로 업로드되었습니다"))
+                                    } else {
+                                        _invalidToken.send(UiEvent.ToastEvent("서버 업로드 완료, RoomDB 삭제 실패"))
+                                    }
                                 }
+
+                                is AuthResult.NetworkError -> {
+                                    Log.e(
+                                        "TrailViewModel",
+                                        "Server upload failed: ${result.exception.message}"
+                                    )
+                                    _invalidToken.send(UiEvent.ToastEvent("서버 업로드 실패: ${result.exception.message}"))
+                                }
+
+                                else -> {}
                             }
-                            is AuthResult.NetworkError -> {
-                                Log.e("TrailViewModel", "Server upload failed: ${result.exception.message}")
-                                _invalidToken.send(UiEvent.ToastEvent("서버 업로드 실패: ${result.exception.message}"))
-                            }
-                            else -> {}
                         }
-                    }
+                }
             } catch (e: Exception) {
                 Log.e("TrailViewModel", "An exception occurred in savePathAndUpload: ${e.message}", e)
                 _invalidToken.send(UiEvent.ToastEvent("오류 발생: ${e.message}"))
