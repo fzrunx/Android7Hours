@@ -4,7 +4,7 @@ import android.util.Log
 import com.sesac.data.mapper.toBreedsList
 import com.sesac.data.mapper.toPetDTO
 import com.sesac.data.mapper.toPetList
-import com.sesac.data.source.remote.api.PetsApi
+import com.sesac.data.source.api.PetsApi
 import com.sesac.domain.model.Breed
 import com.sesac.domain.model.Pet
 import com.sesac.domain.repository.PetRepository

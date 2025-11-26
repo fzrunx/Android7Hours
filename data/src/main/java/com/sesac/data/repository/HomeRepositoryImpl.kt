@@ -1,6 +1,6 @@
 package com.sesac.data.repository
 
-import com.sesac.data.source.remote.api.AuthApi
+import com.sesac.data.source.api.AuthApi
 import com.sesac.data.source.local.datasource.MockCommunity
 import com.sesac.data.source.local.datasource.MockHome
 import com.sesac.domain.model.BannerData

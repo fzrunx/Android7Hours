@@ -24,17 +24,23 @@ data class PathDTO(
     val bookmarksCount: Int,
     @Json(name = "is_bookmarked")
     val isBookmarked: Boolean,
+
 )
 
 @JsonClass(generateAdapter = true)
 data class PathCreateRequestDTO(
+    @Json(name = "id")
+    val id: Int?,
     @Json(name = "path_name")
     val pathName: String?,
     @Json(name = "path_comment")
     val pathComment: String?,
+    @Json(name = "uploader") // Add this line
+    val uploader: String?, // Add this line
     val level: Int,
     val distance: Float,
     val duration: Int?,
+    @Json(name = "is_private")
     val isPrivate: Boolean = false,
     val thumbnail: String?,
     val coords: List<CoordRequestDTO>,
@@ -42,6 +48,11 @@ data class PathCreateRequestDTO(
     val startTime: String?,
     @Json(name = "end_time")
     val endTime: String?,
+    // ✅ 좌표는 인코딩된 문자열로 전송 (95% 압축!)
+    val polyline: String,
+
+    // 마커는 개수가 적으므로 일반 배열
+    val markers: List<List<Any>>?
 )
 
 @JsonClass(generateAdapter = true)
@@ -56,19 +67,6 @@ data class PathUpdateRequestDTO(
     val thumbnail: String?,
     @Json(name = "is_private")
     val isPrivate: Boolean = false,
-)
-
-@JsonClass(generateAdapter = true)
-data class PathUploadDto(
-    @Json(name = "path_name") val pathName: String,
-    @Json(name = "distance") val distance: Float,
-    @Json(name = "duration") val duration: Int,
-
-    // ✅ 좌표는 인코딩된 문자열로 전송 (95% 압축!)
-    @Json(name = "polyline") val polyline: String,
-
-    // 마커는 개수가 적으므로 일반 배열
-    @Json(name = "markers") val markers: List<List<Any>>?
 )
 
 @JsonClass(generateAdapter = true)
@@ -89,7 +87,8 @@ data class CoordDTO(
 @JsonClass(generateAdapter = true)
 data class CoordRequestDTO(
     val lat: Double,
-    val lng: Double
+    val lng: Double,
+    val z: Double = 0.0,
 ) {
     companion object {
         val EMPTY = CoordRequestDTO(

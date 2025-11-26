@@ -450,26 +450,21 @@ class TrailViewModel @Inject constructor(
     }
 
     // Draft 저장 (suspend)
-    suspend fun saveDraft(draft: Path): Boolean {
+    suspend fun saveDraft(draft: Path): Path? {
         return try {
             Log.d("TrailViewModel", "🔄 Calling trailUseCase.saveDraftUseCase...")
             Log.d("TrailViewModel", "Draft details: id=${draft.id}, name=${draft.pathName}, coords=${draft.coord?.size}")
 
-            val success = pathUseCase.saveDraftUseCase(draft).first()
+            val savedPath = pathUseCase.saveDraftUseCase(draft).first()
 
-            Log.d("TrailViewModel", "UseCase returned: $success")
+            Log.d("TrailViewModel", "UseCase returned: $savedPath")
 
-            if (success) {
-                loadDrafts()
-                Log.d("TrailViewModel", "✅ Draft saved and list reloaded")
-            } else {
-                Log.e("TrailViewModel", "❌ UseCase returned false")
-            }
-
-            success
+            loadDrafts()
+            Log.d("TrailViewModel", "✅ Draft saved and list reloaded")
+            savedPath
         } catch (e: Exception) {
             Log.e("TrailViewModel", "❌ Exception in saveDraft: ${e.message}", e)
-            false
+            null
         }
     }
 
@@ -496,28 +491,30 @@ class TrailViewModel @Inject constructor(
     // ✅ 추가: RoomDB에만 저장 (서버 전송 X)
     fun savePathAndUpload(path: Path, token: String) {
         viewModelScope.launch {
-            Log.d("TrailViewModel", "📦 === Starting savePathToRoom ===")
-            Log.d("TrailViewModel", "Path ID: ${path.id}")
+            Log.d("TrailViewModel", "📦 === Starting savePathAndUpload ===")
             Log.d("TrailViewModel", "Path Name: ${path.pathName}")
-            Log.d("TrailViewModel", "Path Distance: ${path.distance}")
-            Log.d("TrailViewModel", "Path Time: ${path.duration}")
-            Log.d("TrailViewModel", "Path Coords: ${path.coord?.size ?: 0} coordinates")
+            Log.d("TrailViewModel", "Token: $token")
 
             try {
                 // 1️⃣ RoomDB에 저장
-                val saved = saveDraft(path)
-                if (!saved) {
+                Log.d("TrailViewModel", "Attempting to save draft to RoomDB...")
+                val savedPathWithId = saveDraft(path)
+                if (savedPathWithId == null) {
+                    Log.e("TrailViewModel", "Failed to save draft to RoomDB or retrieve generated ID.")
                     _invalidToken.send(UiEvent.ToastEvent("경로 저장 실패"))
                     return@launch
                 }
+                Log.d("TrailViewModel", "Draft saved successfully to RoomDB.")
 
                 // 2️⃣ 서버 업로드
-                pathUseCase.createPathUseCase(token, path)
+                Log.d("TrailViewModel", "Attempting to upload path to server...")
+                pathUseCase.createPathUseCase(token, savedPathWithId)
                     .collectLatest { result ->
                         when (result) {
                             is AuthResult.Success -> {
+                                Log.d("TrailViewModel", "Path uploaded successfully to server.")
                                 // 3️⃣ 서버 업로드 성공 시 RoomDB에서 삭제
-                                val deleted = deleteDraft(path)
+                                val deleted = deleteDraft(savedPathWithId)
                                 if (deleted) {
                                     _invalidToken.send(UiEvent.ToastEvent("경로가 서버로 업로드되었습니다"))
                                 } else {
@@ -525,12 +522,14 @@ class TrailViewModel @Inject constructor(
                                 }
                             }
                             is AuthResult.NetworkError -> {
+                                Log.e("TrailViewModel", "Server upload failed: ${result.exception.message}")
                                 _invalidToken.send(UiEvent.ToastEvent("서버 업로드 실패: ${result.exception.message}"))
                             }
                             else -> {}
                         }
                     }
             } catch (e: Exception) {
+                Log.e("TrailViewModel", "An exception occurred in savePathAndUpload: ${e.message}", e)
                 _invalidToken.send(UiEvent.ToastEvent("오류 발생: ${e.message}"))
             }
         }

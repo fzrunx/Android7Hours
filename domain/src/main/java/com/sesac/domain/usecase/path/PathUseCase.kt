@@ -11,7 +11,4 @@ data class PathUseCase(
     val saveDraftUseCase: SaveDraftUseCase,
     val getAllDraftsUseCase: GetAllDraftsUseCase,
     val deleteDraftUseCase: DeleteDraftUseCase,
-    // server 관련 UseCase 추가
-    val uploadPathUseCase: UploadPathUseCase
-
 )

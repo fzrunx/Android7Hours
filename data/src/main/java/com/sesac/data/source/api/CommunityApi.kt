@@ -1,4 +1,4 @@
-package com.sesac.data.source.remote.api
+package com.sesac.data.source.api
 
 import retrofit2.http.GET
 
