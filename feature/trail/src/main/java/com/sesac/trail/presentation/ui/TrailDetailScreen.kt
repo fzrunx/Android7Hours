@@ -66,6 +66,7 @@ import com.sesac.domain.result.AuthUiState
 import com.sesac.domain.result.ResponseUiState
 import com.sesac.trail.presentation.TrailViewModel
 import com.sesac.common.component.CommonCommentSection
+import com.sesac.trail.nav_graph.TrailNavigationRoute
 import com.sesac.trail.presentation.component.TagFlow
 
 
@@ -155,13 +156,18 @@ fun TrailDetailScreen(
                         if (selected.uploader == uiState.nickname) {
                             Row {
                                 TextButton(
-                                    onClick = { onEditClick(selected) },
+//                                    onClick = { onEditClick(selected) },
+                                    onClick = { navController.navigate(TrailNavigationRoute.TrailCreateTab) },
                                     modifier = Modifier.height(32.dp)
                                 ) {
                                     Text("수정", color = GrayTabText, fontSize = 14.sp)
                                 }
                                 TextButton(
-                                    onClick = { onDeleteClick(selected) },
+//                                    onClick = { onDeleteClick(selected) },
+                                    onClick = {
+                                        viewModel.deletePath(uiState.token, selected.id)
+                                        navController.popBackStack()
+                                    },
                                     modifier = Modifier.height(32.dp)
                                 ) {
                                     Text("삭제", color = GrayTabText, fontSize = 14.sp)
@@ -289,7 +295,6 @@ fun PathImageHeader(
             modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.Crop
         )
-        Log.d("TAG-TrailDetailScreen", "isBookmarked3 : $isBookmarked")
         FloatingActionButton(
             onClick = onBookmarkClick,
             modifier = Modifier

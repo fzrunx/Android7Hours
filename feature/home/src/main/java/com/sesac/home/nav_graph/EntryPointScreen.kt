@@ -166,7 +166,7 @@ fun EntryPointScreen(
                                     // 중요: popUpTo의 대상을 "이동하려는 곳"이 아니라 "그래프의 시작점(Home)"으로 설정해야 합니다.
                                     // 이렇게 해야 탭 이동 시 백스택이 계속 쌓이지 않고 깔끔하게 교체됩니다.
                                     popUpTo(navController.graph.findStartDestination().id) {
-                                        saveState = true
+//                                        saveState = true
                                     }
                                     launchSingleTop = true
                                     restoreState = true

@@ -1,43 +1,42 @@
 package com.sesac.trail.presentation
 
-import android.R
 import android.util.Log
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
-import com.sesac.domain.model.Coord
-import com.sesac.common.model.UiEvent
-import com.sesac.domain.model.Path
-import com.sesac.domain.result.AuthResult
-import com.sesac.domain.usecase.path.PathUseCase
-import com.sesac.trail.presentation.ui.WalkPathTab
-import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.receiveAsFlow
-import kotlinx.coroutines.launch
-import javax.inject.Inject
-import com.naver.maps.geometry.LatLng // ⭐ 추가
-import com.naver.maps.map.NaverMap
-import com.naver.maps.map.overlay.Marker
-import com.naver.maps.map.overlay.PolylineOverlay
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.naver.maps.geometry.LatLng
+import com.naver.maps.map.NaverMap
+import com.naver.maps.map.overlay.Marker
+import com.naver.maps.map.overlay.PolylineOverlay
+import com.sesac.common.model.UiEvent
 import com.sesac.domain.model.BookmarkType
 import com.sesac.domain.model.BookmarkedPath
 import com.sesac.domain.model.Comment
 import com.sesac.domain.model.CommentType
+import com.sesac.domain.model.Coord
+import com.sesac.domain.model.Path
 import com.sesac.domain.model.Post
+import com.sesac.domain.result.AuthResult
 import com.sesac.domain.result.ResponseUiState
 import com.sesac.domain.usecase.bookmark.BookmarkUseCase
 import com.sesac.domain.usecase.comment.CommentUseCases
+import com.sesac.domain.usecase.path.PathUseCase
 import com.sesac.domain.usecase.session.SessionUseCase
+import com.sesac.trail.presentation.ui.WalkPathTab
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 @HiltViewModel
 class TrailViewModel @Inject constructor(
@@ -96,6 +95,7 @@ class TrailViewModel @Inject constructor(
     fun stopRecording() {
         _isRecording.value = false
         _isPaused.value = false
+        _recordingTime.value = 0L
     }
 
     fun addRecordingTime(delta: Long) {
@@ -227,7 +227,9 @@ class TrailViewModel @Inject constructor(
     }
 
     fun clearSelectedPath() {
-        _selectedPath.value = null
+        viewModelScope.launch {
+            _selectedPath.value = null
+        }
     }
 
     fun getUserBookmarkedPaths(token: String?) {
@@ -300,6 +302,8 @@ class TrailViewModel @Inject constructor(
     // 📌 6. 경로 CRUD (생성, 수정, 삭제)
     // =================================================================
     
+    private val _createState = MutableStateFlow<ResponseUiState<Path>>(ResponseUiState.Idle)
+    val createState = _createState.asStateFlow()
     private val _updateState = MutableStateFlow<ResponseUiState<Path>>(ResponseUiState.Idle)
     val updateState = _updateState.asStateFlow()
 
@@ -322,35 +326,47 @@ class TrailViewModel @Inject constructor(
             }
         }
     }
-    fun updatePath(token: String?) {
+    fun updatePath() {
         viewModelScope.launch {
+            val token = sessionUseCase.getAccessToken().first()
             if (token.isNullOrEmpty()) {
                 _invalidToken.send(UiEvent.ToastEvent("유저 정보가 없습니다."))
                 return@launch
             }
+            _updateState.value = ResponseUiState.Loading
             _selectedPath.value?.let { path ->
-                _updateState.value = ResponseUiState.Loading
                 pathUseCase.updatePathUseCase(token, path.id, path)
                     .catch { e ->
                         _updateState.value = ResponseUiState.Error(e.message ?: "알 수 없는 오류")
                     }
                     .collectLatest { result ->
-                    when (result) {
-                        is AuthResult.Success -> {
-                            _updateState.value = ResponseUiState.Success("산책로가 수정되었습니다.", result.resultData)
+
+                        when (result) {
+                            is AuthResult.Success -> {
+                                _updateState.value =
+                                    ResponseUiState.Success("산책로가 수정되었습니다.", result.resultData)
+                            }
+                            is AuthResult.NetworkError -> {
+                                _updateState.value =
+                                    ResponseUiState.Error(result.exception.message ?: "네트워크 오류")
+                            }
+                            else -> {}
                         }
-                        is AuthResult.NetworkError -> {
-                            _updateState.value = ResponseUiState.Error(result.exception.message ?: "네트워크 오류")
-                        }
-                        else -> {}
                     }
-                }
             }
         }
     }
-    
+
+    fun resetCreateState() {
+        viewModelScope.launch {
+            _createState.value = ResponseUiState.Idle
+        }
+    }
+
     fun resetUpdateState() {
-        _updateState.value = ResponseUiState.Idle
+        viewModelScope.launch {
+            _updateState.value = ResponseUiState.Idle
+        }
     }
 
     fun deletePath(token: String?, pathId: Int) {
@@ -427,25 +443,17 @@ class TrailViewModel @Inject constructor(
     }
 
 
-    fun createDraftPath(name: String, description: String?): Path {
+    fun createDraftPath(selectedPath: Path): Path {
         val coords = tempPathCoords.value.map { latLng ->
             Coord(latLng.latitude, latLng.longitude)
         }
 
-        val newDraft = Path(
-            id = -1,
-            pathName = name,
-            pathComment = description ?: "",
+        val newDraft = selectedPath.copy(
             coord = coords,
-            markers = _memoMarkers.value,
-            likes = 0,
-            uploader = "",
-            // Provide default values for newly added fields in Path data class
-            bookmarksCount = 0,
-            isBookmarked = false,
-            distanceFromMe = 0f,
-            tags = emptyList()
+            markers = _memoMarkers.value
         )
+
+
         _draftPath.value = newDraft
         return newDraft
     }
@@ -511,25 +519,21 @@ class TrailViewModel @Inject constructor(
     // ✅ 추가: RoomDB에만 저장 (서버 전송 X)
     fun savePathAndUpload(path: Path) {
         viewModelScope.launch {
+            _createState.value = ResponseUiState.Loading
             val token = sessionUseCase.getAccessToken().first()
-            Log.d("TrailViewModel", "📦 === Starting savePathAndUpload ===")
-            Log.d("TrailViewModel", "Path Name: ${path.pathName}")
-            Log.d("TrailViewModel", "Token: $token")
-
             try {
                 // 1️⃣ RoomDB에 저장
-                Log.d("TrailViewModel", "Attempting to save draft to RoomDB...")
                 val savedPathWithId = saveDraft(path)
                 if (savedPathWithId == null) {
                     Log.e(
                         "TrailViewModel",
                         "Failed to save draft to RoomDB or retrieve generated ID."
                     )
-                    _invalidToken.send(UiEvent.ToastEvent("경로 저장 실패"))
+//                    _invalidToken.send(UiEvent.ToastEvent("경로 저장 실패"))
+                    _createState.value = ResponseUiState.Error("경로 저장 실패")
                     return@launch
                 }
-                val roomDbId = savedPathWithId.id
-                Log.d("TrailViewModel", "✅ RoomDB 저장 완료 - ID: $roomDbId")
+                Log.d("TAG-TrailViewModel", "✅ RoomDB 저장 완료 - path: $savedPathWithId")
 
 
                 // 2️⃣ 서버 업로드
@@ -538,48 +542,58 @@ class TrailViewModel @Inject constructor(
                     val result = pathUseCase.createPathUseCase(token, savedPathWithId)
                         .first { it is AuthResult.Success || it is AuthResult.NetworkError }
                     when (result) {
+                        is AuthResult.Loading -> { }
                         is AuthResult.Success -> {
                             Log.d("TrailViewModel", "Path uploaded successfully to server.")
+                            _createState.value = ResponseUiState.Success("경로가 서버로 업로드되었습니다.", savedPathWithId)
                             // RoomDB 삭제
                             val deleted = deleteDraft(savedPathWithId)
                             if (deleted) {
-                                _invalidToken.send(UiEvent.ToastEvent("경로가 서버로 업로드되었습니다"))
+//                                _invalidToken.send(UiEvent.ToastEvent("경로가 서버로 업로드되었습니다"))
+                                Log.d("TAG-TrailViewModel", "savedPathWithid : $savedPathWithId")
+                                Log.d("TAG-TrailViewModel", "result : ${result.resultData}")
                                 getMyPaths(token)
                                 loadDrafts()
+                                _createState.value = ResponseUiState.Success("경로가 서버로 업로드되었습니다.", savedPathWithId)
                             }
                         }
 
 
                         is AuthResult.NetworkError -> {
-                        val errorMsg = result.exception.message ?: ""
-                        // 🔥 JsonDataException이면 실제로는 저장 성공한 것
-                        if (errorMsg.contains("JsonDataException") ||
-                            errorMsg.contains("Required value") ||
-                            errorMsg.contains("missing at")
-                        ) {
+                            val errorMsg = result.exception.message ?: ""
+                            // 🔥 JsonDataException이면 실제로는 저장 성공한 것
 
-                            Log.d("TrailViewModel", "✅ JSON 파싱 에러지만 서버 저장은 성공으로 간주")
-                            // RoomDB 삭제
-                            val deleted = deleteDraft(savedPathWithId)
-                            if (deleted) {
-                                _invalidToken.send(UiEvent.ToastEvent("경로가 서버로 업로드되었습니다"))
-                                getMyPaths(token)
-                                loadDrafts()
+                            if (errorMsg.contains("JsonDataException") ||
+                                errorMsg.contains("Required value") ||
+                                errorMsg.contains("missing at")
+                            ) {
+
+                                Log.d("TrailViewModel", "✅ JSON 파싱 에러지만 서버 저장은 성공으로 간주")
+                                // RoomDB 삭제
+                                val deleted = deleteDraft(savedPathWithId)
+                                if (deleted) {
+//                                    _invalidToken.send(UiEvent.ToastEvent("경로가 서버로 업로드되었습니다"))
+                                    getMyPaths(token)
+                                    loadDrafts()
+                                    _createState.value = ResponseUiState.Success("경로가 서버로 업로드되었습니다.", savedPathWithId)
+                                } else {
+//                                    _invalidToken.send(UiEvent.ToastEvent("서버 업로드 완료, RoomDB 삭제 실패"))
+                                    _createState.value = ResponseUiState.Success("서버 업로드 완료, RoomDB 삭제 실패", savedPathWithId)
+                                }
                             } else {
-                                _invalidToken.send(UiEvent.ToastEvent("서버 업로드 완료, RoomDB 삭제 실패"))
+                                // 진짜 네트워크 에러
+                                Log.e("TrailViewModel", "❌ 실제 업로드 실패: $errorMsg")
+//                                _invalidToken.send(UiEvent.ToastEvent("서버 업로드 실패: $errorMsg"))
+                                _createState.value = ResponseUiState.Error("서버 업로드 실패 $errorMsg")
                             }
-                        } else {
-                            // 진짜 네트워크 에러
-                            Log.e("TrailViewModel", "❌ 실제 업로드 실패: $errorMsg")
-                            _invalidToken.send(UiEvent.ToastEvent("서버 업로드 실패: $errorMsg"))
                         }
-                    }
                         else -> {}
                     }
                 }
             } catch (e: Exception) {
                 Log.e("TrailViewModel", "An exception occurred in savePathAndUpload: ${e.message}", e)
                 _invalidToken.send(UiEvent.ToastEvent("오류 발생: ${e.message}"))
+                _createState.value = ResponseUiState.Error("오류 발생: ${e.message}")
             }
         }
     }

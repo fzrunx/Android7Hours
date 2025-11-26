@@ -355,35 +355,7 @@ fun TrailMainScreen(
                 )
             }
         }
-//        // ✅ 마커 표시
-//        if (!isRecording) {
-//            when (recommendedPaths) {
-//                is AuthResult.Loading -> CircularProgressIndicator()
-//                is AuthResult.Success -> {
-//                    (recommendedPaths as AuthResult.Success<List<UserPath>>).resultData.forEach { path ->
-//                        path.coord?.forEach {
-//                            val hBias = (it.longitude * 2) - 1f
-//                            val vBias = (it.latitude * 2) - 1f
-//
-////                            PathMarker(
-////                                modifier = Modifier.align(BiasAlignment(hBias.toFloat(), vBias.toFloat())),
-////                                onClick = {
-////                                    viewModel.updateSelectedPath(path)
-////                                    navController.navigate(TrailNavigationRoute.TrailDetailTab)
-////                                }
-////                            )
-//                        }
-//
-//                    }
-//                }
-//                is AuthResult.NetworkError -> Toast.makeText(
-//                    context,
-//                    (recommendedPaths as AuthResult.NetworkError).exception.message,
-//                    Toast.LENGTH_SHORT
-//                ).show()
-//                else -> { }
-//            }
-//        }
+
         // ✅ 하단 Bottom Sheet
         AnimatedVisibility(
             visible = isSheetOpen && !isRecording,
@@ -421,6 +393,7 @@ fun TrailMainScreen(
                             viewModel.updateIsRecording(true)
                             viewModel.updateRecordingTime(0)
                             viewModel.updateIsSheetOpen(false)
+                            viewModel.startRecording()
                         },
                         onTabChange = { viewModel.updateActiveTab(it) },
                         onPathClick = {
@@ -470,7 +443,8 @@ fun TrailMainScreen(
                 recordingTime = recordingTime,
                 onPauseToggle = { viewModel.updateIsPaused(null) },
                 onStopRecording = {
-                    viewModel.updateSelectedPath(Path.EMPTY)
+                    viewModel.resetCreateState()
+                    viewModel.resetUpdateState()
                     // 현재 기록된 좌표(LatLng)를 도메인 모델의 Coord로 변환
                     val recordedCoords = tempPathCoords.map { latLng -> Coord(latLng.latitude, latLng.longitude) } // ← MODIFIED
 
@@ -486,7 +460,8 @@ fun TrailMainScreen(
 
                     // 녹화 관련 상태 초기화
                     viewModel.updateIsRecording(false)
-                    viewModel.updateRecordingTime(0)
+//                    viewModel.updateRecordingTime(0)
+                    viewModel.stopRecording()
                     viewModel.updateIsFollowingPath(false)
                     viewModel.updateIsPaused(false)
 

@@ -107,33 +107,63 @@ fun TrailCreateScreen(
 ) {
     val context = LocalContext.current
     val selectedPath by viewModel.selectedPath.collectAsStateWithLifecycle()
+    val createState by viewModel.createState.collectAsStateWithLifecycle()
     val updateState by viewModel.updateState.collectAsStateWithLifecycle()
-    val isLoading = updateState is ResponseUiState.Loading
-
-    Log.d("Tag-TrailCreateScreen", "selectedCreatePath = $selectedPath")
+//    var isLoading by remember { mutableStateOf(false) }
+    val isLoading = updateState is ResponseUiState.Loading || createState is ResponseUiState.Loading
+    Log.d("TAG-TrailCreateScree", "is loading : $isLoading")
 
     val scope = rememberCoroutineScope()
     var validationState by remember { mutableStateOf(ValidationState()) }
 
     LaunchedEffect(key1 = updateState) {
         when(val state = updateState) {
+            is ResponseUiState.Loading -> {}
             is ResponseUiState.Success -> {
                 val updatedPath = state.result
                 Toast.makeText(context, "산책로가 수정되었습니다!", Toast.LENGTH_SHORT).show()
-
+//                isLoading = false
                 // 수정 화면 스택에서 제거하고, 수정된 상세 화면으로 이동
                 navController.navigate(NestedNavigationRoute.TrailDetail(updatedPath.toPathParceler())) {
                     popUpTo(navController.currentDestination!!.id) {
                         inclusive = true
                     }
+                    launchSingleTop = true
                 }
                 viewModel.resetUpdateState()
             }
             is ResponseUiState.Error -> {
                 Toast.makeText(context, state.message, Toast.LENGTH_SHORT).show()
                 viewModel.resetUpdateState()
+//                isLoading = false
             }
-            else -> {}
+            else -> {  }
+        }
+    }
+
+    LaunchedEffect(key1 = createState) {
+        when(val state = createState) {
+            is ResponseUiState.Loading -> {}
+            is ResponseUiState.Success -> {
+                val createdPath = state.result
+                Toast.makeText(context, "산책로가 생성되었습니다!", Toast.LENGTH_SHORT).show()
+                Log.d("TAG-TrailCreateScreen", "created path : $createdPath")
+                // 수정 화면 스택에서 제거하고, 수정된 상세 화면으로 이동
+                viewModel.resetCreateState()
+                navController.navigate(NestedNavigationRoute.TrailDetail(createdPath.toPathParceler())) {
+                    popUpTo(navController.currentDestination!!.id) {
+                        inclusive = true
+                    }
+                    launchSingleTop = true
+                }
+
+            }
+            is ResponseUiState.Error -> {
+                Toast.makeText(context, state.message, Toast.LENGTH_SHORT).show()
+                viewModel.resetCreateState()
+
+            }
+            else -> {  }
         }
     }
 
@@ -206,22 +236,19 @@ fun TrailCreateScreen(
 
                 if (selected.id != -1) {
                     // 기존 경로 수정 -> ViewModel에 위임
-                    viewModel.updatePath(uiState.token)
+                    viewModel.updatePath()
+//                    viewModel.resetUpdateState()
                 } else {
                     // 신규 경로: Draft 생성 → RoomDB 저장
-                    val newDraft = viewModel.createDraftPath(selected.pathName, selected.pathComment)
+                    val newDraft = viewModel.createDraftPath(selected)
                     viewModel.savePathAndUpload(newDraft)
+                    viewModel.resetCreateState()
                     Toast.makeText(context, "산책로가 저장되었습니다!", Toast.LENGTH_SHORT).show()
                 }
-
-                // ✅ 중요: 저장 후 selectedPath 초기화
-                viewModel.clearSelectedPath()
 
                 // 🔥 저장 완료 후 마커 초기화
                 viewModel.clearMemoMarkers()
                 viewModel.clearTempPath()
-
-                navController.popBackStack()
             }
         }
     }
@@ -356,7 +383,7 @@ fun CreateBottomActions(
                 if (isLoading) {
                     CircularProgressIndicator(modifier = Modifier.size(24.dp), color = White)
                 } else {
-                    Text(if (isEditing) "수정하기" else "등록하기")
+                    Text(if (isEditing) "수정하기" else "등록하기", color = White)
                 }
             }
         }
@@ -392,7 +419,7 @@ fun ImageUploader(
                         .align(Alignment.TopEnd)
                         .padding(paddingMicro)
                         .background(Red500, CircleShape),
-                    colors = IconButtonDefaults.iconButtonColors(contentColor = Color.White)
+                    colors = IconButtonDefaults.iconButtonColors(contentColor = White)
                 ) {
                     Icon(Icons.Filled.Close, contentDescription = "Remove image")
                 }
