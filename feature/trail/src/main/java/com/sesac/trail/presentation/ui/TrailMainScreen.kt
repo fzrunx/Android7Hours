@@ -331,6 +331,14 @@ fun TrailMainScreen(
         LaunchedEffect(memoMarkers, currentNaverMap) {
             val map = currentNaverMap ?: return@LaunchedEffect
 
+            // 🔥 녹화 중일 때만 마커 표시
+            if (!isRecording) {
+                // 기존 마커 정리
+                currentMarkers.forEach { it.map = null }
+                currentMarkers.clear()
+                return@LaunchedEffect  // 녹화 중이 아니면 마커 그리지 않음
+            }
+
             // 기존 마커 정리
             currentMarkers.forEach { it.map = null }
             currentMarkers.clear()
@@ -466,8 +474,12 @@ fun TrailMainScreen(
                     // 현재 기록된 좌표(LatLng)를 도메인 모델의 Coord로 변환
                     val recordedCoords = tempPathCoords.map { latLng -> Coord(latLng.latitude, latLng.longitude) } // ← MODIFIED
 
-                    // 새로운 UserPath 객체를 생성하되, 기록된 좌표를 포함시킴
-                    val newPath = Path.EMPTY.copy(coord = recordedCoords)
+                    // 🔥 마커 데이터 포함
+                    val currentMemoMarkers = viewModel.memoMarkers.value
+                    val newPath = Path.EMPTY.copy(
+                        coord = recordedCoords,
+                        markers = currentMemoMarkers
+                    )
 
                     // ViewModel에 새로 생성된 경로를 업데이트
                     viewModel.updateSelectedPath(newPath)
@@ -479,6 +491,7 @@ fun TrailMainScreen(
                     viewModel.updateIsPaused(false)
 
                     viewModel.clearAllMapObjects(currentNaverMap)
+
                     currentNaverMap?.locationTrackingMode = LocationTrackingMode.Follow
 
                     // 화면 이동

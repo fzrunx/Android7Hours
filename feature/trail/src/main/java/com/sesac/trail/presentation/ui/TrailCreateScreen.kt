@@ -216,6 +216,11 @@ fun TrailCreateScreen(
 
                 // ✅ 중요: 저장 후 selectedPath 초기화
                 viewModel.clearSelectedPath()
+
+                // 🔥 저장 완료 후 마커 초기화
+                viewModel.clearMemoMarkers()
+                viewModel.clearTempPath()
+
                 navController.popBackStack()
             }
         }
