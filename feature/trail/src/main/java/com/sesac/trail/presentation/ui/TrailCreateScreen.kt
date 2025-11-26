@@ -136,7 +136,7 @@ fun TrailCreateScreen(
             else -> {}
         }
     }
-    
+
     LaunchedEffect(Unit) {
         viewModel.invalidToken.collectLatest { event ->
             if (event is UiEvent.ToastEvent) Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
@@ -200,11 +200,7 @@ fun TrailCreateScreen(
                 )
 
                 if (isNameInvalid || isDistanceInvalid || isTimeInvalid) {
-                    Toast.makeText(
-                        context,
-                        "필수 항목을 모두 입력해주세요",
-                        Toast.LENGTH_SHORT
-                    ).show()
+                    Toast.makeText(context, "필수 항목을 모두 입력해주세요", Toast.LENGTH_SHORT).show()
                     return@launch
                 }
 
@@ -213,14 +209,14 @@ fun TrailCreateScreen(
                     viewModel.updatePath(uiState.token)
                 } else {
                     // 신규 경로: Draft 생성 → RoomDB 저장
-                    viewModel.createDraftPath(selected.pathName, selected.pathComment)
-                    viewModel.draftPath.value?.let { draft ->
-                        viewModel.savePathToRoom(draft)
-                    }
+                    val newDraft = viewModel.createDraftPath(selected.pathName, selected.pathComment)
+                    viewModel.savePathAndUpload(newDraft, token)
                     Toast.makeText(context, "산책로가 저장되었습니다!", Toast.LENGTH_SHORT).show()
-                    viewModel.clearSelectedPath()
-                    navController.popBackStack()
                 }
+
+                // ✅ 중요: 저장 후 selectedPath 초기화
+                viewModel.clearSelectedPath()
+                navController.popBackStack()
             }
         }
     }

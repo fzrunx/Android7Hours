@@ -1,6 +1,7 @@
 package com.sesac.data.repository
 
 import android.util.Log
+import com.naver.maps.geometry.LatLng
 import com.sesac.data.mapper.toBookmarkResponse
 import com.sesac.data.dao.PathDao
 import com.sesac.data.mapper.toMyRecord
@@ -12,7 +13,7 @@ import com.sesac.data.mapper.toPathList
 import com.sesac.data.mapper.toUserPath
 import com.sesac.data.source.api.PathApi
 import com.sesac.data.type.DraftStatus
-import com.sesac.data.source.local.datasource.MockTrail
+import com.sesac.data.util.PolylineEncoder
 import com.sesac.domain.model.BookmarkResponse
 import com.sesac.domain.model.Coord
 import com.sesac.domain.model.MyRecord
@@ -63,23 +64,45 @@ class PathRepositoryImpl @Inject constructor(
 
     override suspend fun createPath(token: String, path: Path): Flow<AuthResult<Path>> = flow {
         emit(AuthResult.Loading)
+        // 🔹 Polyline 인코딩 적용
+        val encodedPolyline = PolylineEncoder.encode(
+            path.coord?.map { LatLng(it.latitude, it.longitude) } ?: emptyList()
+        )
+
+        // 🔹 DTO 생성 시 polyline 필드에 적용
+        val request = path.toPathCreateRequestDTO()
+//            .copy(polyline = encodedPolyline)
+
+//        Log.d("PathRepository", "📤 === Request Details ===")
+//        Log.d("PathRepository", "  id: ${request.id}")  // null이어야 함
+//        Log.d("PathRepository", "  pathName: ${request.pathName}")
+//        Log.d("PathRepository", "  level: ${request.level}")
+//        Log.d("PathRepository", "  distance: ${request.distance}")
+//        Log.d("PathRepository", "  polyline length: ${request.polyline.length}")
+//        Log.d("PathRepository", "  markers: ${request.markers?.size}")
+        Log.d("PathRepository", "  path create request: $request")
+
         val createdPath = pathApi.createPath(
             token = "Bearer $token",
-            request = path.toPathCreateRequestDTO()
+            request = request
         )
+        Log.d("PathRepository", "  path create response: $createdPath")
+//        Log.d("PathRepository", "📥 === Response Details ===")
+//        Log.d("PathRepository", "  Server assigned id: ${createdPath.id}")
+//        Log.d("PathRepository", "  pathName: ${createdPath.pathName}")
         emit(AuthResult.Success(createdPath.toPath()))
-    }.catch {
-        Log.d("TAG-PathRepository", "Create Path error : $it")
-        emit(AuthResult.NetworkError(it))
+    }.catch { e ->
+        Log.e("PathRepository", "❌ Error: ${e.javaClass.simpleName}")
+        Log.e("PathRepository", "❌ Message: ${e.message}")
+        e.printStackTrace()
+        emit(AuthResult.NetworkError(e))
     }
 
     override suspend fun updatePath(token: String, id: Int, updatedPath: Path): Flow<AuthResult<Path>> = flow {
         emit(AuthResult.Loading)
         val result = pathApi.updatePath("Bearer $token", id, updatedPath.toPathUpdateRequestDTO()).toPath()
-        Log.d("TAG-PathRepository", "result = $result")
         emit(AuthResult.Success(result))
     }.catch {
-        Log.d("TAG-PathRepository", "Update Path error : $it")
         emit(AuthResult.NetworkError(it))
     }
 
@@ -114,10 +137,11 @@ class PathRepositoryImpl @Inject constructor(
         emit(true)
     }
     // ⭐ Local(Room)
-    override suspend fun saveDraft(draft: Path): Flow<Boolean> = flow {
-        val entity = draft.toPathEntity()  // Mapper 필요
-        pathDao.insertDraft(entity)
-        emit(true)
+    override suspend fun saveDraft(draft: Path): Flow<Path> = flow {
+        val entity = draft.toPathEntity()
+        val newId = pathDao.insertDraft(entity)
+        val savedPath = draft.copy(id = newId.toInt())
+        emit(savedPath)
     }
 
     override suspend fun getAllDrafts(): Flow<List<Path>> = flow {

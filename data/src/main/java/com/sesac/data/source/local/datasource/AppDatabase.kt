@@ -6,7 +6,7 @@ import androidx.room.TypeConverters
 import com.sesac.data.dao.PathDao
 import com.sesac.data.entity.PathEntity
 
-@Database(entities = [PathEntity::class], version = 1)
+@Database(entities = [PathEntity::class], version = 1, exportSchema = false)
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun pathDao(): PathDao

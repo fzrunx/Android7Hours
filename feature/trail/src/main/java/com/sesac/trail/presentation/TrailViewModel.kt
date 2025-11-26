@@ -1,5 +1,6 @@
 package com.sesac.trail.presentation
 
+import android.R
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -319,16 +320,6 @@ class TrailViewModel @Inject constructor(
             }
         }
     }
-    fun saveCurrentDraft(name: String, description: String?) {
-        // 1. Draft 생성
-        createDraftPath(name, description)
-
-        // 2. RoomDB에 저장
-        _draftPath.value?.let { draft ->
-            savePathToRoom(draft)
-        }
-    }
-
     fun updatePath(token: String?) {
         viewModelScope.launch {
             if (token.isNullOrEmpty()) {
@@ -434,12 +425,12 @@ class TrailViewModel @Inject constructor(
     }
 
 
-    fun createDraftPath(name: String, description: String?) {
+    fun createDraftPath(name: String, description: String?): Path {
         val coords = tempPathCoords.value.map { latLng ->
             Coord(latLng.latitude, latLng.longitude)
         }
 
-        _draftPath.value = Path(
+        val newDraft = Path(
             id = -1,
             pathName = name,
             pathComment = description ?: "",
@@ -453,6 +444,8 @@ class TrailViewModel @Inject constructor(
             distanceFromMe = 0f,
             tags = emptyList()
         )
+        _draftPath.value = newDraft
+        return newDraft
     }
 
     fun clearDraftPath() {
@@ -475,26 +468,21 @@ class TrailViewModel @Inject constructor(
     }
 
     // Draft 저장 (suspend)
-    suspend fun saveDraft(draft: Path): Boolean {
+    suspend fun saveDraft(draft: Path): Path? {
         return try {
             Log.d("TrailViewModel", "🔄 Calling trailUseCase.saveDraftUseCase...")
             Log.d("TrailViewModel", "Draft details: id=${draft.id}, name=${draft.pathName}, coords=${draft.coord?.size}")
 
-            val success = pathUseCase.saveDraftUseCase(draft).first()
+            val savedPath = pathUseCase.saveDraftUseCase(draft).first()
 
-            Log.d("TrailViewModel", "UseCase returned: $success")
+            Log.d("TrailViewModel", "UseCase returned: $savedPath")
 
-            if (success) {
-                loadDrafts()
-                Log.d("TrailViewModel", "✅ Draft saved and list reloaded")
-            } else {
-                Log.e("TrailViewModel", "❌ UseCase returned false")
-            }
-
-            success
+            loadDrafts()
+            Log.d("TrailViewModel", "✅ Draft saved and list reloaded")
+            savedPath
         } catch (e: Exception) {
             Log.e("TrailViewModel", "❌ Exception in saveDraft: ${e.message}", e)
-            false
+            null
         }
     }
 
@@ -514,59 +502,54 @@ class TrailViewModel @Inject constructor(
         }
     }
 
-    // Draft 전체 삭제 (suspend)
-    suspend fun clearAllDrafts(): Boolean {
-        return try {
-            val success = pathUseCase.clearAllDraftsUseCase().first()
-            if (success) _drafts.value = emptyList()
-            success
-        } catch (e: Exception) {
-            false
-        }
-    }
     // =================================================================
 // 📌 8-1. RoomDB 저장 전용 함수
 // =================================================================
 
     // ✅ 추가: RoomDB에만 저장 (서버 전송 X)
-    fun savePathToRoom(path: Path) {
+    fun savePathAndUpload(path: Path, token: String) {
         viewModelScope.launch {
-            Log.d("TrailViewModel", "📦 === Starting savePathToRoom ===")
-            Log.d("TrailViewModel", "Path ID: ${path.id}")
+            Log.d("TrailViewModel", "📦 === Starting savePathAndUpload ===")
             Log.d("TrailViewModel", "Path Name: ${path.pathName}")
-            Log.d("TrailViewModel", "Path Distance: ${path.distance}")
-            Log.d("TrailViewModel", "Path Time: ${path.duration}")
-            Log.d("TrailViewModel", "Path Coords: ${path.coord?.size ?: 0} coordinates")
+            Log.d("TrailViewModel", "Token: $token")
 
             try {
-                val success = saveDraft(path)
-
-                Log.d("TrailViewModel", "saveDraft() returned: $success")
-
-                if (success) {
-                    Log.d("TrailViewModel", "✅ Successfully saved to RoomDB")
-
-                    // 저장 확인을 위해 다시 불러와보기
-                    val drafts = loadDrafts()
-                    Log.d("TrailViewModel", "📋 Current drafts count: ${drafts.size}")
-                    drafts.forEach { draft ->
-                        Log.d("TrailViewModel", "  - Draft: ${draft.pathName}, coords: ${draft.coord?.size}")
-                    }
-
-                    clearTempPath() // 폴리라인 초기화
-                    clearMemoMarkers() // 메모 마커 초기화
-
-                    _invalidToken.send(UiEvent.ToastEvent("경로가 저장되었습니다"))
-                } else {
-                    Log.e("TrailViewModel", "❌ saveDraft returned false")
-                    _invalidToken.send(UiEvent.ToastEvent("저장에 실패했습니다"))
+                // 1️⃣ RoomDB에 저장
+                Log.d("TrailViewModel", "Attempting to save draft to RoomDB...")
+                val savedPathWithId = saveDraft(path)
+                if (savedPathWithId == null) {
+                    Log.e("TrailViewModel", "Failed to save draft to RoomDB or retrieve generated ID.")
+                    _invalidToken.send(UiEvent.ToastEvent("경로 저장 실패"))
+                    return@launch
                 }
+                Log.d("TrailViewModel", "Draft saved successfully to RoomDB.")
+
+                // 2️⃣ 서버 업로드
+                Log.d("TrailViewModel", "Attempting to upload path to server...")
+                pathUseCase.createPathUseCase(token, savedPathWithId)
+                    .collectLatest { result ->
+                        when (result) {
+                            is AuthResult.Success -> {
+                                Log.d("TrailViewModel", "Path uploaded successfully to server.")
+                                // 3️⃣ 서버 업로드 성공 시 RoomDB에서 삭제
+                                val deleted = deleteDraft(savedPathWithId)
+                                if (deleted) {
+                                    _invalidToken.send(UiEvent.ToastEvent("경로가 서버로 업로드되었습니다"))
+                                } else {
+                                    _invalidToken.send(UiEvent.ToastEvent("서버 업로드 완료, RoomDB 삭제 실패"))
+                                }
+                            }
+                            is AuthResult.NetworkError -> {
+                                Log.e("TrailViewModel", "Server upload failed: ${result.exception.message}")
+                                _invalidToken.send(UiEvent.ToastEvent("서버 업로드 실패: ${result.exception.message}"))
+                            }
+                            else -> {}
+                        }
+                    }
             } catch (e: Exception) {
-                Log.e("TrailViewModel", "❌ Exception in savePathToRoom: ${e.message}", e)
+                Log.e("TrailViewModel", "An exception occurred in savePathAndUpload: ${e.message}", e)
                 _invalidToken.send(UiEvent.ToastEvent("오류 발생: ${e.message}"))
             }
-
-            Log.d("TrailViewModel", "📦 === Finished savePathToRoom ===")
         }
     }
 

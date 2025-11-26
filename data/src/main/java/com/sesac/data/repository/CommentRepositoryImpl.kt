@@ -3,7 +3,6 @@ package com.sesac.data.repository
 import android.content.Context
 import com.sesac.data.dto.CommentRequestDTO
 import com.sesac.data.mapper.CommentMapper.toDomain
-import com.sesac.data.mapper.toDomain
 import com.sesac.data.source.api.PathApi
 import com.sesac.data.source.api.PostApi
 import com.sesac.domain.model.Comment

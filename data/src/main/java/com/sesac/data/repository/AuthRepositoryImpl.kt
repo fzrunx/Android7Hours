@@ -2,13 +2,9 @@ package com.sesac.data.repository
 
 import android.util.Log
 import com.sesac.data.dto.KakaoLoginRequestDTO
-import com.sesac.data.dto.LoginRequestDTO
-import com.sesac.data.mapper.toAuthDTO
 import com.sesac.data.mapper.toLoginResponse
-import com.sesac.data.mapper.toUserList
 import com.sesac.data.source.api.AuthApi
 import com.sesac.data.source.api.KakaoUserApiService
-import com.sesac.domain.model.Auth
 import com.sesac.domain.model.LoginRequest
 import com.sesac.domain.model.LoginResponse
 import com.sesac.domain.repository.AuthRepository

@@ -88,4 +88,5 @@ interface PathApi {
         @Path("id") pathId: Int,
         @Path("commentId") commentId: Int,
     )
+
 }

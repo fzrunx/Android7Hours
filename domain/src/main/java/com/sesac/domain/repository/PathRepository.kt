@@ -19,8 +19,9 @@ interface PathRepository {
     suspend fun getAllMyRecord(): Flow<List<MyRecord>>
     suspend fun addMyRecord(newRecord: MyRecord): Flow<Boolean>
     // Room DB (Local) 관련 추가
-    suspend fun saveDraft(draft: Path): Flow<Boolean>            // 작성중인 Path 저장
+    suspend fun saveDraft(draft: Path): Flow<Path>            // 작성중인 Path 저장
     suspend fun getAllDrafts(): Flow<List<Path>>                 // 저장된 Draft 불러오기
     suspend fun deleteDraft(draft: Path): Flow<Boolean>         // Draft 삭제
     suspend fun clearAllDrafts(): Flow<Boolean>
+
 }

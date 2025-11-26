@@ -1,9 +1,11 @@
 package com.sesac.data.mapper
 
+import com.naver.maps.geometry.LatLng
 import com.sesac.data.dto.PathDTO
 import com.sesac.data.dto.CoordRequestDTO
 import com.sesac.data.dto.PathCreateRequestDTO
 import com.sesac.data.dto.PathUpdateRequestDTO
+import com.sesac.data.util.PolylineEncoder
 import com.sesac.domain.model.Path
 
 fun PathDTO.toPath() = Path(
@@ -30,6 +32,7 @@ fun PathDTO.toPath() = Path(
 )
 
 fun Path.toPathCreateRequestDTO() = PathCreateRequestDTO(
+    id = null,  // ✅ 항상 null (서버가 신규 생성으로 인식)
     pathName = this.pathName,
     pathComment = this.pathComment,
     level = when(level) {
@@ -38,6 +41,7 @@ fun Path.toPathCreateRequestDTO() = PathCreateRequestDTO(
         "고급" -> 3
         else -> 0
     },
+    uploader = this.uploader,
     distance = this.distance,
     duration = this.duration,
     coords = this.coord?.toCoordRequestDTOList() ?: listOf(CoordRequestDTO.EMPTY),
@@ -45,6 +49,14 @@ fun Path.toPathCreateRequestDTO() = PathCreateRequestDTO(
     endTime = null, // Not available in UserPath
     thumbnail = this.thumbnail,
     isPrivate = this.isPrivate,
+    // ✅ 좌표 10,000개를 20KB 문자열로 압축
+    polyline = PolylineEncoder.encode(
+        this.coord?.map { LatLng(it.latitude, it.longitude) } ?: emptyList()
+    ),
+
+    markers = this.markers?.map {
+        listOf(it.latitude, it.longitude, it.memo ?: "")
+    }
 )
 
 fun Path.toPathUpdateRequestDTO(): PathUpdateRequestDTO {
@@ -63,7 +75,6 @@ fun Path.toPathUpdateRequestDTO(): PathUpdateRequestDTO {
         isPrivate = this.isPrivate,
     )
 }
-
 fun List<PathDTO>.toPathList() =
     this.map { it.toPath() }.toList()
 
