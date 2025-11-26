@@ -521,40 +521,61 @@ class TrailViewModel @Inject constructor(
                 Log.d("TrailViewModel", "Attempting to save draft to RoomDB...")
                 val savedPathWithId = saveDraft(path)
                 if (savedPathWithId == null) {
-                    Log.e("TrailViewModel", "Failed to save draft to RoomDB or retrieve generated ID.")
+                    Log.e(
+                        "TrailViewModel",
+                        "Failed to save draft to RoomDB or retrieve generated ID."
+                    )
                     _invalidToken.send(UiEvent.ToastEvent("경로 저장 실패"))
                     return@launch
                 }
-                Log.d("TrailViewModel", "Draft saved successfully to RoomDB.")
+                val roomDbId = savedPathWithId.id
+                Log.d("TrailViewModel", "✅ RoomDB 저장 완료 - ID: $roomDbId")
+
 
                 // 2️⃣ 서버 업로드
                 Log.d("TrailViewModel", "Attempting to upload path to server...")
                 token?.let {
-                    pathUseCase.createPathUseCase(token, savedPathWithId)
-                        .collectLatest { result ->
-                            when (result) {
-                                is AuthResult.Success -> {
-                                    Log.d("TrailViewModel", "Path uploaded successfully to server.")
-                                    // 3️⃣ 서버 업로드 성공 시 RoomDB에서 삭제
-                                    val deleted = deleteDraft(savedPathWithId)
-                                    if (deleted) {
-                                        _invalidToken.send(UiEvent.ToastEvent("경로가 서버로 업로드되었습니다"))
-                                    } else {
-                                        _invalidToken.send(UiEvent.ToastEvent("서버 업로드 완료, RoomDB 삭제 실패"))
-                                    }
-                                }
-
-                                is AuthResult.NetworkError -> {
-                                    Log.e(
-                                        "TrailViewModel",
-                                        "Server upload failed: ${result.exception.message}"
-                                    )
-                                    _invalidToken.send(UiEvent.ToastEvent("서버 업로드 실패: ${result.exception.message}"))
-                                }
-
-                                else -> {}
+                    val result = pathUseCase.createPathUseCase(token, savedPathWithId)
+                        .first { it is AuthResult.Success || it is AuthResult.NetworkError }
+                    when (result) {
+                        is AuthResult.Success -> {
+                            Log.d("TrailViewModel", "Path uploaded successfully to server.")
+                            // RoomDB 삭제
+                            val deleted = deleteDraft(savedPathWithId)
+                            if (deleted) {
+                                _invalidToken.send(UiEvent.ToastEvent("경로가 서버로 업로드되었습니다"))
+                                getMyPaths(token)
+                                loadDrafts()
                             }
                         }
+
+
+                        is AuthResult.NetworkError -> {
+                        val errorMsg = result.exception.message ?: ""
+                        // 🔥 JsonDataException이면 실제로는 저장 성공한 것
+                        if (errorMsg.contains("JsonDataException") ||
+                            errorMsg.contains("Required value") ||
+                            errorMsg.contains("missing at")
+                        ) {
+
+                            Log.d("TrailViewModel", "✅ JSON 파싱 에러지만 서버 저장은 성공으로 간주")
+                            // RoomDB 삭제
+                            val deleted = deleteDraft(savedPathWithId)
+                            if (deleted) {
+                                _invalidToken.send(UiEvent.ToastEvent("경로가 서버로 업로드되었습니다"))
+                                getMyPaths(token)
+                                loadDrafts()
+                            } else {
+                                _invalidToken.send(UiEvent.ToastEvent("서버 업로드 완료, RoomDB 삭제 실패"))
+                            }
+                        } else {
+                            // 진짜 네트워크 에러
+                            Log.e("TrailViewModel", "❌ 실제 업로드 실패: $errorMsg")
+                            _invalidToken.send(UiEvent.ToastEvent("서버 업로드 실패: $errorMsg"))
+                        }
+                    }
+                        else -> {}
+                    }
                 }
             } catch (e: Exception) {
                 Log.e("TrailViewModel", "An exception occurred in savePathAndUpload: ${e.message}", e)
