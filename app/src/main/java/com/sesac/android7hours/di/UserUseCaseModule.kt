@@ -4,6 +4,7 @@ import com.sesac.domain.repository.UserRepository
 import com.sesac.domain.usecase.user.DeleteUserUseCase
 import com.sesac.domain.usecase.user.GetUsersUseCase
 import com.sesac.domain.usecase.user.PostUserUseCase
+import com.sesac.domain.usecase.user.UpdateProfileUseCase
 import com.sesac.domain.usecase.user.UserUseCase
 import dagger.Module
 import dagger.Provides
@@ -21,6 +22,7 @@ object UserUseCaseModule {
             getAllUsers = GetUsersUseCase(repository),
             postUser = PostUserUseCase(repository),
             deleteUserUseCase = DeleteUserUseCase(repository),
+            updateProfile = UpdateProfileUseCase(repository),
         )
     }
 

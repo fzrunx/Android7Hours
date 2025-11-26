@@ -6,6 +6,7 @@ import com.sesac.domain.usecase.session.GetAccessTokenUseCase
 import com.sesac.domain.usecase.session.GetRefreshTokenUseCase
 import com.sesac.domain.usecase.session.GetUserInfoUseCase
 import com.sesac.domain.usecase.session.SaveSessionUseCase
+import com.sesac.domain.usecase.session.SaveUserUseCase
 import com.sesac.domain.usecase.session.SessionUseCase
 import dagger.Module
 import dagger.Provides
@@ -27,6 +28,7 @@ object SessionUseCaseModule {
             getRefreshToken = GetRefreshTokenUseCase(repository),
             getUserInfo = GetUserInfoUseCase(repository),
             saveSession = SaveSessionUseCase(repository),
+            saveUser = SaveUserUseCase(repository),
             clearSession = ClearSessionUseCase(repository)
         )
     }

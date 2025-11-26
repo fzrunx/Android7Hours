@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import android.util.Log
 
 @HiltViewModel
 class CommonViewModel @Inject constructor(
@@ -21,6 +22,7 @@ class CommonViewModel @Inject constructor(
         sessionUseCase.getAccessToken(),
         sessionUseCase.getUserInfo()
     ) { token, user ->
+        Log.d("CommonViewModel", "Combining user info: $user")
         if (token != null && user != null) {
             AuthUiState(
                 isLoggedIn = true,
@@ -29,6 +31,7 @@ class CommonViewModel @Inject constructor(
                 nickname = user.nickname,
                 fullName = user.fullName,
                 email = user.email,
+                profileImageUrl = user.profileImageUrl,
             )
         } else {
             AuthUiState().reset()

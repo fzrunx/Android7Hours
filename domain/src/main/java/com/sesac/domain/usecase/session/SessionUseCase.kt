@@ -5,5 +5,6 @@ data class SessionUseCase(
     val getRefreshToken: GetRefreshTokenUseCase,
     val getUserInfo: GetUserInfoUseCase,
     val saveSession: SaveSessionUseCase,
+    val saveUser: SaveUserUseCase,
     val clearSession: ClearSessionUseCase,
 )

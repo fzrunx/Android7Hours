@@ -5,6 +5,7 @@ import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -63,6 +64,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import coil3.compose.AsyncImage
+import com.sesac.common.CommonViewModel
 import com.sesac.common.ui.theme.Background
 import com.sesac.common.ui.theme.Gray200
 import com.sesac.common.ui.theme.Gray300
@@ -78,10 +80,15 @@ import com.sesac.common.ui.theme.paddingMedium
 import com.sesac.common.ui.theme.paddingSmall
 import com.sesac.domain.result.AuthUiState
 import com.sesac.domain.model.Pet
-import com.sesac.domain.result.ResponseUiState
 import com.sesac.mypage.nav_graph.MypageNavigationRoute
 import com.sesac.mypage.presentation.MypageViewModel
 import com.sesac.common.R as cR
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.ui.platform.LocalContext
+import com.sesac.common.utils.FileUtils
+import com.sesac.domain.result.ResponseUiState
 
 @Composable
 fun MypageDetailScreen(
@@ -91,7 +98,25 @@ fun MypageDetailScreen(
 ) {
     val pets by viewModel.userPets.collectAsStateWithLifecycle()
     val deletePetState by viewModel.deletePetState.collectAsStateWithLifecycle()
+    var selectedImageUri by remember { mutableStateOf<android.net.Uri?>(null) }
     val context = LocalContext.current
+
+    // 갤러리 실행기 (이 변수 선언이 없어서 에러가 난 것입니다)
+    val photoPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickVisualMedia()
+    ) { uri ->
+        if (uri != null) {
+            selectedImageUri = uri
+            // 1. URI -> MultipartBody.Part 변환
+            val imagePart = FileUtils.createMultipartBody(context, uri, "profile_image")
+            Log.d("TOKEN_CHECK", "Raw Token: ${uiState.token}")
+            Log.d("TOKEN_CHECK", "Sending Token: Bearer ${uiState.token}")
+            // 2. 서버로 전송 (토큰이 있을 때만)
+            if (imagePart != null && !uiState.token.isNullOrEmpty()) {
+                viewModel.updateProfileImage("Bearer ${uiState.token}", imagePart)
+            }
+        }
+    }
 
     LaunchedEffect(uiState.id) {
         if (uiState.id != -1) {
@@ -127,7 +152,13 @@ fun MypageDetailScreen(
                 MypageDetailHeader(
                     name = uiState.fullName ?: "-",
                     description = "반려견과 함께하는 즐거운 산책",
-                    imageUrl = null
+                    imageUrl = null,
+                    localImageUri = selectedImageUri,
+                    onCameraClick = {
+                        photoPickerLauncher.launch(
+                            PickVisualMediaRequest(mediaType = ActivityResultContracts.PickVisualMedia.ImageOnly)
+                        )
+                    },
                 )
             }
 
@@ -173,9 +204,14 @@ fun MypageDetailScreen(
     }
 }
 
-
 @Composable
-fun MypageDetailHeader(name: String, description: String, imageUrl: String?) {
+fun MypageDetailHeader(
+    name: String,
+    description: String,
+    imageUrl: String?,
+    localImageUri: android.net.Uri?,
+    onCameraClick: () -> Unit
+) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -184,7 +220,7 @@ fun MypageDetailHeader(name: String, description: String, imageUrl: String?) {
     ) {
         Box {
             AsyncImage(
-                model = imageUrl ?: cR.drawable.placeholder,
+                model = localImageUri ?: fixImageUrl(imageUrl) ?: cR.drawable.placeholder,
                 contentDescription = "Profile Picture",
                 modifier = Modifier
                     .size(120.dp)
@@ -198,7 +234,8 @@ fun MypageDetailHeader(name: String, description: String, imageUrl: String?) {
                     .align(Alignment.BottomEnd)
                     .size(36.dp)
                     .background(Primary, CircleShape)
-                    .border(2.dp, Color.White, CircleShape),
+                    .border(2.dp, Color.White, CircleShape)
+                    .clickable(onClick = onCameraClick),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
@@ -440,4 +477,15 @@ fun EmptyPetView() {
             textAlign = TextAlign.Center
         )
     }
+}
+
+fun fixImageUrl(url: String?): String? {
+    if (url.isNullOrEmpty()) return null
+
+    // 1. localhost -> 10.0.2.2 변환
+    val fixedUrl = url.replace("127.0.0.1", "10.0.2.2")
+        .replace("localhost", "10.0.2.2")
+
+    // 2. 캐시 무시 (이미지 즉시 갱신용)
+    return "$fixedUrl?timestamp=${System.currentTimeMillis()}"
 }

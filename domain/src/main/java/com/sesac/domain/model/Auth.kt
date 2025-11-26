@@ -1,5 +1,8 @@
 package com.sesac.domain.model
 
+import com.squareup.moshi.Json
+import com.squareup.moshi.JsonClass
+
 
 data class Auth(
     val username: String?,
@@ -10,12 +13,14 @@ data class Auth(
     val passwordVerification: String,
 )
 
+@JsonClass(generateAdapter = true)
 data class User(
     val id: Int = -1,
     val username: String?,
     val nickname: String?,
     val fullName: String,
     val email: String,
+    @Json(name = "profile_image_url") val profileImageUrl: String? = null,
 )
 
 data class JoinFormState(

@@ -22,14 +22,15 @@ import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
 import java.net.CookieManager
+import java.util.concurrent.TimeUnit
 import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
 
-//    private const val BASE_URL = "http://192.168.0.73:8000/"
-    private const val BASE_URL = "http://10.0.2.2:8000/"
+    private const val BASE_URL = "http://192.168.0.73:8000/"
+//    private const val BASE_URL = "http://10.0.2.2:8000/"
 
     @Provides
     @Singleton
@@ -65,6 +66,9 @@ object NetworkModule {
             level = HttpLoggingInterceptor.Level.BODY
         }
         return OkHttpClient.Builder()
+            .connectTimeout(10, TimeUnit.SECONDS)
+            .readTimeout(10, TimeUnit.SECONDS)
+            .writeTimeout(10, TimeUnit.SECONDS)
             .cookieJar(cookieJar)
             .addInterceptor(csrfTokenInterceptor)
             .addInterceptor(loggingInterceptor)

@@ -20,7 +20,7 @@ object AuthUseCaseModule {
     fun provideAuthUseCase(repository: AuthRepository): AuthUseCase {
         return AuthUseCase(
             login = LoginUseCase(repository),
-            loginWithKakao = LoginWithKakaoUseCase(repository)
+            loginWithKakao = LoginWithKakaoUseCase(repository),
         )
     }
 
