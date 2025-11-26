@@ -57,6 +57,15 @@ class AuthDataStore @Inject constructor(
             preferences[PreferencesKeys.USER_INFO] = userAdapter.toJson(user)
         }
     }
+    
+    suspend fun saveTokens(accessToken: String, refreshToken: String?) {
+        context.dataStore.edit { preferences ->
+            preferences[PreferencesKeys.ACCESS_TOKEN] = accessToken
+            refreshToken?.let {
+                preferences[PreferencesKeys.REFRESH_TOKEN] = it
+            }
+        }
+    }
 
     suspend fun clearSession() {
         context.dataStore.edit { preferences ->

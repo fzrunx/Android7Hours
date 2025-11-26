@@ -9,5 +9,6 @@ interface SessionRepository {
     fun getRefreshToken(): Flow<String?>
     fun getUserInfo(): Flow<User?>
     suspend fun saveSession(loginResponse: LoginResponse)
+    suspend fun saveRefreshedTokens(access: String, refresh: String?)
     suspend fun clearSession()
 }

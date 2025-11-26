@@ -20,6 +20,10 @@ class SessionRepositoryImpl @Inject constructor(
         authDataStore.saveSession(loginResponse.access, loginResponse.refresh, loginResponse.user)
     }
 
+    override suspend fun saveRefreshedTokens(access: String, refresh: String?) {
+        authDataStore.saveTokens(access, refresh)
+    }
+
     override suspend fun clearSession() {
         authDataStore.clearSession()
     }

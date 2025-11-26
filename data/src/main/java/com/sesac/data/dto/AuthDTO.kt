@@ -24,6 +24,17 @@ data class TokenDTO(
 )
 
 @JsonClass(generateAdapter = true)
+data class TokenRefreshRequestDTO(
+    val refresh: String
+)
+
+@JsonClass(generateAdapter = true)
+data class TokenRefreshResponseDTO(
+    val access: String,
+    val refresh: String?,
+)
+
+@JsonClass(generateAdapter = true)
 data class LoginResponseDTO(
     val refresh: String,
     val access: String,

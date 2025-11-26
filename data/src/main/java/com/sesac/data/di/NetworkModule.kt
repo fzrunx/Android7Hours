@@ -3,6 +3,7 @@ package com.sesac.data.di
 import com.sesac.data.dto.BookmarkedObject
 import com.sesac.data.dto.BookmarkedPathDTO
 import com.sesac.data.dto.PostDTO
+import com.sesac.data.repository.SessionRepositoryImpl
 import com.sesac.data.source.api.AuthApi
 import com.sesac.data.source.api.BookmarkApi
 import com.sesac.data.source.api.PathApi
@@ -22,6 +23,7 @@ import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
 import java.net.CookieManager
+import javax.inject.Provider
 import javax.inject.Singleton
 
 @Module
@@ -57,9 +59,18 @@ object NetworkModule {
 
     @Provides
     @Singleton
+    fun provideTokenAuthenticator(
+        sessionRepositoryImpl: SessionRepositoryImpl,
+        authApiProvider: Provider<AuthApi> // Provider로 AuthApi 주입
+    ): TokenAuthenticator = TokenAuthenticator(sessionRepositoryImpl, authApiProvider)
+
+
+    @Provides
+    @Singleton
     fun provideOkHttpClient(
         cookieJar: CookieJar,
-        csrfTokenInterceptor: CsrfTokenInterceptor
+        csrfTokenInterceptor: CsrfTokenInterceptor,
+        tokenAuthenticator: TokenAuthenticator
     ): OkHttpClient {
         val loggingInterceptor = HttpLoggingInterceptor().apply {
             level = HttpLoggingInterceptor.Level.BODY
@@ -68,6 +79,7 @@ object NetworkModule {
             .cookieJar(cookieJar)
             .addInterceptor(csrfTokenInterceptor)
             .addInterceptor(loggingInterceptor)
+            .authenticator(tokenAuthenticator)
             .build()
     }
 

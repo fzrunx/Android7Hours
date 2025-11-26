@@ -3,6 +3,8 @@ package com.sesac.data.source.api
 import com.sesac.data.dto.AuthDTO
 import com.sesac.data.dto.KakaoLoginRequestDTO
 import com.sesac.data.dto.LoginResponseDTO
+import com.sesac.data.dto.TokenRefreshRequestDTO
+import com.sesac.data.dto.TokenRefreshResponseDTO
 import com.sesac.domain.model.LoginRequest
 import retrofit2.Response
 import retrofit2.http.Body
@@ -29,4 +31,7 @@ interface AuthApi {
 
     @POST("users/token/")
     suspend fun login(@Body loginRequest: LoginRequest): LoginResponseDTO
+
+    @POST("users/token/refresh/")
+    suspend fun refreshToken(@Body body: TokenRefreshRequestDTO): retrofit2.Response<TokenRefreshResponseDTO>
 }
