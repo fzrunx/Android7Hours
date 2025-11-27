@@ -737,6 +737,8 @@ class TrailViewModel @Inject constructor(
             return
         }
 
+        Log.d("TrailViewModel", "Starting to follow path: ${path.pathName}. Markers in path: ${path.markers?.size ?: 0}")
+
         Log.d("TrailViewModel", "✅ 따라가기 시작: ${path.pathName}, 좌표 ${coords.size}개")
         _selectedPath.value = path
         _memoMarkers.value = path.markers ?: emptyList()
