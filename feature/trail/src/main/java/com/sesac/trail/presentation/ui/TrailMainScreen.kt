@@ -60,6 +60,8 @@ import com.sesac.trail.presentation.component.RecordingControls
 import com.sesac.trail.presentation.component.ReopenSheetButton
 import com.sesac.trail.presentation.component.addMemoMarker
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import com.naver.maps.map.CameraUpdate
 import com.naver.maps.map.overlay.OverlayImage
 import com.sesac.common.model.toPathParceler
@@ -344,51 +346,66 @@ fun TrailMainScreen(
             val map = currentNaverMap
             val path = selectedPath
 
-            val followPolyline = if (map != null && isFollowingPath && path != null) {
+            val followPolyline: PolylineOverlay?
+            val startMarker: Marker?
+            val endMarker: Marker?
+
+            if (map != null && isFollowingPath && path != null) {
                 val coords = path.coord?.map { it.toLatLng() } ?: emptyList()
 
-                Log.d("TrailMainScreen", "📍 좌표 변환 완료: ${coords.size}개")
-                coords.take(3).forEach {
-                    Log.d("TrailMainScreen", "  - 좌표: (${it.latitude}, ${it.longitude})")
-                }
-               // ✅ 좌표 검증
                 if (coords.size < 2) {
-                    Log.e("TrailMainScreen", "❌ 경로 좌표가 부족합니다: ${coords.size}개")
-                    null  // 폴리라인 생성하지 않음
+                    Log.e("TrailMainScreen", "❌ 좌표 부족")
+                    followPolyline = null
+                    startMarker = null
+                    endMarker = null
                 } else {
-                    try {
-                        Log.d("TrailMainScreen", "🎨 폴리라인 생성 시작...")
-                        PolylineOverlay().apply {
-                            this.coords = coords
-                            color = 0xFF6200EE.toInt()
-                            width = 12
-                            capType = PolylineOverlay.LineCap.Round
-                            joinType = PolylineOverlay.LineJoin.Round
-                            this.map = map
-                            Log.d("TrailMainScreen", "✅ 폴리라인 생성 완료")
-                        }.also {
-                            coords.firstOrNull()?.let { start ->
-                                Log.d("TrailMainScreen", "📷 카메라 이동: $start")
-                                val cameraUpdate = CameraUpdate.scrollTo(start)
-                                map.moveCamera(cameraUpdate)
-                            }
-                        }
-                    } catch (e: Exception) {
-                        Log.e("TrailMainScreen", "❌ 폴리라인 생성 실패: ${e.message}", e)
-                        null
+                    // 폴리라인
+                    followPolyline = PolylineOverlay().apply {
+                        this.coords = coords
+                        color = 0xFF6200EE.toInt()
+                        width = 12
+                        capType = PolylineOverlay.LineCap.Round
+                        joinType = PolylineOverlay.LineJoin.Round
+                        this.map = map
                     }
+
+                    // ✅ 시작 마커 (초록색)
+                    startMarker = Marker().apply {
+                        position = coords.first()
+                        icon = OverlayImage.fromResource(android.R.drawable.ic_input_add) // 또는 커스텀 아이콘
+                        captionText = "출발"
+                        captionColor = Color.Green.toArgb()
+                        this.map = map
+                    }
+
+                    // ✅ 종료 마커 (빨간색)
+                    endMarker = Marker().apply {
+                        position = coords.last()
+                        icon = OverlayImage.fromResource(android.R.drawable.ic_menu_close_clear_cancel)
+                        captionText = "도착"
+                        captionColor = Color.Red.toArgb()
+                        this.map = map
+                    }
+
+                    // 카메라 이동
+                    val cameraUpdate = CameraUpdate.scrollTo(coords.first())
+                    map.moveCamera(cameraUpdate)
+
+                    Log.d("TrailMainScreen", "✅ 폴리라인 + 시작/종료 마커 생성 완료")
                 }
             } else {
-                Log.d("TrailMainScreen", "⏸️ 폴리라인 조건 불만족")
-                null
+                followPolyline = null
+                startMarker = null
+                endMarker = null
             }
 
             onDispose {
                 followPolyline?.map = null
-                Log.d("TrailMainScreen", "🧹 따라가기 폴리라인 제거")
+                startMarker?.map = null
+                endMarker?.map = null
+                Log.d("TrailMainScreen", "🧹 폴리라인 + 마커 제거")
             }
         }
-
         // 🔹 사용자 현재 위치 마커
         val userLocation by viewModel.userLocationMarker.collectAsStateWithLifecycle()
         var userMarker by remember { mutableStateOf<Marker?>(null) }
@@ -502,7 +519,7 @@ fun TrailMainScreen(
 //        }
         // ✅ 하단 Bottom Sheet
         AnimatedVisibility(
-            visible = isSheetOpen && !isRecording,
+            visible = isSheetOpen && !isRecording && !isFollowingPath,
             modifier = Modifier.align(Alignment.BottomCenter),
             enter = slideInVertically { it },
             exit = slideOutVertically(
@@ -566,7 +583,7 @@ fun TrailMainScreen(
 
         // ✅ 시트 다시 열기 버튼
         AnimatedVisibility(
-            visible = !isSheetOpen && !isRecording,
+            visible = !isSheetOpen && !isRecording && !isFollowingPath,
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .padding(bottom = paddingLarge * 2)
