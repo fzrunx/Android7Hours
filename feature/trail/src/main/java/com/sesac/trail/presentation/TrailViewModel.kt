@@ -739,6 +739,8 @@ class TrailViewModel @Inject constructor(
 
         Log.d("TrailViewModel", "✅ 따라가기 시작: ${path.pathName}, 좌표 ${coords.size}개")
         _selectedPath.value = path
+        _memoMarkers.value = path.markers ?: emptyList()
+        _isRecording.value = true
         _isFollowing.value = true
         _isRouteCompleted.value = false  // ✅ 초기화
         _offRoute.value = false

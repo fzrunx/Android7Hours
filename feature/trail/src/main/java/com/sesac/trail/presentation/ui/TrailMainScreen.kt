@@ -561,8 +561,7 @@ fun TrailMainScreen(
                             navController.navigate(NestedNavigationRoute.TrailDetail(it.toPathParceler()))
                         },
                         onFollowClick = { path ->
-                            viewModel.updateIsFollowingPath(true)
-                            viewModel.updateIsRecording(true)
+                            viewModel.startFollowing(path)
                             viewModel.updateIsSheetOpen(false)
                             Log.d("Tag-TrailMainScree", "Following path: ${path.pathName}")
                         },
