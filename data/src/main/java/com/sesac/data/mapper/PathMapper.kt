@@ -33,7 +33,16 @@ fun PathDTO.toPath() = Path(
         if (markerData.size >= 2) {
             val lat = markerData.getOrNull(0) as? Double
             val lng = markerData.getOrNull(1) as? Double
-            val memo = markerData.getOrNull(2) as? String
+            val memoValue = markerData.getOrNull(2)
+            val memo: String = if (memoValue is Double) {
+                if (memoValue == memoValue.toInt().toDouble()) {
+                    memoValue.toInt().toString()
+                } else {
+                    memoValue.toString()
+                }
+            } else {
+                memoValue?.toString() ?: ""
+            }
             if (lat != null && lng != null) {
                 com.sesac.domain.model.MemoMarker(lat, lng, memo)
             } else {
