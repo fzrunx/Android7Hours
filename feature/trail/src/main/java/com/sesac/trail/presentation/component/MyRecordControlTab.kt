@@ -50,9 +50,7 @@ fun MyRecordsTabContent(
     isEditMode: Boolean,
     onPathClick: (Path) -> Unit,
     onFollowClick: () -> Unit,
-//    onRegisterClick: () -> Unit,
     onEditModeToggle: () -> Unit,
-//    onModifyClick: (UserPath) -> Unit,
     onDeleteClick: (Int) -> Unit,
 ) {
     Column {
@@ -69,15 +67,13 @@ fun MyRecordsTabContent(
             contentPadding = PaddingValues(vertical = paddingSmall),
             verticalArrangement = Arrangement.spacedBy(paddingMicro)
         ) {
-            items(myPaths) { myPath ->
+            items(myPaths, key = { it.id }) { myPath ->
                 MyRecordItem(
                     viewModel = viewModel,
                     myPath = myPath,
                     isEditMode = isEditMode,
                     onPathClick = onPathClick,
                     onFollowClick = onFollowClick,
-//                    onRegisterClick = onRegisterClick,
-//                    onModifyClick = onModifyClick,
                     onDeleteClick = onDeleteClick
                 )
             }
@@ -92,8 +88,6 @@ fun MyRecordItem(
     isEditMode: Boolean,
     onPathClick: (Path) -> Unit,
     onFollowClick: () -> Unit,
-//    onRegisterClick: () -> Unit,
-//    onModifyClick: (UserPath) -> Unit,
     onDeleteClick: (Int) -> Unit
 ) {
     Card(
@@ -123,12 +117,7 @@ fun MyRecordItem(
                     Text(myPath.pathName, fontWeight = FontWeight.Bold)
                     Text(text = myPath.level.toString(), style = MaterialTheme.typography.bodyMedium)
                 }
-                Text("${myPath.distance} · ${myPath.duration}", fontSize = 14.sp)
-                Row {
-//                    Text("👣 ${myPath.steps.toLocaleString()}", fontSize = 12.sp)
-//                    Text(" • ", fontSize = 12.sp)
-//                    Text("🔥 ${myPath.calories}kcal", fontSize = 12.sp)
-                }
+                Text("${myPath.distance}km · ${myPath.duration}분", style = MaterialTheme.typography.bodySmall)
             }
             Spacer(Modifier.width(paddingSmall))
             if (isEditMode) {

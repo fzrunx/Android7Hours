@@ -1,4 +1,4 @@
-package com.sesac.mypage.presentation.ui
+package com.sesac.common.component
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -16,14 +16,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.sesac.common.ui.theme.Android7HoursTheme
 import com.sesac.common.ui.theme.TextDisabled
 import com.sesac.common.ui.theme.paddingMedium
 import com.sesac.common.ui.theme.paddingSmall
 
 @Composable
-fun EmptyStateView(message: String, subMessage: String) {
+fun CommonEmptyState(message: String, subMessage: String) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -51,5 +53,13 @@ fun EmptyStateView(message: String, subMessage: String) {
             fontSize = 14.sp,
             textAlign = TextAlign.Center
         )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun EmptyStateViewPreview() {
+    Android7HoursTheme {
+        CommonEmptyState("빈화면 메세지", "서브 메세지")
     }
 }

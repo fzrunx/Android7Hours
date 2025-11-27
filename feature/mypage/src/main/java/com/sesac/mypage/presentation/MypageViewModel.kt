@@ -14,6 +14,7 @@ import com.sesac.domain.usecase.mypage.MypageUseCase
 import com.sesac.domain.model.User
 import com.sesac.domain.model.Pet
 import com.sesac.domain.result.AuthResult
+import com.sesac.domain.result.AuthUiState
 import com.sesac.domain.result.ResponseUiState
 import com.sesac.domain.usecase.auth.AuthUseCase
 import com.sesac.domain.usecase.bookmark.BookmarkUseCase
@@ -263,7 +264,7 @@ class MypageViewModel @Inject constructor(
         }
     }
 
-    fun getStats() {
+    fun getStats(uiState: AuthUiState) {
         viewModelScope.launch {
             _stats.value = ResponseUiState.Loading
             val token = sessionUseCase.getAccessToken().first()
@@ -272,26 +273,49 @@ class MypageViewModel @Inject constructor(
                 return@launch
             }
 
-            bookmarkUseCase.getMyBookmarksUseCase(token)
+            pathUseCase.getMyPaths(token)
                 .catch { e ->
                     _stats.value = ResponseUiState.Error(e.message ?: "알 수 없는 오류가 발생했습니다.")
                 }
-                .collectLatest { bookmarksResult ->
-                    when (bookmarksResult) {
+                .collectLatest { myPathResult ->
+                    val userNickname = uiState.nickname
+                    when (myPathResult) {
                         is AuthResult.Success -> {
-                            val pathList = bookmarksResult.resultData.mapNotNull { it.bookmarkedItem as? BookmarkedPath }
+                            val pathList = myPathResult.resultData.filter { it.uploader == userNickname }
                             val myPathStats = getMyPathStatsUtils(pathList)
                             _stats.value = ResponseUiState.Success("마이페이지 스탯을 불러왔습니다", myPathStats)
                         }
 
                         is AuthResult.NetworkError -> {
-                            _stats.value = ResponseUiState.Error(bookmarksResult.exception.message ?: "unknown")
+                            _stats.value = ResponseUiState.Error(myPathResult.exception.message ?: "unknown")
                         }
                         else -> {
                             _stats.value = ResponseUiState.Error("데이터를 불러오는데 실패했습니다.")
                         }
                     }
                 }
+
+//            bookmarkUseCase.getMyBookmarksUseCase(token)
+//                .catch { e ->
+//                    _stats.value = ResponseUiState.Error(e.message ?: "알 수 없는 오류가 발생했습니다.")
+//                }
+//                .collectLatest { bookmarksResult ->
+//                    val userNickname = uiState.nickname
+//                    when (bookmarksResult) {
+//                        is AuthResult.Success -> {
+//                            val pathList = bookmarksResult.resultData.mapNotNull { it.bookmarkedItem as? BookmarkedPath }.filter { it.uploader == userNickname }
+//                            val myPathStats = getMyPathStatsUtils(pathList)
+//                            _stats.value = ResponseUiState.Success("마이페이지 스탯을 불러왔습니다", myPathStats)
+//                        }
+//
+//                        is AuthResult.NetworkError -> {
+//                            _stats.value = ResponseUiState.Error(bookmarksResult.exception.message ?: "unknown")
+//                        }
+//                        else -> {
+//                            _stats.value = ResponseUiState.Error("데이터를 불러오는데 실패했습니다.")
+//                        }
+//                    }
+//                }
         }
     }
 

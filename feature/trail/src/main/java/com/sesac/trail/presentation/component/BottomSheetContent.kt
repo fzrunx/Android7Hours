@@ -58,9 +58,7 @@ fun BottomSheetContent(
     onTabChange: (WalkPathTab) -> Unit,
     onPathClick: (Path) -> Unit,
     onFollowClick: (Path) -> Unit,
-    onRegisterClick: () -> Unit,
     onEditModeToggle: () -> Unit,
-    onModifyClick: (Path) -> Unit,
     onDeleteClick: (Int) -> Unit
 ) {
     Surface(
@@ -141,16 +139,13 @@ fun BottomSheetContent(
                         onFollowClick = onFollowClick
                     )
                     WalkPathTab.MY_RECORDS -> {
-//                        viewModel.getUserBookmarkedPaths(uiState.token)
                         MyRecordsTabContent(
                             viewModel = viewModel,
                             myPaths = myPaths.filterNotNull(),
                             isEditMode = isEditMode,
                             onPathClick = onPathClick,
                             onFollowClick = { /* MyRecord에서 UserPath로 변환 필요 */ },
-//                            onRegisterClick = onRegisterClick,
                             onEditModeToggle = onEditModeToggle,
-//                        onModifyClick = onModifyClick,
                             onDeleteClick = onDeleteClick,
                         )
                     }

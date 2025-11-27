@@ -180,6 +180,7 @@ class TrailViewModel @Inject constructor(
                 .collectLatest { pathsResult ->
                 when (pathsResult) {
                     is AuthResult.Success -> {
+                        Log.d("TAG-TarilVieModel", "현재 위치 : $coord")
                         _recommendedPaths.value = ResponseUiState.Success("추천 경로를 불러왔습니다.", pathsResult.resultData)
                     }
                     is AuthResult.NetworkError -> {

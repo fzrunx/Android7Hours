@@ -31,6 +31,7 @@ import androidx.compose.ui.unit.sp
 import com.sesac.common.ui.theme.ColorOrange
 import com.sesac.common.ui.theme.Purple600
 import com.sesac.common.ui.theme.Red500
+import com.sesac.common.ui.theme.White
 import com.sesac.common.ui.theme.paddingLarge
 import com.sesac.common.ui.theme.paddingMicro
 import com.sesac.common.ui.theme.paddingSmall
@@ -58,7 +59,7 @@ fun RecordingControls(
         Surface(
             shape = RoundedCornerShape(16.dp),
             shadowElevation = 4.dp,
-            color = Color.White
+            color = White
         ) {
             Column(
                 modifier = Modifier.padding(horizontal = 24.dp, vertical = 12.dp),

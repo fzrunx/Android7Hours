@@ -63,7 +63,7 @@ fun MypageMainScreen(
 
     LaunchedEffect(uiState) {
         if (uiState.isLoggedIn){
-            viewModel.getStats()
+            viewModel.getStats(uiState)
         } else {
             nav2LoginScreen()
         }

@@ -98,11 +98,7 @@ fun TrailMainScreen(
     // ✅ 수정: tempPathCoords는 이제 ViewModel에서 제공
     val tempPathCoords by viewModel.tempPathCoords.collectAsStateWithLifecycle()
     val polylineFromVM by viewModel.polylineOverlay.collectAsStateWithLifecycle()
-
     var isTracking by remember { mutableStateOf(false) }
-
-
-
     // 네이버 지도 위치 소스
     val locationSource = remember {
         activity?.let { FusedLocationSource(it, 1000) }
@@ -115,7 +111,6 @@ fun TrailMainScreen(
             ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
         )
     }
-
     // 위치 권한 요청
     val locationPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions()
@@ -132,14 +127,11 @@ fun TrailMainScreen(
     var showMemoDialog by remember { mutableStateOf(false) }
     var selectedCoord by remember { mutableStateOf<LatLng?>(null) }
     var memoText by remember { mutableStateOf("") }
-
     // NaverMap 저장 위한 변수
     var currentNaverMap by remember { mutableStateOf<NaverMap?>(null) }
-
     // 마커 관리 리스트/맵
     val currentMarkers = viewModel.currentMarkers
     val infoWindowStates = remember { mutableStateMapOf<Marker, Boolean>() }
-
     // 위치 콜백
     val locationCallback = remember {
         object : LocationCallback() {
@@ -192,9 +184,25 @@ fun TrailMainScreen(
             Log.d("TrailMainScreen", "❌ 폴리라인 지도에서 제거")
         }
     }
-    // ⭐ Draft 목록 초기화
-    LaunchedEffect(Unit) {
-        viewModel.loadDrafts() // suspend 호출, drafts StateFlow 갱신
+    // ⭐ Draft 및 경로 목록 초기화
+    LaunchedEffect(hasLocationPermission, uiState.token) {
+        viewModel.loadDrafts()
+        viewModel.updateIsEditMode(false)
+        viewModel.getMyPaths(uiState.token)
+
+        if (hasLocationPermission) {
+            @SuppressLint("MissingPermission")
+            fusedLocationClient.getCurrentLocation(Priority.PRIORITY_BALANCED_POWER_ACCURACY, null)
+                .addOnSuccessListener { location: Location? ->
+                    val coord = location?.let { Coord(it.latitude, it.longitude) } ?: Coord.DEFAULT
+                    viewModel.getRecommendedPaths(coord, 50000f)
+                }.addOnFailureListener {
+                    Log.w("TrailMainScreen", "Failed to get current location", it)
+                    viewModel.getRecommendedPaths(Coord.DEFAULT, 50000f)
+                }
+        } else {
+            viewModel.getRecommendedPaths(Coord.DEFAULT, 50000f)
+        }
     }
 
 // ⭐ 녹화 종료 시 초기화
@@ -202,15 +210,6 @@ fun TrailMainScreen(
         if (!isRecording) {
             Log.d("TrailMainScreen", "🧹 녹화 중지 시 폴리라인, 마커, 좌표 초기화 완료")
         }
-    }
-    // ✅ 추천 경로 불러오기
-    LaunchedEffect(Unit) {
-        viewModel.getRecommendedPaths(Coord.DEFAULT, 50000f)
-    }
-
-    LaunchedEffect(Unit, uiState) {
-        viewModel.getMyPaths(uiState.token)
-        Log.d("TAG-TrailMainScreen", "myPaths : $myPaths")
     }
 
     // --- 타이머 로직 (녹화 중일 때 시간 증가) ---
@@ -314,7 +313,7 @@ fun TrailMainScreen(
                                     selectedCoord = coord
                                     memoText = ""
                                     showMemoDialog = true
-                                }
+                                 }
                             }
                         }
                         mapView
@@ -406,15 +405,7 @@ fun TrailMainScreen(
                             viewModel.updateIsSheetOpen(false)
                             Log.d("Tag-TrailMainScree", "Following path: ${path.pathName}")
                         },
-                        onRegisterClick = {
-                            viewModel.updateIsSheetOpen(false)
-                            navController.navigate(TrailNavigationRoute.TrailCreateTab)
-                        },
                         onEditModeToggle = { viewModel.updateIsEditMode() },
-                        onModifyClick = {
-                            viewModel.updateSelectedPath(it)
-                            navController.navigate(TrailNavigationRoute.TrailCreateTab)
-                        },
                         onDeleteClick = { viewModel.deletePath(uiState.token, it) }
                     )
                 }
@@ -460,7 +451,6 @@ fun TrailMainScreen(
 
                     // 녹화 관련 상태 초기화
                     viewModel.updateIsRecording(false)
-//                    viewModel.updateRecordingTime(0)
                     viewModel.stopRecording()
                     viewModel.updateIsFollowingPath(false)
                     viewModel.updateIsPaused(false)

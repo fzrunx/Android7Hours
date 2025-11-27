@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -45,8 +46,11 @@ import com.sesac.common.ui.theme.paddingMicro
 import com.sesac.domain.model.BannerData
 
 @Composable
-fun BannerSectionView(banners: List<BannerData?>, modifier: Modifier = Modifier) {
-    val pagerState = rememberPagerState(pageCount = { banners.size })
+fun BannerSectionView(
+    banners: List<BannerData?>,
+    modifier: Modifier = Modifier,
+    pagerState: PagerState,
+    ) {
     Column(modifier = modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
         HorizontalPager(
             state = pagerState,

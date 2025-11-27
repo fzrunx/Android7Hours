@@ -17,6 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.sesac.common.component.CommonEmptyState
 import com.sesac.common.ui.theme.TextPrimary
 import com.sesac.common.ui.theme.paddingLarge
 import com.sesac.common.ui.theme.paddingMedium
@@ -62,7 +63,7 @@ fun <T> ListContainerView(
         }
 
         if (itemList.isEmpty()) {
-            EmptyStateView(
+            CommonEmptyState(
                 message = emptyStateMessage,
                 subMessage = emptyStateSubMessage
             )
