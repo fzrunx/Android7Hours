@@ -14,29 +14,53 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import com.sesac.common.ui.theme.paddingLarge
 import com.sesac.common.ui.theme.paddingMedium
+import com.sesac.domain.result.ResponseUiState
 
 @Composable
 fun <T> CommonLazyRow(
     modifier: Modifier = Modifier,
     title: String,
-    items: List<T>,
+    items: ResponseUiState<List<T>>,
     content: @Composable (T)-> Unit
 ) {
-    Column(modifier = modifier.fillMaxWidth().padding(vertical = paddingMedium)) {
-        Text(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = paddingLarge).padding(bottom = paddingMedium),
-            text = title,
-            color = MaterialTheme.colorScheme.onBackground,
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold
-        )
-        LazyRow(
-            contentPadding = PaddingValues(horizontal = paddingLarge),
-            horizontalArrangement = Arrangement.spacedBy(paddingMedium)
-        ) {
-            items(items) { item ->
-                content(item)
+    when(val state = items) {
+        is ResponseUiState.Loading -> {
+            Column(modifier = modifier.fillMaxWidth().padding(vertical = paddingMedium)) {
+                LazyRowContent(title)
             }
         }
+        is ResponseUiState.Success -> {
+            Column(modifier = modifier.fillMaxWidth().padding(vertical = paddingMedium)) {
+                LazyRowContent(title)
+                LazyRow(
+                    contentPadding = PaddingValues(horizontal = paddingLarge),
+                    horizontalArrangement = Arrangement.spacedBy(paddingMedium)
+                ) {
+                    items(state.result) { item ->
+                        content(item)
+                    }
+                }
+            }
+        }
+        is ResponseUiState.Error -> {
+            Column(modifier = modifier.fillMaxWidth().padding(vertical = paddingMedium)) {
+                LazyRowContent(title)
+                Text(state.message)
+            }
+        }
+        else -> {}
     }
+}
+
+@Composable
+fun LazyRowContent(message: String) {
+    Text(
+        modifier = Modifier.fillMaxWidth()
+            .padding(horizontal = paddingLarge)
+            .padding(bottom = paddingMedium),
+        text = message,
+        color = MaterialTheme.colorScheme.onBackground,
+        style = MaterialTheme.typography.titleMedium,
+        fontWeight = FontWeight.Bold
+    )
 }

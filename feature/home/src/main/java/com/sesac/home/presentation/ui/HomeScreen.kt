@@ -1,6 +1,7 @@
 package com.sesac.home.presentation.ui
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -9,6 +10,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
@@ -37,9 +39,9 @@ import com.sesac.common.ui.theme.bannerHeight
 import com.sesac.common.ui.theme.cardWidth
 import com.sesac.common.ui.theme.paddingLarge
 import com.sesac.common.ui.theme.paddingMedium
-import com.sesac.domain.model.Path
-import com.sesac.domain.result.AuthResult
+import com.sesac.domain.result.ResponseUiState
 import com.sesac.home.presentation.HomeViewModel
+import kotlinx.coroutines.delay
 import com.sesac.common.R as cR
 
 
@@ -55,9 +57,21 @@ fun HomeScreen(
     val banners by viewModel.bannerList.collectAsStateWithLifecycle()
     val pathList by viewModel.recommendPathList.collectAsStateWithLifecycle()
     val communityList by viewModel.communityList.collectAsStateWithLifecycle()
+    val pagerState = rememberPagerState(pageCount = { banners.size })
 
     LaunchedEffect(Unit) {
         viewModel.getRecommendedPaths()
+    }
+
+    LaunchedEffect(pagerState.pageCount) {
+        if (pagerState.pageCount > 1) {
+            while (true) {
+                delay(5000)
+                pagerState.animateScrollToPage(
+                    page = (pagerState.currentPage + 1) % pagerState.pageCount
+                )
+            }
+        }
     }
 
     Column(
@@ -66,26 +80,26 @@ fun HomeScreen(
             .background(MaterialTheme.colorScheme.background)
     ) {
         LazyColumn(modifier = Modifier.fillMaxSize()) {
-            item { BannerSectionView(banners = banners, modifier = Modifier.padding(top = paddingMedium)) }
-            when(pathList) {
-                is AuthResult.Success -> {
-                    item {
-                        CommonLazyRow(
-                            title = "산책로 추천",
-                            items = (pathList as AuthResult.Success<List<Path?>>).resultData,
-                        ) { path ->
-                            ContentCardView(
-                                data = path,
-                                onClick = { onNavigateToPathDetail(path?.toPathParceler()) },
-                                modifier = Modifier.width(cardWidth)
-                            )
-                        }
-                    }
-                }
-                else -> {}
-
+            item {
+                BannerSectionView(
+                    banners = banners,
+                    modifier = Modifier.padding(top = paddingMedium),
+                    pagerState = pagerState,
+                )
             }
 
+            item {
+                CommonLazyRow(
+                    title = "산책로 추천",
+                    items = pathList,
+                ) { path ->
+                    ContentCardView(
+                        data = path,
+                        onClick = { onNavigateToPathDetail(path?.toPathParceler()) },
+                        modifier = Modifier.width(cardWidth)
+                    )
+                }
+            }
 
 //            item { CommonLazyRow(
 //                title = "여행지 추천",

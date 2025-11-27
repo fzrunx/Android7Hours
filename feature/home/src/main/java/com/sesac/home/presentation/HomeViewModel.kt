@@ -8,6 +8,7 @@ import com.sesac.domain.usecase.community.CommunityUseCase
 import com.sesac.domain.usecase.home.HomeUseCase
 import com.sesac.domain.model.Path
 import com.sesac.domain.result.AuthResult
+import com.sesac.domain.result.ResponseUiState
 import com.sesac.domain.usecase.path.PathUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -22,7 +23,7 @@ class HomeViewModel @Inject constructor(
     private val homeUseCase: HomeUseCase,
     private val communityUseCase: CommunityUseCase,
 ): ViewModel() {
-    private val _recommendPathList = MutableStateFlow<AuthResult<List<Path?>>>(AuthResult.NoConstructor)
+    private val _recommendPathList = MutableStateFlow<ResponseUiState<List<Path?>>>(ResponseUiState.Idle)
     val recommendPathList get() = _recommendPathList.asStateFlow()
     private val _bannerList = MutableStateFlow<List<BannerData?>>(emptyList())
     val bannerList get() = _bannerList.asStateFlow()
@@ -39,7 +40,13 @@ class HomeViewModel @Inject constructor(
 
     fun getRecommendedPaths() {
         viewModelScope.launch {
-            pathUseCase.getAllRecommendedPathsUseCase(null, null).collectLatest { _recommendPathList.value = it }
+            pathUseCase.getAllRecommendedPathsUseCase(null, null).collectLatest { result ->
+                when(result) {
+                    is AuthResult.Success -> _recommendPathList.value = ResponseUiState.Success("산책로 불러오기 성공", result.resultData)
+                    is AuthResult.NetworkError -> _recommendPathList.value = ResponseUiState.Error(result.exception.message ?: "unknown")
+                    else -> {}
+                }
+            }
         }
     }
 
