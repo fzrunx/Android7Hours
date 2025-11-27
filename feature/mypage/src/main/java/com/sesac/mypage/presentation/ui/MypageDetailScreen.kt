@@ -152,7 +152,7 @@ fun MypageDetailScreen(
                 MypageDetailHeader(
                     name = uiState.fullName ?: "-",
                     description = "반려견과 함께하는 즐거운 산책",
-                    imageUrl = null,
+                    imageUrl = uiState.profileImageUrl,
                     localImageUri = selectedImageUri,
                     onCameraClick = {
                         photoPickerLauncher.launch(
@@ -227,7 +227,11 @@ fun MypageDetailHeader(
                     .clip(CircleShape)
                     .border(2.dp, Color.White, CircleShape),
                 contentScale = ContentScale.Crop,
-                placeholder = painterResource(id = cR.drawable.placeholder)
+                placeholder = painterResource(id = cR.drawable.placeholder),
+                onError = { result ->
+                    Log.e("IMAGE_DEBUG", "이미지 로드 실패 사유: ${result.result.throwable.message}")
+                    result.result.throwable.printStackTrace()
+                }
             )
             Box(
                 modifier = Modifier
@@ -482,10 +486,7 @@ fun EmptyPetView() {
 fun fixImageUrl(url: String?): String? {
     if (url.isNullOrEmpty()) return null
 
-    // 1. localhost -> 10.0.2.2 변환
-    val fixedUrl = url.replace("127.0.0.1", "10.0.2.2")
+    // 127.0.0.1 이나 localhost 를 에뮬레이터 전용 주소(10.0.2.2)로 교체
+    return url.replace("127.0.0.1", "10.0.2.2")
         .replace("localhost", "10.0.2.2")
-
-    // 2. 캐시 무시 (이미지 즉시 갱신용)
-    return "$fixedUrl?timestamp=${System.currentTimeMillis()}"
 }
