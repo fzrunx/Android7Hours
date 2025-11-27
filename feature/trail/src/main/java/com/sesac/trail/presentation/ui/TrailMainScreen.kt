@@ -60,8 +60,14 @@ import com.sesac.trail.presentation.component.RecordingControls
 import com.sesac.trail.presentation.component.ReopenSheetButton
 import com.sesac.trail.presentation.component.addMemoMarker
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
+import com.naver.maps.map.CameraUpdate
+import com.naver.maps.map.overlay.OverlayImage
 import com.sesac.common.model.toPathParceler
 import com.sesac.trail.nav_graph.NestedNavigationRoute
+import com.sesac.trail.presentation.component.FollowGuide
+import com.sesac.trail.presentation.toLatLng
 
 enum class WalkPathTab { RECOMMENDED, MY_RECORDS }
 
@@ -95,6 +101,7 @@ fun TrailMainScreen(
     val recordingTime by viewModel.recordingTime.collectAsStateWithLifecycle()
     val isEditMode by viewModel.isEditMode.collectAsStateWithLifecycle()
     val activeTab by viewModel.activeTab.collectAsStateWithLifecycle()
+    val selectedPath by viewModel.selectedPath.collectAsStateWithLifecycle()
     // ✅ 수정: tempPathCoords는 이제 ViewModel에서 제공
     val tempPathCoords by viewModel.tempPathCoords.collectAsStateWithLifecycle()
     val polylineFromVM by viewModel.polylineOverlay.collectAsStateWithLifecycle()
@@ -152,24 +159,29 @@ fun TrailMainScreen(
 
                     val newPoint = LatLng(smoothLoc.latitude, smoothLoc.longitude)
 
-                    // 🔥 3) 최소 이동거리 필터 (정지시 지그재그 방지)
-                    val lastPoint = tempPathCoords.lastOrNull()
-                    if (lastPoint != null) {
-                        val diff = lastPoint.distanceTo(newPoint)
-                        if (diff < 5) {
-                            Log.d("GPS", "5m 미만이라 무시됨: 이동거리=$diff")
-                            return@forEach
+                    // 🔥 따라가기 모드일 때 위치 업데이트
+                    if (isFollowingPath) {
+                        viewModel.updateUserLocation(newPoint)
+                        viewModel.updateUserLocationMarker(newPoint)
+                    } else if (isRecording && !isPaused) {
+                        // 🔥 3) 최소 이동거리 필터 (정지시 지그재그 방지)
+                        val lastPoint = tempPathCoords.lastOrNull()
+                        if (lastPoint != null) {
+                            val diff = lastPoint.distanceTo(newPoint)
+                            if (diff < 5) {
+                                Log.d("GPS", "5m 미만이라 무시됨: 이동거리=$diff")
+                                return@forEach
+                            }
                         }
-                    }
 
-                    // 🔥 4) 최종 추가
-                    viewModel.addTempPoint(newPoint)
-                    Log.d("GPS", "추가됨: ${newPoint.latitude}, ${newPoint.longitude}")
+                        // 🔥 4) 최종 추가
+                        viewModel.addTempPoint(newPoint)
+                        Log.d("GPS", "추가됨: ${newPoint.latitude}, ${newPoint.longitude}")
+                    }
                 }
             }
         }
     }
-
 
     // ⭐⭐ 폴리라인 좌표 업데이트
     LaunchedEffect(tempPathCoords.size, isRecording) {
@@ -228,14 +240,17 @@ fun TrailMainScreen(
     }
 
     // --- 위치 업데이트 시작/중지 ---
-    LaunchedEffect(isRecording, isPaused, hasLocationPermission) {  // ⭐ hasLocationPermission 추가
+    LaunchedEffect(isRecording, isPaused, isFollowingPath, hasLocationPermission) {
         val locationRequest = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 2000L)
             .setWaitForAccurateLocation(false)
             .setMinUpdateIntervalMillis(500L)
             .setMaxUpdateDelayMillis(1000L)
             .build()
 
-        if (isRecording && !isPaused) {
+        // ✅ 녹화 중이거나 따라가기 중일 때 위치 업데이트
+        val shouldUpdateLocation = (isRecording && !isPaused) || isFollowingPath
+
+        if (shouldUpdateLocation) {
             if (hasLocationPermission) {  // ⭐ state 사용
                 @SuppressLint("MissingPermission")
                 fusedLocationClient.requestLocationUpdates(
@@ -243,7 +258,7 @@ fun TrailMainScreen(
                     locationCallback,
                     Looper.getMainLooper()
                 )
-                Log.d("TrailMainScreen", "📍 위치 업데이트 시작")
+                Log.d("TrailMainScreen", "📍 위치 업데이트 시작 (녹화: $isRecording, 따라가기: $isFollowingPath)")
             } else {
                 // 권한 요청
                 locationPermissionLauncher.launch(
@@ -324,18 +339,136 @@ fun TrailMainScreen(
                 )
             }
         }
+        // 🔹 선택된 경로의 폴리라인 표시
+        DisposableEffect(isFollowingPath, selectedPath, currentNaverMap) {
+            Log.d("TrailMainScreen", "🔹 DisposableEffect 진입: isFollowing=$isFollowingPath, path=${selectedPath?.pathName}, map=$currentNaverMap")
+            val map = currentNaverMap
+            val path = selectedPath
+
+            val followPolyline: PolylineOverlay?
+            val startMarker: Marker?
+            val endMarker: Marker?
+
+            if (map != null && isFollowingPath && path != null) {
+                val coords = path.coord?.map { it.toLatLng() } ?: emptyList()
+
+                if (coords.size < 2) {
+                    Log.e("TrailMainScreen", "❌ 좌표 부족")
+                    followPolyline = null
+                    startMarker = null
+                    endMarker = null
+                } else {
+                    // 폴리라인
+                    followPolyline = PolylineOverlay().apply {
+                        this.coords = coords
+                        color = 0xFF6200EE.toInt()
+                        width = 12
+                        capType = PolylineOverlay.LineCap.Round
+                        joinType = PolylineOverlay.LineJoin.Round
+                        this.map = map
+                    }
+
+                    // ✅ 시작 마커 (초록색)
+                    startMarker = Marker().apply {
+                        position = coords.first()
+                        icon = OverlayImage.fromResource(android.R.drawable.ic_input_add) // 또는 커스텀 아이콘
+                        captionText = "출발"
+                        captionColor = Color.Green.toArgb()
+                        this.map = map
+                    }
+
+                    // ✅ 종료 마커 (빨간색)
+                    endMarker = Marker().apply {
+                        position = coords.last()
+                        icon = OverlayImage.fromResource(android.R.drawable.ic_menu_close_clear_cancel)
+                        captionText = "도착"
+                        captionColor = Color.Red.toArgb()
+                        this.map = map
+                    }
+
+                    // 카메라 이동
+                    val cameraUpdate = CameraUpdate.scrollTo(coords.first())
+                    map.moveCamera(cameraUpdate)
+
+                    Log.d("TrailMainScreen", "✅ 폴리라인 + 시작/종료 마커 생성 완료")
+                }
+            } else {
+                followPolyline = null
+                startMarker = null
+                endMarker = null
+            }
+
+            onDispose {
+                followPolyline?.map = null
+                startMarker?.map = null
+                endMarker?.map = null
+                Log.d("TrailMainScreen", "🧹 폴리라인 + 마커 제거")
+            }
+        }
+        // 🔹 사용자 현재 위치 마커
+        val userLocation by viewModel.userLocationMarker.collectAsStateWithLifecycle()
+        var userMarker by remember { mutableStateOf<Marker?>(null) }
+
+        LaunchedEffect(userLocation, currentNaverMap, isFollowingPath) {
+            Log.d(
+                "TrailMainScreen",
+                "🔹 마커 LaunchedEffect: location=$userLocation, map=$currentNaverMap, isFollowing=$isFollowingPath"
+            )
+            val map = currentNaverMap ?: return@LaunchedEffect
+            val location = userLocation
+
+            if (isFollowingPath && location != null) {
+                try{
+                    if (userMarker == null) {
+                        Log.d("TrailMainScreen", "🎯 마커 생성 시작...")
+                        userMarker = Marker().apply {
+                            icon = OverlayImage.fromResource(android.R.drawable.ic_menu_mylocation)
+                            width = 60
+                            height = 60
+                            this.map = map
+                        }
+                        Log.d("TrailMainScreen", "✅ 마커 생성 완료")
+                    }
+                    userMarker?.position = location
+                    Log.d("TrailMainScreen", "📍 마커 위치 업데이트: (${location.latitude}, ${location.longitude})")
+                } catch (e: Exception) {
+                Log.e("TrailMainScreen", "❌ 마커 생성/업데이트 실패: ${e.message}", e)
+            }
+        } else {
+        if (userMarker != null) {
+            Log.d("TrailMainScreen", "🗑️ 마커 제거")
+        }
+        userMarker?.map = null
+        userMarker = null
+    }
+    }
+        // 🔹 따라가기 안내 UI
+        AnimatedVisibility(
+            visible = isFollowingPath,
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+                .padding(top = 80.dp)
+        ) {
+            FollowGuide(viewModel = viewModel,
+                onStopFollowing = {
+                    viewModel.stopFollowing()
+                    viewModel.updateIsFollowingPath(false)
+                    viewModel.clearUserLocationMarker()
+                }
+            )
+        }
 
         // ✅ 메모 마커 표시 (ViewModel 상태 기반)
         val memoMarkers by viewModel.memoMarkers.collectAsStateWithLifecycle()
-        LaunchedEffect(memoMarkers, currentNaverMap) {
+        LaunchedEffect(memoMarkers, currentNaverMap, isRecording, isFollowingPath) {
             val map = currentNaverMap ?: return@LaunchedEffect
 
-            // 🔥 녹화 중일 때만 마커 표시
-            if (!isRecording) {
+            // 🔥 녹화 또는 따라가기 중일 때만 마커 표시
+            if (!isRecording && !isFollowingPath) {
                 // 기존 마커 정리
                 currentMarkers.forEach { it.map = null }
                 currentMarkers.clear()
-                return@LaunchedEffect  // 녹화 중이 아니면 마커 그리지 않음
+                return@LaunchedEffect
             }
 
             // 기존 마커 정리
@@ -357,7 +490,7 @@ fun TrailMainScreen(
 
         // ✅ 하단 Bottom Sheet
         AnimatedVisibility(
-            visible = isSheetOpen && !isRecording,
+            visible = isSheetOpen && !isRecording && !isFollowingPath,
             modifier = Modifier.align(Alignment.BottomCenter),
             enter = slideInVertically { it },
             exit = slideOutVertically(
@@ -388,9 +521,7 @@ fun TrailMainScreen(
                         isEditMode = isEditMode,
                         onSheetOpenToggle = { viewModel.updateIsSheetOpen(null) },
                         onStartRecording = {
-                            viewModel.updateIsFollowingPath(false)
-                            viewModel.updateIsRecording(true)
-                            viewModel.updateRecordingTime(0)
+                            viewModel.startRecording()
                             viewModel.updateIsSheetOpen(false)
                             viewModel.startRecording()
                         },
@@ -400,8 +531,7 @@ fun TrailMainScreen(
                             navController.navigate(NestedNavigationRoute.TrailDetail(it.toPathParceler()))
                         },
                         onFollowClick = { path ->
-                            viewModel.updateIsFollowingPath(true)
-                            viewModel.updateIsRecording(true)
+                            viewModel.startFollowing(path)
                             viewModel.updateIsSheetOpen(false)
                             Log.d("Tag-TrailMainScree", "Following path: ${path.pathName}")
                         },
@@ -414,7 +544,7 @@ fun TrailMainScreen(
 
         // ✅ 시트 다시 열기 버튼
         AnimatedVisibility(
-            visible = !isSheetOpen && !isRecording,
+            visible = !isSheetOpen && !isRecording && !isFollowingPath,
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .padding(bottom = paddingLarge * 2)

@@ -1,5 +1,6 @@
 package com.sesac.trail.presentation.component
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -144,7 +145,24 @@ fun BottomSheetContent(
                             myPaths = myPaths.filterNotNull(),
                             isEditMode = isEditMode,
                             onPathClick = onPathClick,
-                            onFollowClick = { /* MyRecord에서 UserPath로 변환 필요 */ },
+                            onFollowClick = { path ->
+                                Log.d("BottomSheet", "==================== 따라가기 클릭 ====================")
+                                Log.d("BottomSheet", "경로 ID: ${path.id}")
+                                Log.d("BottomSheet", "경로 이름: ${path.pathName}")
+                                Log.d("BottomSheet", "좌표 개수: ${path.coord?.size ?: 0}")
+                                path.coord?.take(5)?.forEachIndexed { index, coord ->
+                                    Log.d("BottomSheet", "  [$index] lat=${coord.latitude}, lng=${coord.longitude}")
+                                }
+
+                                Log.d("BottomSheet", "startFollowing 호출...")
+                                viewModel.startFollowing(path)
+
+                                Log.d("BottomSheet", "시트 닫기...")
+                                viewModel.updateIsSheetOpen(false)
+
+                                Log.d("BottomSheet", "========================================================")
+                            },
+//                            onRegisterClick = onRegisterClick,
                             onEditModeToggle = onEditModeToggle,
                             onDeleteClick = onDeleteClick,
                         )

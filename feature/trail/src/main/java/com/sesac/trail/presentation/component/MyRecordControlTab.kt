@@ -49,7 +49,8 @@ fun MyRecordsTabContent(
     myPaths: List<Path>,
     isEditMode: Boolean,
     onPathClick: (Path) -> Unit,
-    onFollowClick: () -> Unit,
+    onFollowClick: (Path) -> Unit,
+//    onRegisterClick: () -> Unit,
     onEditModeToggle: () -> Unit,
     onDeleteClick: (Int) -> Unit,
 ) {
@@ -73,7 +74,13 @@ fun MyRecordsTabContent(
                     myPath = myPath,
                     isEditMode = isEditMode,
                     onPathClick = onPathClick,
-                    onFollowClick = onFollowClick,
+                    onFollowClick = { path ->
+                        viewModel.startFollowing(path) // ✅ ViewModel 함수 호출
+                        viewModel.updateIsSheetOpen(false) // 시트 닫기
+                        viewModel.updateIsFollowingPath(true) // 상태 업데이트
+                    },
+//                    onRegisterClick = onRegisterClick,
+//                    onModifyClick = onModifyClick,
                     onDeleteClick = onDeleteClick
                 )
             }
@@ -87,7 +94,7 @@ fun MyRecordItem(
     myPath: Path,
     isEditMode: Boolean,
     onPathClick: (Path) -> Unit,
-    onFollowClick: () -> Unit,
+    onFollowClick: (Path) -> Unit,
     onDeleteClick: (Int) -> Unit
 ) {
     Card(
@@ -146,7 +153,10 @@ fun MyRecordItem(
             } else {
                 Column(verticalArrangement = Arrangement.spacedBy(paddingMicro)) {
                     Button(
-                        onClick = onFollowClick,
+                        onClick = {
+                            viewModel.startFollowing(myPath)
+                            onFollowClick(myPath)
+                            },
                         colors = ButtonDefaults.buttonColors(containerColor = Purple600),
                         contentPadding = PaddingValues(horizontal = paddingSmall, vertical = paddingMicro)
                     ) { Text("따라가기", color = White) }

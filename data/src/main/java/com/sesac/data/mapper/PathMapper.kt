@@ -29,6 +29,29 @@ fun PathDTO.toPath() = Path(
     likes = 0,
     distanceFromMe = 0f,
     tags = emptyList(),
+    markers = this.markers?.mapNotNull { markerData ->
+        if (markerData.size >= 2) {
+            val lat = markerData.getOrNull(0) as? Double
+            val lng = markerData.getOrNull(1) as? Double
+            val memoValue = markerData.getOrNull(2)
+            val memo: String = if (memoValue is Double) {
+                if (memoValue == memoValue.toInt().toDouble()) {
+                    memoValue.toInt().toString()
+                } else {
+                    memoValue.toString()
+                }
+            } else {
+                memoValue?.toString() ?: ""
+            }
+            if (lat != null && lng != null) {
+                com.sesac.domain.model.MemoMarker(lat, lng, memo)
+            } else {
+                null
+            }
+        } else {
+            null
+        }
+    }
 )
 
 fun Path.toPathCreateRequestDTO() = PathCreateRequestDTO(

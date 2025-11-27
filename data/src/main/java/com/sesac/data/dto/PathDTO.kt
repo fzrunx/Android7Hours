@@ -24,7 +24,8 @@ data class PathDTO(
     val bookmarksCount: Int,
     @Json(name = "is_bookmarked")
     val isBookmarked: Boolean,
-
+    @Json(name = "markers")
+    val markers: List<List<Any>>? = null,
 )
 
 @JsonClass(generateAdapter = true)
