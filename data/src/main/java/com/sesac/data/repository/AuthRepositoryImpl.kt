@@ -20,11 +20,20 @@ class AuthRepositoryImpl @Inject constructor(
 ): AuthRepository {
     override suspend fun login(loginRequest: LoginRequest) = flow {
         emit(AuthResult.Loading)
-        val resultDTO = authApi.login(loginRequest)
-        val result = resultDTO.toLoginResponse()
-        Log.d("TAG-AuthRepositoryImpl", "loginRequestDTD : $resultDTO")
-        Log.d("TAG-AuthRepositoryImpl", "loginRequest : $result")
-        emit(AuthResult.Success(result))
+        val response = authApi.login(loginRequest)
+        if (response.isSuccessful) {
+            val responseBody = response.body()
+            if (responseBody != null) {
+                val result = responseBody.toLoginResponse()
+                Log.d("TAG-AuthRepositoryImpl", "login response DTO: $responseBody")
+                Log.d("TAG-AuthRepositoryImpl", "login response: $result")
+                emit(AuthResult.Success(result))
+            } else {
+                emit(AuthResult.NetworkError(Exception("Login response body is null")))
+            }
+        } else {
+            emit(AuthResult.NetworkError(Exception("Login failed with code: ${response.code()} - ${response.message()}")))
+        }
     }.catch {
         Log.d("TAG-AuthRepositoryImpl", "login() : error : $it")
         emit(AuthResult.NetworkError(it))
@@ -65,7 +74,8 @@ class AuthRepositoryImpl @Inject constructor(
         }
 
     }.catch { e ->
-        Log.e("AuthRepositoryImpl", "loginWithKakao Failed", e)
+        Log.e("AuthRepositoryImpl", "loginWithKakao failed", e)
         emit(AuthResult.NetworkError(e))
     }
+
 }

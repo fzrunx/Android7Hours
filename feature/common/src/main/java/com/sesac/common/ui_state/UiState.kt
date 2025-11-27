@@ -21,6 +21,7 @@ data class AuthUiState(
     val nickname: String? = null, // Add other user info if needed
     val email: String? = null,
     val fullName: String? = null,
+    val profileImageUrl: String? = null,
 ) {
     fun reset() = AuthUiState()
 }

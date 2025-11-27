@@ -1,8 +1,6 @@
 package com.sesac.data.source.local.datasource
 
-import com.sesac.common.ui.theme.AccentGreen
-import com.sesac.common.ui.theme.ColorBlue
-import com.sesac.common.ui.theme.Purple500
+import androidx.compose.ui.graphics.Color
 import com.sesac.domain.model.Coord
 import com.sesac.domain.model.MyRecord
 import com.sesac.domain.model.Path
@@ -23,9 +21,9 @@ object MockTrail {
 //        }
 
         with(myRecord) {
-            add(MyRecord(101, "아침 산책", Date(2025,11,2), 2.3f, 32, 3420, 145, Purple500,))
-            add( MyRecord(102, "한강공원 조깅", Date(2025,11,1), 4.5f, 58, 6780, 298, ColorBlue))
-            add( MyRecord(103, "저녁 산책", Date(2025,10,31), 1.8f, 25, 2560, 112, AccentGreen))
+            add(MyRecord(101, "아침 산책", Date(2025,11,2), 2.3f, 32, 3420, 145, Color(0xFF6200EE),))
+            add( MyRecord(102, "한강공원 조깅", Date(2025,11,1), 4.5f, 58, 6780, 298, Color(0xFF3B82F6)))
+            add( MyRecord(103, "저녁 산책", Date(2025,10,31), 1.8f, 25, 2560, 112, Color(0xFF22C55E)))
         }
     }
 }

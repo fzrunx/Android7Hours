@@ -1,12 +1,12 @@
 package com.sesac.data.mapper
 
+import com.sesac.common.model.KakaoLoginRequest
 import com.sesac.data.dto.AuthDTO
 import com.sesac.data.dto.KakaoLoginRequestDTO
 import com.sesac.data.dto.LoginRequestDTO
 import com.sesac.data.dto.LoginResponseDTO
 import com.sesac.data.dto.TokenDTO
 import com.sesac.domain.model.Auth
-import com.sesac.common.model.KakaoLoginRequest
 import com.sesac.domain.model.LoginRequest
 import com.sesac.domain.model.LoginResponse
 import com.sesac.domain.model.Token
@@ -35,6 +35,7 @@ fun AuthDTO.toUser() = User(
     nickname = this.nickname,
     fullName = this.fullName,
     email = this.email,
+    profileImageUrl = this.profileImage
 )
 
 fun List<AuthDTO>.toUserList() = this.map {

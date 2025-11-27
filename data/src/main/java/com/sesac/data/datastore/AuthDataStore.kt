@@ -15,6 +15,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 import javax.inject.Singleton
+import android.util.Log
 
 private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "auth_prefs")
 
@@ -46,6 +47,7 @@ class AuthDataStore @Inject constructor(
     val user: Flow<User?> = context.dataStore.data
         .map { preferences ->
             preferences[PreferencesKeys.USER_INFO]?.let { jsonString ->
+                Log.d("AuthDataStore", "Reading user JSON: $jsonString")
                 userAdapter.fromJson(jsonString)
             }
         }
@@ -54,7 +56,17 @@ class AuthDataStore @Inject constructor(
         context.dataStore.edit { preferences ->
             preferences[PreferencesKeys.ACCESS_TOKEN] = accessToken
             preferences[PreferencesKeys.REFRESH_TOKEN] = refreshToken
-            preferences[PreferencesKeys.USER_INFO] = userAdapter.toJson(user)
+            val userJson = userAdapter.toJson(user)
+            Log.d("AuthDataStore", "Saving session user JSON: $userJson")
+            preferences[PreferencesKeys.USER_INFO] = userJson
+        }
+    }
+
+    suspend fun saveUser(user: User) {
+        context.dataStore.edit { preferences ->
+            val userJson = userAdapter.toJson(user)
+            Log.d("AuthDataStore", "Saving user JSON: $userJson")
+            preferences[PreferencesKeys.USER_INFO] = userJson
         }
     }
     

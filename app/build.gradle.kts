@@ -109,4 +109,6 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.7.0")
 
     ksp("com.squareup.moshi:moshi-kotlin-codegen:1.15.0")
+
+    implementation("io.coil-kt:coil-compose:2.4.0")
 }

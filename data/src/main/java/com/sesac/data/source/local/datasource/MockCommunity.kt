@@ -1,7 +1,6 @@
 package com.sesac.data.source.local.datasource
 
 import com.sesac.domain.model.Community
-import com.sesac.common.R
 
 object MockCommunity {
     val postList = mutableListOf<Community>()
@@ -15,8 +14,8 @@ object MockCommunity {
                     userName = "간장",
                     content = "부산 근처 산에 다녀왔어요. 자연과 함께한 힐링 타임 🌿",
                     imageResList = listOf(
-                        R.drawable.nature,
-                        R.drawable.hiking
+                        0, // R.drawable.nature - Replaced with 0 to remove feature module dependency
+                        0  // R.drawable.hiking - Replaced with 0 to remove feature module dependency
                     ),
                     comments = listOf("부산", "갈매기"),
                     status = true
@@ -30,8 +29,8 @@ object MockCommunity {
                     userName = "공장",
                     content = "팀원들과 함께한 점심시간 🍜 새로운 아이디어도 많이 나왔어요!",
                     imageResList = listOf(
-                        R.drawable.food,
-                        R.drawable.team
+                        0, // R.drawable.food - Replaced with 0 to remove feature module dependency
+                        0  // R.drawable.team - Replaced with 0 to remove feature module dependency
                     ),
                     comments = listOf("맞없음", "아님 맞있음", "?"),
                     status = false
@@ -45,7 +44,7 @@ object MockCommunity {
                     userName = "공장장",
                     content = "오늘 본 석양은 정말 아름다웠어요 🌇 하루를 마무리하며 힐링했습니다.",
                     imageResList = listOf(
-                        R.drawable.sunset
+                        0 // R.drawable.sunset - Replaced with 0 to remove feature module dependency
                     ),
                     status = true
                 )
@@ -58,7 +57,7 @@ object MockCommunity {
                     userName = "로봇",
                     content = "Mock 데이터 테스트용 포스트입니다.",
                     imageResList = listOf(
-                        R.drawable.icons8_dog_50
+                        0 // R.drawable.icons8_dog_50 - Replaced with 0 to remove feature module dependency
                     ),
                     status = false
                 )

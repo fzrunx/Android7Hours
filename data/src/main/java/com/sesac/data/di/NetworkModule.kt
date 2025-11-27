@@ -25,6 +25,7 @@ import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
 import java.net.CookieManager
 import javax.inject.Provider
+import java.util.concurrent.TimeUnit
 import javax.inject.Singleton
 
 @Module

@@ -33,6 +33,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.first
 import org.threeten.bp.LocalDate
 import javax.inject.Inject
+import okhttp3.MultipartBody
 
 @HiltViewModel
 class MypageViewModel @Inject constructor(
@@ -404,6 +405,32 @@ class MypageViewModel @Inject constructor(
     fun signOut(id: Int) {
         viewModelScope.launch {
             userUseCase.deleteUserUseCase(id).collectLatest { }
+        }
+    }
+    fun updateProfileImage(token: String, imagePart: MultipartBody.Part) {
+        viewModelScope.launch {
+            // [수정] authUseCase 안에 있는 updateProfile 호출
+            userUseCase.updateProfile(token, imagePart, null)
+                .collectLatest { result ->
+                    when (result) {
+                        is AuthResult.Loading -> {
+                            Log.d("MypageViewModel", "업로드 진행 중: Loading")
+                        }
+                        is AuthResult.Success -> {
+                            val updatedUser = result.resultData
+                            Log.d("MypageViewModel", "업로드 성공, 유저 정보: ${updatedUser.profileImageUrl}")
+                            // 성공 후 유저 정보 갱신
+                            sessionUseCase.saveUser(updatedUser)
+                            getAllUserPets()
+                        }
+                        is AuthResult.NetworkError -> {
+                            Log.e("MypageViewModel", "업로드 실패: 네트워크 오류 - ${result.exception.message}")
+                        }
+                        else -> {
+                            Log.e("MypageViewModel", "업로드 실패: 알 수 없는 오류 - $result")
+                        }
+                    }
+                }
         }
     }
 }
