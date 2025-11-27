@@ -29,6 +29,20 @@ fun PathDTO.toPath() = Path(
     likes = 0,
     distanceFromMe = 0f,
     tags = emptyList(),
+    markers = this.markers?.mapNotNull { markerData ->
+        if (markerData.size >= 2) {
+            val lat = markerData.getOrNull(0) as? Double
+            val lng = markerData.getOrNull(1) as? Double
+            val memo = markerData.getOrNull(2) as? String
+            if (lat != null && lng != null) {
+                com.sesac.domain.model.MemoMarker(lat, lng, memo)
+            } else {
+                null
+            }
+        } else {
+            null
+        }
+    }
 )
 
 fun Path.toPathCreateRequestDTO() = PathCreateRequestDTO(
