@@ -461,15 +461,15 @@ fun TrailMainScreen(
 
         // ✅ 메모 마커 표시 (ViewModel 상태 기반)
         val memoMarkers by viewModel.memoMarkers.collectAsStateWithLifecycle()
-        LaunchedEffect(memoMarkers, currentNaverMap) {
+        LaunchedEffect(memoMarkers, currentNaverMap, isRecording, isFollowingPath) {
             val map = currentNaverMap ?: return@LaunchedEffect
 
-            // 🔥 녹화 중일 때만 마커 표시
-            if (!isRecording) {
+            // 🔥 녹화 또는 따라가기 중일 때만 마커 표시
+            if (!isRecording && !isFollowingPath) {
                 // 기존 마커 정리
                 currentMarkers.forEach { it.map = null }
                 currentMarkers.clear()
-                return@LaunchedEffect  // 녹화 중이 아니면 마커 그리지 않음
+                return@LaunchedEffect
             }
 
             // 기존 마커 정리
