@@ -1,5 +1,6 @@
 package com.sesac.data.di
 
+import com.sesac.data.BuildConfig
 import com.sesac.data.dto.BookmarkedObject
 import com.sesac.data.dto.BookmarkedPathDTO
 import com.sesac.data.dto.PostDTO
@@ -31,7 +32,7 @@ import javax.inject.Singleton
 object NetworkModule {
 
 //    private const val BASE_URL = "http://192.168.0.73:8000/"
-    private const val BASE_URL = "http://10.0.2.2:8000/"
+    private const val BASE_URL = BuildConfig.SERVER_URL
 
     @Provides
     @Singleton
