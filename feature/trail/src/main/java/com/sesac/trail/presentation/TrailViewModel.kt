@@ -1,6 +1,5 @@
 package com.sesac.trail.presentation
 
-import android.R
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -34,9 +33,12 @@ import com.sesac.domain.result.ResponseUiState
 import com.sesac.domain.usecase.bookmark.BookmarkUseCase
 import com.sesac.domain.usecase.comment.CommentUseCases
 import com.sesac.domain.usecase.session.SessionUseCase
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 
 @HiltViewModel
@@ -706,5 +708,115 @@ class TrailViewModel @Inject constructor(
         newCommentContent = ""
         return true
     }
+    // =================================================================
+    // 📌 10. 따라가기
+    // =================================================================
+    private val _isFollowing = MutableStateFlow(false)
+    val isFollowing = _isFollowing.asStateFlow()
+
+    private val _offRoute = MutableStateFlow(false)
+    val offRoute = _offRoute.asStateFlow()
+
+    // 🔹 1. 따라가기 시작 시 초기화
+    fun startFollowing(path: Path) {
+        // 경로 검증
+        val coords = path.coord
+        if (coords == null || coords.size < 2) {
+            Log.e("TrailViewModel", "❌ 따라가기 실패: 좌표가 부족합니다 (${coords?.size ?: 0}개)")
+            viewModelScope.launch {
+                _invalidToken.send(UiEvent.ToastEvent("경로 데이터가 올바르지 않습니다"))
+            }
+            return
+        }
+
+        Log.d("TrailViewModel", "✅ 따라가기 시작: ${path.pathName}, 좌표 ${coords.size}개")
+        _selectedPath.value = path
+        _isFollowing.value = true
+        _currentFollowIndex.value = 0
+        _offRoute.value = false
+    }
+
+    fun stopFollowing() {
+        _isFollowing.value = false
+    }
+    // 위치 관리 인덱스
+    private val _currentFollowIndex = MutableStateFlow(0)
+    val currentFollowIndex = _currentFollowIndex.asStateFlow()
+
+    // 사용자 현재 위치 업데이트
+    fun updateUserLocation(current: LatLng) {
+        if (!_isFollowing.value) return
+
+        val path = _selectedPath.value ?: return
+        val coords = path.coord ?: emptyList() // 🔹 null-safe // Path 안에 있는 좌표 리스트
+
+        if (_currentFollowIndex.value >= coords.size - 1) return
+
+        val next = coords[_currentFollowIndex.value + 1].toLatLng()
+
+        val distance = current.distanceTo(next)
+
+        // ✔️ 다음 좌표에 충분히 가까워지면 index 증가
+        if (distance < 10) { // 예: 10m 이내면 통과 처리
+            _currentFollowIndex.value++
+        }
+
+        // ✔️ 이탈 감지 (경로에서 너무 멀어짐)
+        detectOffRoute(current, next)
+    }
+
+    // 🔹 2. 전체 경로 진행률 계산
+    val followProgress: StateFlow<Float> = combine(
+        currentFollowIndex,
+        selectedPath
+    ) { index, path ->
+        val totalPoints = path?.coord?.size ?: 1
+        (index.toFloat() / totalPoints.coerceAtLeast(1)) * 100f
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, 0f)
+
+    // 🔹 3. 남은 거리 계산
+    fun getRemainingDistance(): Float {
+        val path = _selectedPath.value ?: return 0f
+        val coords = path.coord ?: return 0f
+        val currentIndex = _currentFollowIndex.value
+
+        if (currentIndex >= coords.size - 1) return 0f
+
+        var totalDistance = 0.0
+        for (i in currentIndex until coords.size - 1) {
+            totalDistance += coords[i].toLatLng().distanceTo(coords[i + 1].toLatLng())
+        }
+        return totalDistance.toFloat()
+    }
+
+    // 🔹 4. 사용자 위치 마커 표시용
+    private val _userLocationMarker = MutableStateFlow<LatLng?>(null)
+    val userLocationMarker = _userLocationMarker.asStateFlow()
+
+    fun updateUserLocationMarker(location: LatLng) {
+        _userLocationMarker.value = location
+    }
+    // 마커 제거 함수
+    fun clearUserLocationMarker() {
+        _userLocationMarker.value = null
+    }
+    // 이탈 감지 함수
+    private fun detectOffRoute(current: LatLng, target: LatLng) {
+        val distance = current.distanceTo(target)
+
+        if (distance > 30) {   // 30m 이상 벗어나면 이탈로 판단
+            _offRoute.value = true
+        } else {
+            _offRoute.value = false
+        }
+    }
+    // UI에서 필요한 안내 데이터
+    fun getNextDirection(): LatLng? {
+        val path = _selectedPath.value ?: return null
+        val coords = path.coord ?: emptyList()
+        if (_currentFollowIndex.value >= coords.size - 1) return null
+        return coords[_currentFollowIndex.value + 1].toLatLng()
+    }
+
 
 }
