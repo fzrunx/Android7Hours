@@ -27,6 +27,10 @@ val NavBackStackEntry.topBarAsRouteName: TopBarData
                 AppTopBarData(title = "로그인")
             }
 
+            routeName.contains("FindAccount") -> {
+                AppTopBarData(title = "아이디/비밀번호 찾기", titleIcon = AutoMirrored.Filled.ArrowBack)
+            }
+
             routeName.contains("Join") -> {
                 AppTopBarData(title = "회원가입")
             }

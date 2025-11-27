@@ -133,7 +133,7 @@ fun AuthJoinScreen(
                 CommonLabelledTextField(
                     value = formState.phone,
                     onValueChange = viewModel::onPhoneChange,
-                    label = stringResource(id = R.string.auth_join_phone_label),
+                    labelContent = { RequiredLabel(text = stringResource(id = R.string.auth_join_phone_label)) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone)
                 )
             }

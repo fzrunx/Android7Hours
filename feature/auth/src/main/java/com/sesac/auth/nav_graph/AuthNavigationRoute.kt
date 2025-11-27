@@ -8,4 +8,7 @@ sealed interface AuthNavigationRoute {
     data object JoinTab: AuthNavigationRoute
     @Serializable
     data object LoginTab: AuthNavigationRoute
+
+    @Serializable
+    data object FindAccountTab : AuthNavigationRoute
 }
