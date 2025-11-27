@@ -86,6 +86,7 @@ class TrailViewModel @Inject constructor(
         _isPaused.value = false
         _recordingTime.value = 0L
         clearTempPath()
+        clearMemoMarkers()
     }
 
     fun pauseRecording() {

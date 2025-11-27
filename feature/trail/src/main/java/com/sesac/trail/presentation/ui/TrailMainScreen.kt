@@ -550,9 +550,7 @@ fun TrailMainScreen(
                         isEditMode = isEditMode,
                         onSheetOpenToggle = { viewModel.updateIsSheetOpen(null) },
                         onStartRecording = {
-                            viewModel.updateIsFollowingPath(false)
-                            viewModel.updateIsRecording(true)
-                            viewModel.updateRecordingTime(0)
+                            viewModel.startRecording()
                             viewModel.updateIsSheetOpen(false)
                         },
                         onTabChange = { viewModel.updateActiveTab(it) },
