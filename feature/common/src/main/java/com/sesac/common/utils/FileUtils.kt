@@ -11,26 +11,28 @@ import java.io.FileOutputStream
 object FileUtils {
     fun createMultipartBody(context: Context, uri: Uri, partName: String): MultipartBody.Part? {
         val contentResolver = context.contentResolver
+        val mimeType = contentResolver.getType(uri)
+        val extension = when {
+            mimeType?.contains("webp") == true -> "webp"
+            mimeType?.contains("png") == true -> "png"
+            else -> "jpeg"
+        }
 
-        // 1. 임시 파일 생성 (캐시 디렉토리)
-        val type = contentResolver.getType(uri)
-        val extension = type?.substringAfter("/") ?: "jpg"
-        val tempFile = File(context.cacheDir, "temp_profile_image.$extension")
+        // [핵심] 파일명에 현재 시간을 붙여서 유니크하게 만듦
+        val uniqueFileName = "profile_${System.currentTimeMillis()}.$extension"
+        val tempFile = File(context.cacheDir, uniqueFileName)
 
-        try {
-            // 2. URI의 데이터를 임시 파일로 복사
+        return try {
             contentResolver.openInputStream(uri)?.use { inputStream ->
                 FileOutputStream(tempFile).use { outputStream ->
                     inputStream.copyTo(outputStream)
                 }
             }
-        } catch (e: Exception) {3
+            val requestFile = tempFile.asRequestBody(mimeType?.toMediaTypeOrNull())
+            MultipartBody.Part.createFormData(partName, uniqueFileName, requestFile)
+        } catch (e: Exception) {
             e.printStackTrace()
-            return null
+            null
         }
-
-        // 3. MultipartBody.Part 생성
-        val requestFile = tempFile.asRequestBody(type?.toMediaTypeOrNull())
-        return MultipartBody.Part.createFormData(partName, tempFile.name, requestFile)
     }
 }

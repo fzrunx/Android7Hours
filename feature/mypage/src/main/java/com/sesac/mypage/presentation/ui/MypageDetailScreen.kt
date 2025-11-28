@@ -89,6 +89,9 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.ui.platform.LocalContext
 import com.sesac.common.utils.FileUtils
 import com.sesac.domain.result.ResponseUiState
+import coil3.request.ImageRequest
+import coil3.request.CachePolicy
+
 
 @Composable
 fun MypageDetailScreen(
@@ -212,6 +215,8 @@ fun MypageDetailHeader(
     localImageUri: android.net.Uri?,
     onCameraClick: () -> Unit
 ) {
+    val context = LocalContext.current
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -219,37 +224,40 @@ fun MypageDetailHeader(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Box {
-            AsyncImage(
-                model = localImageUri ?: fixImageUrl(imageUrl) ?: cR.drawable.placeholder,
-                contentDescription = "Profile Picture",
-                modifier = Modifier
-                    .size(120.dp)
-                    .clip(CircleShape)
-                    .border(2.dp, Color.White, CircleShape),
-                contentScale = ContentScale.Crop,
-                placeholder = painterResource(id = cR.drawable.placeholder),
-                onError = { result ->
-                    Log.e("IMAGE_DEBUG", "이미지 로드 실패 사유: ${result.result.throwable.message}")
-                    result.result.throwable.printStackTrace()
-                }
-            )
+            // [핵심] key를 사용하여 URL이 바뀌면 강제로 새로 그림
+            androidx.compose.runtime.key(localImageUri, imageUrl) {
+                AsyncImage(
+                    model = ImageRequest.Builder(context)
+                        // 1순위: 방금 갤러리 선택 사진 / 2순위: 서버 사진 / 3순위: 기본 사진
+                        .data(localImageUri ?: fixImageUrl(imageUrl) ?: cR.drawable.placeholder)
+                        // [중요] 캐시 끄기: 이미지가 갱신 안 되는 문제 해결
+                        .memoryCachePolicy(CachePolicy.DISABLED)
+                        .diskCachePolicy(CachePolicy.DISABLED)
+                        .build(),
+                    contentDescription = "Profile Picture",
+                    modifier = Modifier
+                        .size(120.dp)
+                        .clip(CircleShape)
+                        .border(2.dp, Color.White, CircleShape),
+                    contentScale = ContentScale.Crop,
+                    placeholder = painterResource(id = cR.drawable.placeholder),
+                    error = painterResource(id = cR.drawable.placeholder),
+                    // 에러 발생 시 로그 출력 (디버깅용)
+                    onError = { Log.e("IMAGE_LOAD", "실패 원인: ${it.result.throwable.message}") }
+                )
+            }
+
+            // ... (카메라 아이콘 등 기존 코드 유지) ...
             Box(
-                modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .size(36.dp)
-                    .background(Primary, CircleShape)
-                    .border(2.dp, Color.White, CircleShape)
+                modifier = Modifier.align(Alignment.BottomEnd).size(36.dp)
+                    .background(Primary, CircleShape).border(2.dp, Color.White, CircleShape)
                     .clickable(onClick = onCameraClick),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(
-                    imageVector = Icons.Default.PhotoCamera,
-                    contentDescription = "Change Picture",
-                    tint = Color.White,
-                    modifier = Modifier.size(20.dp)
-                )
+                Icon(Icons.Default.PhotoCamera, "Change", tint = Color.White, modifier = Modifier.size(20.dp))
             }
         }
+        // ... (텍스트 부분 유지) ...
         Spacer(modifier = Modifier.height(paddingMedium))
         Text(text = name, style = Typography.titleLarge, fontWeight = FontWeight.Bold)
         Spacer(modifier = Modifier.height(paddingSmall))
@@ -486,7 +494,9 @@ fun EmptyPetView() {
 fun fixImageUrl(url: String?): String? {
     if (url.isNullOrEmpty()) return null
 
+    val serverIp = "192.168.0.73"
+
     // 127.0.0.1 이나 localhost 를 에뮬레이터 전용 주소(10.0.2.2)로 교체
-    return url.replace("127.0.0.1", "10.0.2.2")
-        .replace("localhost", "10.0.2.2")
+    return url.replace("127.0.0.1", serverIp)
+        .replace("localhost", serverIp)
 }
