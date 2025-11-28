@@ -71,6 +71,10 @@ val NavBackStackEntry.topBarAsRouteName: TopBarData
                 AppTopBarData(title = "즐겨찾기", titleIcon = AutoMirrored.Filled.ArrowBack)
             }
 
+            routeName.contains("PlaceDetail") -> {
+                AppTopBarData(title = "장소 상세", titleIcon = AutoMirrored.Filled.ArrowBack)
+            }
+
             routeName.contains("Setting") -> {
                 AppTopBarData(title = "설정", titleIcon = AutoMirrored.Filled.ArrowBack)
             }

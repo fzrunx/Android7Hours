@@ -28,10 +28,12 @@ import com.sesac.domain.model.BookmarkType
 import com.sesac.domain.model.BookmarkedPath
 import com.sesac.domain.model.Comment
 import com.sesac.domain.model.CommentType
+import com.sesac.domain.model.Place
 import com.sesac.domain.model.Post
 import com.sesac.domain.result.ResponseUiState
 import com.sesac.domain.usecase.bookmark.BookmarkUseCase
 import com.sesac.domain.usecase.comment.CommentUseCases
+import com.sesac.domain.usecase.place.PlaceUseCase
 import com.sesac.domain.usecase.session.SessionUseCase
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -47,7 +49,8 @@ class TrailViewModel @Inject constructor(
     private val sessionUseCase: SessionUseCase,
     private val pathUseCase: PathUseCase,
     private val bookmarkUseCase: BookmarkUseCase,
-    private val commentUseCases: CommentUseCases
+    private val commentUseCases: CommentUseCases,
+    private val placeUseCases: PlaceUseCase
 ): ViewModel() {
     private val _invalidToken = Channel<UiEvent>()
     val invalidToken = _invalidToken.receiveAsFlow()
@@ -820,4 +823,166 @@ class TrailViewModel @Inject constructor(
     fun clearUserLocationMarker() {
         _userLocationMarker.value = null
     }
+    // =================================================================
+    // 📌 11. 정보
+    // =================================================================
+    private val _placesState = MutableStateFlow<ResponseUiState<List<Place>>>(ResponseUiState.Idle)
+    val placesState: StateFlow<ResponseUiState<List<Place>>> = _placesState
+
+
+
+    fun loadPlaces(
+        categoryId: Int? = null,
+        lat: Double? = null,
+        lng: Double? = null,
+        radius: Int? = 5000 // 기본 5km
+    ) {
+        viewModelScope.launch {
+            _placesState.value = ResponseUiState.Loading
+            placeUseCases.getPlaceUseCase(
+                categoryId = categoryId,
+                latitude = lat,
+                longitude = lng,
+                radius = radius
+            ).catch { e ->
+                _placesState.value = ResponseUiState.Error(e.message ?: "알 수 없는 오류가 발생했습니다.")
+            }.collectLatest { result ->
+                when (result) {
+                    is AuthResult.Success -> {
+                        _placesState.value = ResponseUiState.Success("장소를 불러왔습니다.", result.resultData)
+                    }
+                    is AuthResult.NetworkError -> {
+                        _placesState.value = ResponseUiState.Error(result.exception.message ?: "네트워크 오류")
+                    }
+                    else -> {
+                        // You might want to handle other states like Loading, NoToken, etc.
+                    }
+                }
+            }
+        }
+    }
+
+
+
+    fun loadPlaceComments(placeId: Int) {
+        viewModelScope.launch {
+            _commentsState.value = ResponseUiState.Loading
+            commentUseCases.getCommentsUseCase(
+                objectId = placeId,
+                type = CommentType.PATH  // ✅ 장소 댓글도 PATH 타입 사용
+            )
+                .catch { e ->
+                    _commentsState.value = ResponseUiState.Error(e.message ?: "알 수 없는 오류가 발생했습니다.")
+                }
+                .collectLatest { result ->
+                    when (result) {
+                        is AuthResult.Success -> {
+                            _commentsState.value = ResponseUiState.Success(
+                                "댓글을 불러왔습니다.",
+                                result.resultData
+                            )
+                        }
+                        is AuthResult.NetworkError -> {
+                            _commentsState.value = ResponseUiState.Error(
+                                result.exception.message ?: "네트워크 오류"
+                            )
+                        }
+                        else -> {}
+                    }
+                }
+        }
+    }
+
+    fun postPlaceComment(placeId: Int, content: String, type: CommentType) {
+        viewModelScope.launch {
+            val token = sessionUseCase.getAccessToken().first()
+            if (token == null) {
+                _invalidToken.send(UiEvent.ToastEvent("로그인이 필요합니다."))
+                return@launch
+            }
+
+            commentUseCases.createCommentUseCase(
+                token = token,
+                objectId = placeId,
+                content = content,
+                type = type
+            ).collectLatest { result ->
+                when (result) {
+                    is AuthResult.Success -> {
+                        loadPlaceComments(placeId) // 댓글 목록 새로고침
+                    }
+                    is AuthResult.NetworkError -> {
+                        _commentsState.value = ResponseUiState.Error(
+                            result.exception.message ?: "네트워크 오류"
+                        )
+                    }
+                    else -> {}
+                }
+            }
+        }
+    }
+
+    fun updatePlaceComment(placeId: Int, commentId: Int, content: String, type: CommentType) {
+        viewModelScope.launch {
+            val token = sessionUseCase.getAccessToken().first()
+            if (token == null) {
+                _invalidToken.send(UiEvent.ToastEvent("로그인이 필요합니다."))
+                return@launch
+            }
+
+            commentUseCases.updateCommentUseCase(
+                token = token,
+                objectId = placeId,
+                commentId = commentId,
+                content = content,
+                type = type
+            ).collectLatest { result ->
+                when (result) {
+                    is AuthResult.Success -> {
+                        loadPlaceComments(placeId)
+                    }
+                    is AuthResult.NetworkError -> {
+                        _commentsState.value = ResponseUiState.Error(
+                            result.exception.message ?: "네트워크 오류"
+                        )
+                    }
+                    else -> {}
+                }
+            }
+        }
+    }
+
+    fun deletePlaceComment(placeId: Int, commentId: Int, type: CommentType) {
+        viewModelScope.launch {
+            val token = sessionUseCase.getAccessToken().first()
+            if (token == null) {
+                _invalidToken.send(UiEvent.ToastEvent("로그인이 필요합니다."))
+                return@launch
+            }
+
+            commentUseCases.deleteCommentUseCase(
+                token = token,
+                objectId = placeId,
+                commentId = commentId,
+                type = type
+            ).collectLatest { result ->
+                when (result) {
+                    is AuthResult.Success -> {
+                        loadPlaceComments(placeId)
+                    }
+                    is AuthResult.NetworkError -> {
+                        _commentsState.value = ResponseUiState.Error(
+                            result.exception.message ?: "네트워크 오류"
+                        )
+                    }
+                    else -> {}
+                }
+            }
+        }
+    }
+
+    // 현재 로그인한 사용자 ID (댓글 작성자 확인용)
+    val currentUserId: Int
+        get() = -1 // TODO: 실제 사용자 ID로 변경 필요
 }
+

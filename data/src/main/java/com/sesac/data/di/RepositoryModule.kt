@@ -10,6 +10,7 @@ import com.sesac.data.repository.MypageRepositoryImpl
 import com.sesac.data.repository.PetRepositoryImpl
 import com.sesac.data.repository.SessionRepositoryImpl
 import com.sesac.data.repository.PathRepositoryImpl
+import com.sesac.data.repository.PlaceRepositoryImpl
 import com.sesac.data.repository.UserRepositoryImpl
 import com.sesac.domain.repository.AuthRepository
 import com.sesac.domain.repository.BookmarkRepository
@@ -21,6 +22,7 @@ import com.sesac.domain.repository.MypageRepository
 import com.sesac.domain.repository.PetRepository
 import com.sesac.domain.repository.SessionRepository
 import com.sesac.domain.repository.PathRepository
+import com.sesac.domain.repository.PlaceRepository
 import com.sesac.domain.repository.UserRepository
 import dagger.Binds
 import dagger.Module
@@ -99,5 +101,11 @@ abstract class RepositoryModule {
     abstract fun bindCommentRepository(
         commentRepositoryImpl: CommentRepositoryImpl
     ): CommentRepository
+
+    @Binds
+    @ActivityRetainedScoped
+    abstract fun bindPlaceRepository(
+        placeRepositoryImpl: PlaceRepositoryImpl
+    ): PlaceRepository
 
 }
