@@ -3,6 +3,7 @@ package com.sesac.android7hours.di
 import com.sesac.domain.repository.LocationRepository
 import com.sesac.domain.usecase.location.GetCurrentLocationUseCase
 import com.sesac.domain.usecase.location.LocationUseCase
+import com.sesac.domain.usecase.location.PostPetLocationUseCase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -21,6 +22,7 @@ object LocationUseCaseModule {
     ): LocationUseCase {
         return LocationUseCase(
             getCurrentLocationUseCase = GetCurrentLocationUseCase(repository, externalScope),
+            postPetLocationUseCase = PostPetLocationUseCase(repository)
         )
     }
 }

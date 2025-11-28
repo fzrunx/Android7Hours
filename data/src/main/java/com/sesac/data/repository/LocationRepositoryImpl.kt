@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.location.LocationManager
 import android.os.Looper
+import android.util.Log
 import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationCallback
@@ -12,19 +13,27 @@ import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
 import com.sesac.data.mapper.CoordMapper.toCoord
+import com.sesac.data.mapper.toDomain
+import com.sesac.data.mapper.toRequestDTO
+import com.sesac.data.source.api.PetsApi
 import com.sesac.domain.model.Coord
+import com.sesac.domain.model.PetLocation
 import com.sesac.domain.repository.LocationRepository
+import com.sesac.domain.result.AuthResult
 import com.sesac.domain.result.LocationException
 import com.sesac.domain.result.LocationFlowResult
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.flow
 import javax.inject.Inject
 import java.util.concurrent.TimeUnit
 
 class LocationRepositoryImpl @Inject constructor(
-    @ApplicationContext private val context: Context
+    @ApplicationContext private val context: Context,
+    private val petsApi: PetsApi,
 ): LocationRepository {
     private val fusedLocationClient: FusedLocationProviderClient =
         LocationServices.getFusedLocationProviderClient(context)
@@ -81,6 +90,18 @@ class LocationRepositoryImpl @Inject constructor(
         awaitClose {
             fusedLocationClient.removeLocationUpdates(locationCallback)
         }
+    }
+
+    override suspend fun postPetLocation(token: String, location: PetLocation): Flow<AuthResult<PetLocation>> = flow {
+        emit(AuthResult.Loading)
+        val response = petsApi.postPetLocation(
+            token = "Bearer $token",
+            location = location.toRequestDTO()
+        )
+        emit(AuthResult.Success(response.toDomain()))
+    }.catch { e ->
+        Log.e("LocationRepositoryImpl", "postPetLocation failed", e)
+        emit(AuthResult.NetworkError(e))
     }
 
     private fun isLocationEnabled(): Boolean {

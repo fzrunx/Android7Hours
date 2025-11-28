@@ -8,7 +8,7 @@ data class PetDTO(
     val id: Int = -1,
     val owner: String,
     val name: String,
-    val gender: String,
+    val gender: String? =null,
     val birthday: String?, // Changed to nullable
     val neutering: Boolean,
     val breed: String?, // Changed to nullable

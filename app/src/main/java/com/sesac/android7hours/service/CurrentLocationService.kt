@@ -12,18 +12,25 @@ import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 import com.sesac.android7hours.R
+import com.sesac.data.mapper.toPetLocation
+import com.sesac.domain.model.PetLocation
 import com.sesac.domain.repository.LocationRepository
+import com.sesac.domain.result.AuthResult
 import com.sesac.domain.result.LocationException
 import com.sesac.domain.result.LocationFlowResult
+import com.sesac.domain.usecase.location.LocationUseCase
+import com.sesac.domain.usecase.session.SessionUseCase
 import dagger.hilt.android.AndroidEntryPoint
-import dagger.hilt.android.HiltAndroidApp
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 const val NOTIFICATION_ID = 12345
@@ -31,7 +38,9 @@ private const val CHANNEL_ID = "location_service_channel"
 
 @AndroidEntryPoint
 class CurrentLocationService @Inject constructor(
-    private val locationRepository: LocationRepository
+//    private val locationRepository: LocationRepository,
+    private val locationUseCase: LocationUseCase, // NEW
+    private val sessionUseCase: SessionUseCase, // NEW
 ): Service() {
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
@@ -44,20 +53,46 @@ class CurrentLocationService @Inject constructor(
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         startForegroundNotify()
         Log.e("TAG", "Service Start")
-        locationRepository.getCurrentCoord()
-            .onEach { location ->
-                when (location) {
-                    is LocationFlowResult.Success -> {
-                        Log.d("TAG-CurrentLocationService", "Location updated : ${location.coord}")
-                    }
-                    is LocationFlowResult.Error -> handleLocationError(location.exception)
-                }
-                /**
-                 * 필요하다면 여기서 추가작업(클라우드 전송, Room DB 기록, File 누적 등)
-                 */
+
+        serviceScope.launch { // Launch a coroutine to get token and collect location
+            val token = sessionUseCase.getAccessToken().first()
+            if (token.isNullOrEmpty()) {
+                Log.e("TAG-CurrentLocationService", "No token found, stopping service.")
+                stopSelf()
+                return@launch
             }
-            .catch { e -> e.printStackTrace() }
-            .launchIn(serviceScope)
+
+            locationUseCase.getCurrentLocationUseCase()
+                .onEach { locationFlowResult ->
+                    when (locationFlowResult) {
+                        is LocationFlowResult.Success -> {
+                            val coord = locationFlowResult.coord
+                            val petLocation = coord.toPetLocation() // Map Coord to PetLocation
+                            Log.d("TAG-CurrentLocationService", "Location updated : $coord")
+
+                            // Send location to backend
+                            locationUseCase.postPetLocationUseCase(token, petLocation)
+                                .collectLatest { result ->
+                                    when (result) {
+                                        is AuthResult.Success -> {
+                                            Log.d("TAG-CurrentLocationService", "Location sent to backend: ${result.resultData}")
+                                        }
+                                        is AuthResult.NetworkError -> {
+                                            Log.e("TAG-CurrentLocationService", "Failed to send location to backend: ${result.exception.message}")
+                                        }
+                                        else -> { /* Loading or other states */ }
+                                    }
+                                }
+                        }
+                        is LocationFlowResult.Error -> handleLocationError(locationFlowResult.exception)
+                    }
+                }
+                .catch { e ->
+                    Log.e("TAG-CurrentLocationService", "Error collecting location: $e", e)
+                }
+                .launchIn(this) // Use the serviceScope
+        }
+
 
         return START_STICKY
     }

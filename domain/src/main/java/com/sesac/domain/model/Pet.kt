@@ -4,7 +4,7 @@ data class Pet(
     val id: Int = -1,
     val owner: String,
     val name: String,
-    val gender: String,
+    val gender: String? =null,
     val birthday: String?,
     val neutering: Boolean,
     val breed: String?,

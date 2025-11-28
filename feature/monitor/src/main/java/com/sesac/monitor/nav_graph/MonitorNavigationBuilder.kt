@@ -18,9 +18,9 @@ fun NavGraphBuilder.monitorRoute(
             commonMapLifecycle = commonMapLifecycle,
         )
     }
-    composable<MonitorNavigationRoute.GpsTab> {
-        MonitorGpsScreen(
-            commonMapLifecycle = commonMapLifecycle,
-        )
-    }
+//    composable<MonitorNavigationRoute.GpsTab> {
+//        MonitorGpsScreen(
+//            commonMapLifecycle = commonMapLifecycle,
+//        )
+//    }
 }

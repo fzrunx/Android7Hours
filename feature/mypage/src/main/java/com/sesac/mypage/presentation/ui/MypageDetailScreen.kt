@@ -576,7 +576,7 @@ fun PetInfoCard(
                         modifier = Modifier.weight(1f),
                         icon = Icons.Default.FavoriteBorder,
                         label = "성별",
-                        value = pet.gender
+                        value = pet.gender ?: ""
                     )
                 }
             }

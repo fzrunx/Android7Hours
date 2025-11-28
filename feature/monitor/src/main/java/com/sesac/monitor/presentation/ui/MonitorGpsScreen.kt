@@ -9,8 +9,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -18,15 +20,17 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.currentStateAsState
+import com.naver.maps.map.CameraUpdate
 import com.naver.maps.map.LocationTrackingMode
 import com.naver.maps.map.NaverMap
 import com.naver.maps.map.overlay.Marker
 import com.naver.maps.map.util.FusedLocationSource
-import com.sesac.common.component.CommonMapLifecycle   // 🔧 공유 lifecycle 관리
+import com.sesac.common.component.CommonMapLifecycle
 import com.sesac.common.component.CommonMapView
 import com.sesac.common.utils.EffectPauseStop
 import com.sesac.monitor.presentation.MonitorViewModel
-import com.sesac.monitor.presentation.utils.LatLngPoint2LatLng
+import com.naver.maps.geometry.LatLng
+import com.sesac.domain.result.ResponseUiState // NEW IMPORT
 import kotlinx.coroutines.launch
 
 
@@ -34,25 +38,56 @@ import kotlinx.coroutines.launch
 fun MonitorGpsScreen (
     modifier: Modifier = Modifier,
     viewModel: MonitorViewModel = hiltViewModel(),
-    commonMapLifecycle: CommonMapLifecycle, // 라이프 사이클 따로 관리하려고 만듬
-    onMapReady: ((NaverMap) -> Unit)? = null
-) { // Context와 LifecycleOwner를 가져옵니다. (지도의 생명주기 관리에 필수)
+    commonMapLifecycle: CommonMapLifecycle,
+    petId: Int, // NEW ARGUMENT: petId
+) {
     val coroutineScope = rememberCoroutineScope()
-    val latLngPointRandom by viewModel.latLngRandom.collectAsStateWithLifecycle()
+    val monitoredPetState by viewModel.monitoredPet.collectAsStateWithLifecycle() // NEW STATE
     val activity = LocalActivity.current
-    val locationSource = remember {
-        activity?.let { FusedLocationSource(it, 1000) }
-            ?: throw IllegalStateException("Activity not found for FusedLocationSource")
-    }
-    val lifecycle = LocalLifecycleOwner.current.lifecycle // 🔧 Compose에서 lifecycle 가져오기
+    val lifecycle = LocalLifecycleOwner.current.lifecycle
     val lifecycleState by lifecycle.currentStateAsState()
+    var currentNaverMap by remember { mutableStateOf<NaverMap?>(null) } // To hold NaverMap instance
+    var petMarker by remember { mutableStateOf<Marker?>(null) } // NEW: To manage the pet's marker
 
-    LaunchedEffect(latLngPointRandom, Unit) {
-        coroutineScope.launch {
-            viewModel.getLatLngRandom()
-            Log.d("Tag-MonitorGpsScreen", "${latLngPointRandom}")
+    // NEW: Start monitoring the pet
+    LaunchedEffect(petId) {
+        viewModel.startMonitoringPet(petId)
+    }
+
+    // NEW: Update map marker when pet location changes
+    LaunchedEffect(monitoredPetState, currentNaverMap) {
+        val naverMap = currentNaverMap ?: return@LaunchedEffect
+        when (val state = monitoredPetState) {
+            is ResponseUiState.Success -> {
+                val pet = state.result
+                pet.lastLocation?.let { petLocation ->
+                    val latLng = LatLng(petLocation.latitude, petLocation.longitude)
+
+                    // Clear previous marker if exists
+                    petMarker?.map = null
+
+                    // Create and set new marker
+                    val newMarker = Marker().apply {
+                        position = latLng
+                        captionText = pet.name
+                        map = naverMap
+                    }
+                    petMarker = newMarker // Store reference to the new marker
+
+                    // Move camera to pet's location
+                    val cameraUpdate = CameraUpdate.scrollTo(latLng)
+                    naverMap.moveCamera(cameraUpdate)
+                }
+            }
+            is ResponseUiState.Error -> {
+                Log.e("MonitorGpsScreen", "Error monitoring pet: ${state.message}")
+                // Optionally show a Toast or error message
+            }
+            else -> { /* Loading or Idle states */ }
         }
     }
+
+
     // 🔴 중요!! 화면이 Pause 또는 Stop 될 때 MapView 반응하도록 설정
     lifecycle.EffectPauseStop {
         commonMapLifecycle.mapView?.onPause()
@@ -79,26 +114,12 @@ fun MonitorGpsScreen (
                             this.onResume()
 
                             getMapAsync { naverMap ->
-                                // 위치 설정
-                                naverMap.locationSource = locationSource
-                                naverMap.locationTrackingMode = LocationTrackingMode.Follow
+                                currentNaverMap = naverMap // Store NaverMap instance
 
                                 // UI
                                 naverMap.uiSettings.isLocationButtonEnabled = true
                                 naverMap.uiSettings.isZoomControlEnabled = false
 
-
-                                //✅ 지도 준비 완료 시 마커 생성
-                                val marker = Marker().apply {
-                                    Log.d(
-                                        "Tag-MonitorGpsScreen",
-                                        "변환 -> ${LatLngPoint2LatLng(latLngPointRandom)}"
-                                    )
-                                    position = LatLngPoint2LatLng(latLngPointRandom)
-                                    map = naverMap
-                                }
-
-                                onMapReady?.invoke(naverMap)
                                 Log.d("Tag-MonitorGpsScreen", "gps 지도 준비 완료")
                             }
                         }
