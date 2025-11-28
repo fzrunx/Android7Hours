@@ -79,7 +79,12 @@ dependencies {
 
     ksp(libs.androidx.room.compiler)
     ksp(libs.hilt.compiler)
-    implementation("com.google.maps:google-maps-services:2.2.0")
+    implementation(libs.google.maps.services)
+    implementation(libs.play.services.location)
     // --- Map SDK ---
     implementation(libs.map.sdk)
+
+    testImplementation(libs.junit)
+    androidTestImplementation(libs.androidx.junit)
+    androidTestImplementation(libs.androidx.espresso.core)
 }

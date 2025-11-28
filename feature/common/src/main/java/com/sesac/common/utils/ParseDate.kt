@@ -10,6 +10,8 @@ import java.util.Date
 import java.util.Locale
 import java.util.TimeZone
 
+val simpleDataFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
+
 //@RequiresApi(Build.VERSION_CODES.O)
 fun parseDate(
     dateString: String,
@@ -43,6 +45,7 @@ fun parseDate(
             Log.d("TAG-ParseDate", "parse-date error with format '$format': $e")
         }
     }
+    simpleDataFormat.format(Date())
     // Return current date as a fallback if parsing fails
     Log.e("TAG-ParseDate", "Failed to parse date: $dateString with any format. Returning current date.")
     return Date()
