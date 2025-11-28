@@ -6,6 +6,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.android.gms.location.LocationResult
 import com.naver.maps.geometry.LatLng
 import com.naver.maps.map.NaverMap
 import com.naver.maps.map.overlay.Marker
@@ -22,9 +23,11 @@ import com.sesac.domain.model.Coord
 import com.sesac.domain.model.Path
 import com.sesac.domain.model.Post
 import com.sesac.domain.result.AuthResult
+import com.sesac.domain.result.LocationFlowResult
 import com.sesac.domain.result.ResponseUiState
 import com.sesac.domain.usecase.bookmark.BookmarkUseCase
 import com.sesac.domain.usecase.comment.CommentUseCases
+import com.sesac.domain.usecase.location.LocationUseCase
 import com.sesac.domain.usecase.path.PathUseCase
 import com.sesac.domain.usecase.session.SessionUseCase
 import com.sesac.trail.presentation.ui.WalkPathTab
@@ -50,8 +53,9 @@ import javax.inject.Inject
 class TrailViewModel @Inject constructor(
     private val sessionUseCase: SessionUseCase,
     private val pathUseCase: PathUseCase,
+    private val locationUseCase: LocationUseCase,
     private val bookmarkUseCase: BookmarkUseCase,
-    private val commentUseCases: CommentUseCases
+    private val commentUseCases: CommentUseCases,
 ): ViewModel() {
     private val _invalidToken = Channel<UiEvent>()
     val invalidToken = _invalidToken.receiveAsFlow()
@@ -60,10 +64,27 @@ class TrailViewModel @Inject constructor(
     // 📌 1. 지도 녹화 관련 데이터 (MainScreen에서 사용)
     // =================================================================
 
+    private val _currentLocation = MutableStateFlow<ResponseUiState<Coord?>>(ResponseUiState.Idle)
+    val currentLocation: StateFlow<ResponseUiState<Coord?>> = _currentLocation.asStateFlow()
     // ✅ 수정: LatLng 타입으로 변경 (UI 레이어에서 사용하는 타입)
     private val _tempPathCoords = MutableStateFlow<List<LatLng>>(emptyList())
     val tempPathCoords = _tempPathCoords.asStateFlow()
 
+
+    fun getCurrentLocation() {
+        viewModelScope.launch {
+            _currentLocation.value = ResponseUiState.Idle
+            locationUseCase.getCurrentLocationUseCase().collectLatest { location ->
+                when (location) {
+                    is LocationFlowResult.Success -> {
+                        _currentLocation.value = ResponseUiState.Success("현재 위치 갱신 성공", location.coord)
+                        Log.d("TAG-TrailViewModel", "현재 위치 : ${location.coord}")
+                    }
+                    is LocationFlowResult.Error -> _currentLocation.value = ResponseUiState.Error(location.exception.message ?: "unknown error")
+                }
+            }
+        }
+    }
     fun addTempPoint(point: LatLng) {
         _tempPathCoords.value = _tempPathCoords.value + point
     }

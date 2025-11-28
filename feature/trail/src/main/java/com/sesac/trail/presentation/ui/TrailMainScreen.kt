@@ -6,8 +6,8 @@ import android.content.pm.PackageManager
 import android.location.Location
 import android.os.Looper
 import android.util.Log
-import android.widget.Toast
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.activity.compose.LocalActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -93,6 +93,7 @@ fun TrailMainScreen(
     val recommendedPaths by viewModel.recommendedPaths.collectAsStateWithLifecycle()
     val myPaths by viewModel.myPaths.collectAsStateWithLifecycle()
     val drafts by viewModel.drafts.collectAsStateWithLifecycle()
+    val currentLocation by viewModel.currentLocation.collectAsStateWithLifecycle()
 
     val isSheetOpen by viewModel.isSheetOpen.collectAsStateWithLifecycle()
     val isPaused by viewModel.isPaused.collectAsStateWithLifecycle()
@@ -202,19 +203,32 @@ fun TrailMainScreen(
         viewModel.updateIsEditMode(false)
         viewModel.getMyPaths(uiState.token)
 
-        if (hasLocationPermission) {
-            @SuppressLint("MissingPermission")
-            fusedLocationClient.getCurrentLocation(Priority.PRIORITY_BALANCED_POWER_ACCURACY, null)
-                .addOnSuccessListener { location: Location? ->
-                    val coord = location?.let { Coord(it.latitude, it.longitude) } ?: Coord.DEFAULT
-                    viewModel.getRecommendedPaths(coord, 50000f)
-                }.addOnFailureListener {
-                    Log.w("TrailMainScreen", "Failed to get current location", it)
-                    viewModel.getRecommendedPaths(Coord.DEFAULT, 50000f)
-                }
-        } else {
-            viewModel.getRecommendedPaths(Coord.DEFAULT, 50000f)
+//        if (hasLocationPermission) {
+//            @SuppressLint("MissingPermission")
+//            fusedLocationClient.getCurrentLocation(Priority.PRIORITY_BALANCED_POWER_ACCURACY, null)
+//                .addOnSuccessListener { location: Location? ->
+//                    val coord = location?.let { Coord(it.latitude, it.longitude) } ?: Coord.DEFAULT
+//                    viewModel.getRecommendedPaths(coord, 50000f)
+//                }.addOnFailureListener {
+//                    Log.w("TrailMainScreen", "Failed to get current location", it)
+//                    viewModel.getRecommendedPaths(Coord.DEFAULT, 50000f)
+//                }
+//        } else {
+//            viewModel.getRecommendedPaths(Coord.DEFAULT, 50000f)
+//        }
+        viewModel.getCurrentLocation()
+        when (val location = currentLocation) {
+            is ResponseUiState.Success -> {
+                location.result?.let {
+                    viewModel.getRecommendedPaths(location.result!!, 50000f)
+                } ?: viewModel.getRecommendedPaths(Coord.DEFAULT, 50000f)
+            }
+            is ResponseUiState.Error -> {
+                Toast.makeText(context, location.message, Toast.LENGTH_SHORT).show()
+            }
+            else -> {}
         }
+
     }
 
 // ⭐ 녹화 종료 시 초기화

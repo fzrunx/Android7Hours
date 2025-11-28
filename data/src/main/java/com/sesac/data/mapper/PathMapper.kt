@@ -5,6 +5,8 @@ import com.sesac.data.dto.PathDTO
 import com.sesac.data.dto.CoordRequestDTO
 import com.sesac.data.dto.PathCreateRequestDTO
 import com.sesac.data.dto.PathUpdateRequestDTO
+import com.sesac.data.mapper.CoordMapper.toCoordList
+import com.sesac.data.mapper.CoordMapper.toCoordRequestDTOList
 import com.sesac.data.util.PolylineEncoder
 import com.sesac.domain.model.Path
 

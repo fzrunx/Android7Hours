@@ -34,6 +34,13 @@
             android:exported="false"
             android:theme="@style/Theme.Android7Hours">
         </activity>
+
+        <service
+            android:name=".service.CurrentLocationService"
+            android:enabled="true"
+            android:foregroundServiceType="location"
+            tools:ignore="ExportedService"/>
+
         <!--여기 meta-data 부분 인증 정보 집어넣어야 함 -->
         <meta-data
             android:name="com.naver.maps.map.NCP_KEY_ID"
