@@ -5,9 +5,12 @@ data class Pet(
     val owner: String,
     val name: String,
     val gender: String,
-    val birthday: String,
+    val birthday: String?,
     val neutering: Boolean,
-    val breed: String,
+    val breed: String?,
+    val image: String?,
+    val linkedUser: String?,
+    val lastLocation: PetLocation?,
 ) {
     companion object {
         val EMPTY = Pet(
@@ -18,6 +21,9 @@ data class Pet(
             birthday = "날짜를 선택해주세요",
             neutering = false,
             breed = "",
+            image = null,
+            linkedUser = null,
+            lastLocation = null
         )
     }
 }

@@ -8,16 +8,17 @@ import com.sesac.domain.model.BookmarkedPath
 import com.sesac.domain.model.Breed
 import com.sesac.domain.model.FavoriteCommunityPost
 import com.sesac.domain.model.FavoriteWalkPath
+import com.sesac.domain.model.InvitationCode
 import com.sesac.domain.model.MypageSchedule
 import com.sesac.domain.model.Path
-import com.sesac.domain.usecase.mypage.MypageUseCase
-import com.sesac.domain.model.User
 import com.sesac.domain.model.Pet
+import com.sesac.domain.model.User
 import com.sesac.domain.result.AuthResult
 import com.sesac.domain.result.AuthUiState
 import com.sesac.domain.result.ResponseUiState
 import com.sesac.domain.usecase.auth.AuthUseCase
 import com.sesac.domain.usecase.bookmark.BookmarkUseCase
+import com.sesac.domain.usecase.mypage.MypageUseCase
 import com.sesac.domain.usecase.path.PathUseCase
 import com.sesac.domain.usecase.pet.PetUseCase
 import com.sesac.domain.usecase.session.SessionUseCase
@@ -29,11 +30,11 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
+import okhttp3.MultipartBody
 import org.threeten.bp.LocalDate
 import javax.inject.Inject
-import okhttp3.MultipartBody
 
 @HiltViewModel
 class MypageViewModel @Inject constructor(
@@ -49,9 +50,11 @@ class MypageViewModel @Inject constructor(
     val tabLabels = listOf("산책로", "커뮤니티")
     private val _activeFilter = MutableStateFlow<String>(tabLabels[0])
     val activeFilter get() = _activeFilter.asStateFlow()
+
     // MypageMainScreen
     private val _stats = MutableStateFlow<ResponseUiState<List<MyPathStats>>>(ResponseUiState.Idle)
     val stats = _stats.asStateFlow()
+
     // MypageDetailScreen
     private val _userPets = MutableStateFlow<List<Pet>>(emptyList())
     val userPets = _userPets.asStateFlow()
@@ -70,7 +73,8 @@ class MypageViewModel @Inject constructor(
     // AddPetScreen
     private val _breeds = MutableStateFlow<List<Breed>>(emptyList())
     val breeds = _breeds.asStateFlow()
-    private val _bookmarkedPaths = MutableStateFlow<ResponseUiState<List<BookmarkedPath>>>(ResponseUiState.Idle)
+    private val _bookmarkedPaths =
+        MutableStateFlow<ResponseUiState<List<BookmarkedPath>>>(ResponseUiState.Idle)
     val bookmarkedPaths = _bookmarkedPaths.asStateFlow()
     private val _selectedPath = MutableStateFlow<ResponseUiState<Path>>(ResponseUiState.Idle)
     val selectedPath = _selectedPath.asStateFlow()
@@ -80,9 +84,15 @@ class MypageViewModel @Inject constructor(
     val favoriteWalkPaths get() = _favoriteWalkPaths.asStateFlow()
     private val _favoritePosts = MutableStateFlow<List<FavoriteCommunityPost>>(emptyList())
     val favoritePosts get() = _favoritePosts.asStateFlow()
+
     // MypageManageScreen
     private val _schedules = MutableStateFlow<List<MypageSchedule>>(emptyList())
     val schedules get() = _schedules.asStateFlow()
+
+    // Invite Code
+    private val _invitationCode =
+        MutableStateFlow<ResponseUiState<InvitationCode>>(ResponseUiState.Idle)
+    val invitationCode get() = _invitationCode.asStateFlow()
 
     fun onFilterChange(filter: String) {
         _activeFilter.value = filter
@@ -98,6 +108,35 @@ class MypageViewModel @Inject constructor(
         }
     }
 
+    fun generateInvitationCode() {
+        viewModelScope.launch {
+            _invitationCode.value = ResponseUiState.Loading
+            val token = sessionUseCase.getAccessToken().first()
+            if (token == null) {
+                _invitationCode.value = ResponseUiState.Error("로그인이 필요합니다.")
+                return@launch
+            }
+            userUseCase.postInvitationCodeUseCase(token)
+                .collectLatest { result ->
+                    when (result) {
+                        is AuthResult.Success -> {
+                            _invitationCode.value = ResponseUiState.Success("초대 코드가 생성되었습니다.", result.resultData)
+                        }
+                        is AuthResult.NetworkError -> {
+                            _invitationCode.value = ResponseUiState.Error(result.exception.message ?: "네트워크 오류")
+                        }
+                        else -> {
+                            _invitationCode.value = ResponseUiState.Error("초대 코드 생성에 실패했습니다.")
+                        }
+                    }
+                }
+        }
+    }
+
+    fun resetInvitationCodeState() {
+        _invitationCode.value = ResponseUiState.Idle
+    }
+
     fun getPathInfo(pathId: Int) {
         viewModelScope.launch {
             _selectedPath.value = ResponseUiState.Loading
@@ -106,7 +145,7 @@ class MypageViewModel @Inject constructor(
                     _selectedPath.value = ResponseUiState.Error(e.message ?: "알 수 없는 오류가 발생했습니다.")
                 }
                 .collectLatest { path ->
-                    when(path) {
+                    when (path) {
                         is AuthResult.Success -> {
                             val selectedPath = path.resultData
                             _selectedPath.value = ResponseUiState.Success("산책로 불러오기 성공", selectedPath)
@@ -163,14 +202,17 @@ class MypageViewModel @Inject constructor(
                 return@launch
             }
             petUseCase.postUserPetUseCase(token, pet).collectLatest { result ->
-                when(result) {
+                when (result) {
                     is AuthResult.Success -> {
                         getAllUserPets()
                         _addPetState.value = ResponseUiState.Success("반려견이 추가되었습니다.", Unit)
                     }
+
                     is AuthResult.NetworkError -> {
-                        _addPetState.value = ResponseUiState.Error(result.exception.message ?: "오류가 발생했습니다.")
+                        _addPetState.value =
+                            ResponseUiState.Error(result.exception.message ?: "오류가 발생했습니다.")
                     }
+
                     is AuthResult.Loading -> {}
                     else -> {
                         _addPetState.value = ResponseUiState.Error("알 수 없는 오류가 발생했습니다.")
@@ -190,11 +232,12 @@ class MypageViewModel @Inject constructor(
             }
 
             petUseCase.updatePetUseCase(token, pet.id, pet).collectLatest { result ->
-                when(result) {
+                when (result) {
                     is AuthResult.Success -> {
                         getAllUserPets()
                         _updatePetState.value = ResponseUiState.Success("반려견 정보가 수정되었습니다.", Unit)
                     }
+
                     is AuthResult.Loading -> {}
                     else -> _updatePetState.value = ResponseUiState.Error("수정에 실패했습니다.")
                 }
@@ -212,11 +255,12 @@ class MypageViewModel @Inject constructor(
             }
 
             petUseCase.deletePetUseCase(token, petId).collectLatest { result ->
-                when(result) {
+                when (result) {
                     is AuthResult.Success -> {
                         getAllUserPets()
                         _deletePetState.value = ResponseUiState.Success("반려견이 삭제되었습니다.", Unit)
                     }
+
                     is AuthResult.Loading -> {}
                     else -> _deletePetState.value = ResponseUiState.Error("삭제에 실패했습니다.")
                 }
@@ -246,17 +290,24 @@ class MypageViewModel @Inject constructor(
 
             bookmarkUseCase.getMyBookmarksUseCase(token)
                 .catch { e ->
-                    _bookmarkedPaths.value = ResponseUiState.Error(e.message ?: "알 수 없는 오류가 발생했습니다.")
+                    _bookmarkedPaths.value =
+                        ResponseUiState.Error(e.message ?: "알 수 없는 오류가 발생했습니다.")
                 }
                 .collectLatest { bookmarksResult ->
                     when (bookmarksResult) {
                         is AuthResult.Success -> {
-                            val pathList = bookmarksResult.resultData.mapNotNull { it.bookmarkedItem as? BookmarkedPath }
-                            _bookmarkedPaths.value = ResponseUiState.Success("북마크를 불러왔습니다.", pathList)
+                            val pathList =
+                                bookmarksResult.resultData.mapNotNull { it.bookmarkedItem as? BookmarkedPath }
+                            _bookmarkedPaths.value =
+                                ResponseUiState.Success("북마크를 불러왔습니다.", pathList)
                         }
+
                         is AuthResult.NetworkError -> {
-                            _bookmarkedPaths.value = ResponseUiState.Error(bookmarksResult.exception.message ?: "unknown")
+                            _bookmarkedPaths.value = ResponseUiState.Error(
+                                bookmarksResult.exception.message ?: "unknown"
+                            )
                         }
+
                         else -> {
                             // Other AuthResult states are not handled here.
                         }
@@ -282,41 +333,22 @@ class MypageViewModel @Inject constructor(
                     val userNickname = uiState.nickname
                     when (myPathResult) {
                         is AuthResult.Success -> {
-                            val pathList = myPathResult.resultData.filter { it.uploader == userNickname }
+                            val pathList =
+                                myPathResult.resultData.filter { it.uploader == userNickname }
                             val myPathStats = getMyPathStatsUtils(pathList)
                             _stats.value = ResponseUiState.Success("마이페이지 스탯을 불러왔습니다", myPathStats)
                         }
 
                         is AuthResult.NetworkError -> {
-                            _stats.value = ResponseUiState.Error(myPathResult.exception.message ?: "unknown")
+                            _stats.value =
+                                ResponseUiState.Error(myPathResult.exception.message ?: "unknown")
                         }
+
                         else -> {
                             _stats.value = ResponseUiState.Error("데이터를 불러오는데 실패했습니다.")
                         }
                     }
                 }
-
-//            bookmarkUseCase.getMyBookmarksUseCase(token)
-//                .catch { e ->
-//                    _stats.value = ResponseUiState.Error(e.message ?: "알 수 없는 오류가 발생했습니다.")
-//                }
-//                .collectLatest { bookmarksResult ->
-//                    val userNickname = uiState.nickname
-//                    when (bookmarksResult) {
-//                        is AuthResult.Success -> {
-//                            val pathList = bookmarksResult.resultData.mapNotNull { it.bookmarkedItem as? BookmarkedPath }.filter { it.uploader == userNickname }
-//                            val myPathStats = getMyPathStatsUtils(pathList)
-//                            _stats.value = ResponseUiState.Success("마이페이지 스탯을 불러왔습니다", myPathStats)
-//                        }
-//
-//                        is AuthResult.NetworkError -> {
-//                            _stats.value = ResponseUiState.Error(bookmarksResult.exception.message ?: "unknown")
-//                        }
-//                        else -> {
-//                            _stats.value = ResponseUiState.Error("데이터를 불러오는데 실패했습니다.")
-//                        }
-//                    }
-//                }
         }
     }
 
@@ -332,7 +364,10 @@ class MypageViewModel @Inject constructor(
                         // Refresh the list on success
                         getUserBookmarkedPaths(token)
                     } else if (bookmarkResponse is AuthResult.NetworkError) {
-                        Log.e("MypageViewModel", "Toggle bookmark failed: ${bookmarkResponse.exception}")
+                        Log.e(
+                            "MypageViewModel",
+                            "Toggle bookmark failed: ${bookmarkResponse.exception}"
+                        )
                     }
                 }
         }
@@ -340,17 +375,19 @@ class MypageViewModel @Inject constructor(
 
     fun getFavoriteCommunityPost() {
         viewModelScope.launch {
-            mypageUseCase.getFavoriteCommunityPostsUseCase().collectLatest { _favoritePosts.value = it }
+            mypageUseCase.getFavoriteCommunityPostsUseCase()
+                .collectLatest { _favoritePosts.value = it }
         }
     }
 
     fun deleteFavoriteCommunityPost(favoriteCommunityPost: FavoriteCommunityPost) {
         viewModelScope.launch {
-            mypageUseCase.deleteFavoriteCommunityPostUseCase(favoriteCommunityPost.id).collectLatest { success ->
-                if (success) {
-                    getFavoriteCommunityPost()
+            mypageUseCase.deleteFavoriteCommunityPostUseCase(favoriteCommunityPost.id)
+                .collectLatest { success ->
+                    if (success) {
+                        getFavoriteCommunityPost()
+                    }
                 }
-            }
         }
     }
 
@@ -407,6 +444,7 @@ class MypageViewModel @Inject constructor(
             userUseCase.deleteUserUseCase(id).collectLatest { }
         }
     }
+
     fun updateProfileImage(token: String, imagePart: MultipartBody.Part) {
         viewModelScope.launch {
             // [수정] authUseCase 안에 있는 updateProfile 호출
@@ -416,16 +454,25 @@ class MypageViewModel @Inject constructor(
                         is AuthResult.Loading -> {
                             Log.d("MypageViewModel", "업로드 진행 중: Loading")
                         }
+
                         is AuthResult.Success -> {
                             val updatedUser = result.resultData
-                            Log.d("MypageViewModel", "업로드 성공, 유저 정보: ${updatedUser.profileImageUrl}")
+                            Log.d(
+                                "MypageViewModel",
+                                "업로드 성공, 유저 정보: ${updatedUser.profileImageUrl}"
+                            )
                             // 성공 후 유저 정보 갱신
                             sessionUseCase.saveUser(updatedUser)
                             getAllUserPets()
                         }
+
                         is AuthResult.NetworkError -> {
-                            Log.e("MypageViewModel", "업로드 실패: 네트워크 오류 - ${result.exception.message}")
+                            Log.e(
+                                "MypageViewModel",
+                                "업로드 실패: 네트워크 오류 - ${result.exception.message}"
+                            )
                         }
+
                         else -> {
                             Log.e("MypageViewModel", "업로드 실패: 알 수 없는 오류 - $result")
                         }

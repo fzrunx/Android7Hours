@@ -71,6 +71,11 @@ class AuthViewModel @Inject constructor(
         _joinFormState.update { it.copy(phone = phone) }
     }
 
+    // NEW FUNCTION
+    fun onInvitationCodeChange(code: String) {
+        _joinFormState.update { it.copy(invitationCode = code) }
+    }
+
     fun onAgreeAllChange(isChecked: Boolean) {
         _joinFormState.update {
             it.copy(

@@ -1,7 +1,11 @@
 package com.sesac.mypage.presentation.ui
 
+import android.content.Intent
 import android.util.Log
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -25,14 +29,18 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Cake
 import androidx.compose.material.icons.filled.Call
+import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.PhotoCamera
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.FloatingActionButton
@@ -54,8 +62,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -64,7 +74,8 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import coil3.compose.AsyncImage
-import com.sesac.common.CommonViewModel
+import coil3.request.CachePolicy
+import coil3.request.ImageRequest
 import com.sesac.common.ui.theme.Background
 import com.sesac.common.ui.theme.Gray200
 import com.sesac.common.ui.theme.Gray300
@@ -78,19 +89,14 @@ import com.sesac.common.ui.theme.White
 import com.sesac.common.ui.theme.paddingLarge
 import com.sesac.common.ui.theme.paddingMedium
 import com.sesac.common.ui.theme.paddingSmall
-import com.sesac.domain.result.AuthUiState
+import com.sesac.common.utils.FileUtils
+import com.sesac.domain.model.InvitationCode
 import com.sesac.domain.model.Pet
+import com.sesac.domain.result.AuthUiState
+import com.sesac.domain.result.ResponseUiState
 import com.sesac.mypage.nav_graph.MypageNavigationRoute
 import com.sesac.mypage.presentation.MypageViewModel
 import com.sesac.common.R as cR
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.PickVisualMediaRequest
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.ui.platform.LocalContext
-import com.sesac.common.utils.FileUtils
-import com.sesac.domain.result.ResponseUiState
-import coil3.request.ImageRequest
-import coil3.request.CachePolicy
 
 
 @Composable
@@ -101,8 +107,13 @@ fun MypageDetailScreen(
 ) {
     val pets by viewModel.userPets.collectAsStateWithLifecycle()
     val deletePetState by viewModel.deletePetState.collectAsStateWithLifecycle()
+    val invitationCodeState by viewModel.invitationCode.collectAsStateWithLifecycle() // NEW
     var selectedImageUri by remember { mutableStateOf<android.net.Uri?>(null) }
     val context = LocalContext.current
+
+    // Dialog control states
+    var showAddPetOptionsDialog by remember { mutableStateOf(false) } // NEW
+    var showInvitationCodeDialog by remember { mutableStateOf(false) } // NEW
 
     // 갤러리 실행기 (이 변수 선언이 없어서 에러가 난 것입니다)
     val photoPickerLauncher = rememberLauncherForActivityResult(
@@ -142,6 +153,29 @@ fun MypageDetailScreen(
             else -> {}
         }
     }
+
+    // NEW: Handle invitationCodeState for dialog display and toast messages
+    LaunchedEffect(invitationCodeState) {
+        when(val state = invitationCodeState) {
+            is ResponseUiState.Loading -> {
+                // Dialog will show loading indicator
+                showInvitationCodeDialog = true
+            }
+            is ResponseUiState.Success -> {
+                // Dialog will show code
+                showInvitationCodeDialog = true
+            }
+            is ResponseUiState.Error -> {
+                Toast.makeText(context, state.message, Toast.LENGTH_SHORT).show()
+                viewModel.resetInvitationCodeState()
+                showInvitationCodeDialog = false // Close dialog on error
+            }
+            else -> {
+                // Idle state, do nothing or hide dialog if it was showing
+            }
+        }
+    }
+
 
     Box(modifier = Modifier.fillMaxSize()) {
         LazyColumn(
@@ -194,8 +228,9 @@ fun MypageDetailScreen(
             }
         }
 
+        // Modified FAB to show options
         FloatingActionButton(
-            onClick = { navController.navigate(MypageNavigationRoute.AddPetScreen()) },
+            onClick = { showAddPetOptionsDialog = true }, // NEW: show options dialog
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(paddingLarge),
@@ -204,8 +239,158 @@ fun MypageDetailScreen(
         ) {
             Icon(imageVector = Icons.Default.Add, contentDescription = "Add Pet")
         }
+
+        // NEW: Add Pet Options Dialog
+        if (showAddPetOptionsDialog) {
+            AddPetOptionsDialog(
+                onDismissRequest = { showAddPetOptionsDialog = false },
+                onAddAnimalPet = {
+                    showAddPetOptionsDialog = false
+                    navController.navigate(MypageNavigationRoute.AddPetScreen())
+                },
+                onInviteUser = {
+                    showAddPetOptionsDialog = false
+                    viewModel.generateInvitationCode() // Trigger code generation
+                    // showInvitationCodeDialog = true will be handled by LaunchedEffect
+                }
+            )
+        }
+
+        // NEW: Share Invitation Code Dialog
+        if (showInvitationCodeDialog) {
+            ShareInvitationCodeDialog(
+                invitationCodeState = invitationCodeState,
+                onDismiss = {
+                    viewModel.resetInvitationCodeState()
+                    showInvitationCodeDialog = false
+                }
+            )
+        }
     }
 }
+
+// NEW: AddPetOptionsDialog Composable
+@Composable
+fun AddPetOptionsDialog(
+    onDismissRequest: () -> Unit,
+    onAddAnimalPet: () -> Unit,
+    onInviteUser: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismissRequest,
+        title = { Text("펫 추가 옵션 선택") },
+        text = {
+            Column {
+                Text("어떤 방식으로 펫을 추가하시겠습니까?")
+                Spacer(modifier = Modifier.height(paddingMedium))
+                Button(
+                    onClick = onAddAnimalPet,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("반려동물 정보 등록")
+                }
+                Spacer(modifier = Modifier.height(paddingSmall))
+                Button(
+                    onClick = onInviteUser,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("친구 위치 추적 (초대)")
+                }
+            }
+        },
+        confirmButton = { /* No confirm button needed, actions are in text part */ }
+    )
+}
+
+// NEW: ShareInvitationCodeDialog Composable
+@Composable
+fun ShareInvitationCodeDialog(
+    invitationCodeState: ResponseUiState<InvitationCode>,
+    onDismiss: () -> Unit
+) {
+    val context = LocalContext.current
+    val clipboardManager = LocalClipboardManager.current
+    var codeToShare by remember { mutableStateOf("") }
+
+    LaunchedEffect(invitationCodeState) {
+        if (invitationCodeState is ResponseUiState.Success) {
+            codeToShare = invitationCodeState.result.code
+        }
+    }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("펫 초대 코드") },
+        text = {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                when (invitationCodeState) {
+                    is ResponseUiState.Loading -> {
+                        CircularProgressIndicator(modifier = Modifier.padding(paddingLarge))
+                        Text("코드 생성 중...")
+                    }
+                    is ResponseUiState.Success -> {
+                        Text("초대 코드가 생성되었습니다. 친구에게 공유하여 위치 추적을 시작하세요.")
+                        Spacer(modifier = Modifier.height(paddingMedium))
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .border(1.dp, Gray300, RoundedCornerShape(8.dp))
+                                .padding(paddingMedium)
+                        ) {
+                            Text(codeToShare, style = Typography.titleLarge, fontWeight = FontWeight.Bold)
+                            Spacer(modifier = Modifier.width(paddingSmall))
+                            IconButton(onClick = {
+                                clipboardManager.setText(AnnotatedString(codeToShare))
+                                Toast.makeText(context, "코드가 클립보드에 복사되었습니다.", Toast.LENGTH_SHORT).show()
+                            }) {
+                                Icon(Icons.Default.ContentCopy, contentDescription = "Copy Code")
+                            }
+                        }
+                    }
+                    is ResponseUiState.Error -> {
+                        Text("코드 생성에 실패했습니다: ${invitationCodeState.message}")
+                    }
+                    else -> { /* Idle state, shouldn't happen when dialog is shown */ }
+                }
+            }
+        },
+        confirmButton = {
+            if (invitationCodeState is ResponseUiState.Success) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Button(onClick = {
+                        val sendIntent: Intent = Intent().apply {
+                            action = Intent.ACTION_SEND
+                            putExtra(Intent.EXTRA_TEXT, "내 펫 추적 초대 코드: $codeToShare\n앱을 설치하고 회원가입 시 코드를 입력해주세요!")
+                            type = "text/plain"
+                        }
+                        val shareIntent = Intent.createChooser(sendIntent, null)
+                        context.startActivity(shareIntent)
+                    }) {
+                        Icon(Icons.Default.Share, contentDescription = "Share Code")
+                        Spacer(modifier = Modifier.width(paddingSmall))
+                        Text("공유하기")
+                    }
+                    Button(onClick = onDismiss) {
+                        Text("닫기")
+                    }
+                }
+            } else {
+                Button(onClick = onDismiss) {
+                    Text("닫기")
+                }
+            }
+        }
+    )
+}
+
 
 @Composable
 fun MypageDetailHeader(
@@ -376,7 +561,7 @@ fun PetInfoCard(
                     Spacer(modifier = Modifier.width(paddingMedium))
                     Column(modifier = Modifier.weight(1f)) {
                         Text(text = pet.name, style = Typography.titleMedium, fontWeight = FontWeight.Bold)
-                        Text(text = pet.breed, style = Typography.bodyMedium, color = Gray500)
+                        Text(text = pet.breed ?: "", style = Typography.bodyMedium, color = Gray500)
                     }
                 }
                 Spacer(modifier = Modifier.height(paddingMedium))
@@ -385,7 +570,7 @@ fun PetInfoCard(
                         modifier = Modifier.weight(1f),
                         icon = Icons.Default.Cake,
                         label = "생일",
-                        value = pet.birthday
+                        value = pet.birthday ?: ""
                     )
                     PetDetailChip(
                         modifier = Modifier.weight(1f),

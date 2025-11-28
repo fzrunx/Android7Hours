@@ -139,6 +139,14 @@ fun AuthJoinScreen(
             }
         }
 
+        // NEW FIELD: Invitation Code
+        CommonLabelledTextField(
+            value = formState.invitationCode,
+            onValueChange = viewModel::onInvitationCodeChange,
+            labelContent = { Text("초대 코드 (선택)") },
+            placeholder = { Text("초대 코드가 있다면 입력해주세요") }
+        )
+
         Spacer(modifier = Modifier.height(paddingSmall))
 
         AgreementSectionView(

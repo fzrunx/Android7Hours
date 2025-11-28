@@ -6,12 +6,14 @@ import com.sesac.domain.model.Breed
 import com.sesac.domain.model.Pet
 
 fun Pet.toPetDTO() = PetDTO(
+    id = id,
     owner = owner,
     name = name,
     gender = gender,
     birthday = birthday,
     neutering = neutering,
     breed = breed,
+    image = image,
 )
 
 fun PetDTO.toPet() = Pet(
@@ -22,6 +24,9 @@ fun PetDTO.toPet() = Pet(
     birthday = birthday,
     neutering = neutering,
     breed = breed,
+    image = image,
+    linkedUser = linkedUser,
+    lastLocation = lastLocation?.toDomain()
 )
 
 fun Breed.toBreedsDTO() = BreedDTO(

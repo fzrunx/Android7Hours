@@ -27,6 +27,7 @@ fun Auth.toAuthDTO() = AuthDTO(
     nickname = this.nickname,
     password = this.password,
     passwordVerification = this.passwordVerification,
+    invitationCode = this.invitationCode,
 )
 
 fun AuthDTO.toUser() = User(

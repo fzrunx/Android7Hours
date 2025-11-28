@@ -3,6 +3,7 @@ package com.sesac.android7hours.di
 import com.sesac.domain.repository.UserRepository
 import com.sesac.domain.usecase.user.DeleteUserUseCase
 import com.sesac.domain.usecase.user.GetUsersUseCase
+import com.sesac.domain.usecase.user.PostInvitationCodeUseCase
 import com.sesac.domain.usecase.user.PostUserUseCase
 import com.sesac.domain.usecase.user.UpdateProfileUseCase
 import com.sesac.domain.usecase.user.UserUseCase
@@ -23,6 +24,7 @@ object UserUseCaseModule {
             postUser = PostUserUseCase(repository),
             deleteUserUseCase = DeleteUserUseCase(repository),
             updateProfile = UpdateProfileUseCase(repository),
+            postInvitationCodeUseCase = PostInvitationCodeUseCase(repository),
         )
     }
 

@@ -9,10 +9,14 @@ data class PetDTO(
     val owner: String,
     val name: String,
     val gender: String,
-    val birthday: String,
+    val birthday: String?, // Changed to nullable
     val neutering: Boolean,
-    val breed: String,
+    val breed: String?, // Changed to nullable
     val image: String? = null,
+    @Json(name = "linked_user")
+    val linkedUser: String? = null, // New field
+    @Json(name = "last_location")
+    val lastLocation: PetLocationResponseDTO? = null // New field
 )
 
 @JsonClass(generateAdapter = true)

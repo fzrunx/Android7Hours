@@ -2,6 +2,9 @@ package com.sesac.data.source.api
 
 import com.sesac.data.dto.BreedDTO
 import com.sesac.data.dto.PetDTO
+import com.sesac.data.dto.InvitationCodeResponseDTO
+import com.sesac.data.dto.PetLocationRequestDTO
+import com.sesac.data.dto.PetLocationResponseDTO
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
@@ -38,4 +41,17 @@ interface PetsApi {
 
     @GET("pets/breeds/")
     suspend fun getBreeds(): List<BreedDTO>
+
+    // New API for generating invitation code
+    @POST("pets/invitations/")
+    suspend fun postInvitationCode(
+        @Header("Authorization") token: String
+    ): InvitationCodeResponseDTO
+
+    // New API for posting pet location
+    @POST("pets/locations/")
+    suspend fun postPetLocation(
+        @Header("Authorization") token: String,
+        @Body location: PetLocationRequestDTO
+    ): PetLocationResponseDTO
 }

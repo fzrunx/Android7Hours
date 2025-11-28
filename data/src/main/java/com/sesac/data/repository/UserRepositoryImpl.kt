@@ -2,10 +2,13 @@ package com.sesac.data.repository
 
 import android.util.Log
 import com.sesac.data.mapper.toAuthDTO
+import com.sesac.data.mapper.toDomain
 import com.sesac.data.mapper.toUser
 import com.sesac.data.mapper.toUserList
 import com.sesac.data.source.api.AuthApi
+import com.sesac.data.source.api.PetsApi
 import com.sesac.domain.model.Auth
+import com.sesac.domain.model.InvitationCode
 import com.sesac.domain.model.User
 import com.sesac.domain.repository.UserRepository
 import com.sesac.domain.result.AuthResult
@@ -18,6 +21,7 @@ import javax.inject.Inject
 
 class UserRepositoryImpl @Inject constructor(
     private val authApi: AuthApi,
+    private val petsApi: PetsApi,
 ): UserRepository {
     override suspend fun getUsers() = flow {
         emit(AuthResult.Loading)
@@ -65,5 +69,14 @@ class UserRepositoryImpl @Inject constructor(
         } catch (e: Exception) {
             emit(AuthResult.NetworkError(e))
         }
+    }
+
+    override suspend fun postInvitationCode(token: String): Flow<AuthResult<InvitationCode>> = flow {
+        emit(AuthResult.Loading)
+        val result = petsApi.postInvitationCode("Bearer $token").toDomain()
+        emit(AuthResult.Success(result))
+    }.catch {
+        Log.e("UserRepositoryImpl", "postInvitationCode failed", it)
+        emit(AuthResult.NetworkError(it))
     }
 }

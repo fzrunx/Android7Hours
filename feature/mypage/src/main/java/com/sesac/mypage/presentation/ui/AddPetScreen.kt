@@ -60,6 +60,7 @@ import com.sesac.common.ui.theme.paddingMedium
 import com.sesac.common.ui.theme.paddingSmall
 import com.sesac.domain.result.AuthUiState
 import com.sesac.domain.model.Pet
+import com.sesac.domain.model.PetLocation
 import com.sesac.domain.result.ResponseUiState
 import com.sesac.mypage.presentation.MypageViewModel
 import java.text.SimpleDateFormat
@@ -105,9 +106,9 @@ fun AddPetScreen(
             selectedPet?.let { pet ->
                 name = pet.name
                 selectedGender = if (pet.gender == "M") "남아" else "여아"
-                birthday = pet.birthday
+                birthday = pet.birthday ?: ""
                 isNeutered = pet.neutering
-                selectedBreed = pet.breed
+                selectedBreed = pet.breed ?: ""
             }
         }
     }
@@ -227,7 +228,10 @@ fun AddPetScreen(
                         birthday = birthday,
                         neutering = isNeutered,
                         breed = selectedBreed,
-                        owner = uiState.id.toString()
+                        owner = uiState.id.toString(),
+                        image = "",
+                        linkedUser = "",
+                        lastLocation = PetLocation.EMPTY,
                     )
                     if (isEditMode) viewModel.updatePet(pet) else viewModel.addPet(pet)
                 }
