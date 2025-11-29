@@ -21,7 +21,8 @@ data class User(
     val nickname: String?,
     val fullName: String,
     val email: String,
-    @Json(name = "profile_image_url") val profileImageUrl: String? = null,
+    val profileImageUrl: String? = null,
+    val isPet: Boolean? = null,
 )
 
 data class JoinFormState(

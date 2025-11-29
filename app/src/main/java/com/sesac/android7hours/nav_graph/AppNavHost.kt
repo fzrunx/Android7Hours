@@ -56,6 +56,7 @@ fun AppNavHost(
 //        sizeTransform = ,
     ) {
         homeRoute(
+            uiState = uiState,
             onNavigateToPathDetail = onNavigateToPathDetail,
         )
         trailRoute(

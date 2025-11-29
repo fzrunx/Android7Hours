@@ -98,16 +98,6 @@ class MypageViewModel @Inject constructor(
         _activeFilter.value = filter
     }
 
-    fun getUserPets(userId: Int) {
-        viewModelScope.launch {
-            petUseCase.getPetInfoUseCase(userId).collectLatest { result ->
-                if (result is AuthResult.Success) {
-                    _userPets.value = result.resultData
-                }
-            }
-        }
-    }
-
     fun generateInvitationCode() {
         viewModelScope.launch {
             _invitationCode.value = ResponseUiState.Loading

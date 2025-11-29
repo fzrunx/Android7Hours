@@ -17,11 +17,11 @@ import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
 @Module
-@InstallIn(ActivityRetainedComponent::class)
+@InstallIn(SingletonComponent::class)
 object SessionUseCaseModule {
 
     @Provides
-    @ActivityRetainedScoped
+    @Singleton
     fun provideSessionUseCase(repository: SessionRepository): SessionUseCase {
         return SessionUseCase(
             getAccessToken = GetAccessTokenUseCase(repository),

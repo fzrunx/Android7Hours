@@ -52,12 +52,6 @@ abstract class RepositoryModule {
 
     @Binds
     @ActivityRetainedScoped
-    abstract fun bindSessionRepository(
-        sessionRepositoryImpl: SessionRepositoryImpl
-    ): SessionRepository
-
-    @Binds
-    @ActivityRetainedScoped
     abstract fun bindCommunityRepository(
         communityRepositoryImpl: CommunityRepositoryImpl
     ): CommunityRepository
@@ -116,4 +110,10 @@ abstract class SingleToneRepositoryModule {
     abstract fun bindMapRepository(
         locationRepositoryImpl: LocationRepositoryImpl
     ): LocationRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindSessionRepository(
+        sessionRepositoryImpl: SessionRepositoryImpl
+    ): SessionRepository
 }

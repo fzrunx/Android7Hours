@@ -52,25 +52,45 @@ dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
 
-    // compose
+    // --- Compose BOM 기반 ---
     implementation(libs.material)
-    implementation(libs.androidx.compose.material.icons.extended)
-    implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(platform(libs.androidx.compose.bom))
+    implementation(libs.androidx.compose.material.icons.extended)
     implementation(libs.bundles.compose)
-    implementation(libs.bundles.navigation)
-    implementation(libs.kotlinx.serialization.json)
 
+    // --- Navigation ---
+    implementation(libs.bundles.navigation)
+
+    // --- Coil ---
+    implementation(libs.coil.compose)
+
+    // --- Hilt ---
     implementation(libs.hilt.android)
     implementation(libs.androidx.hilt.navigation.compose)
     ksp(libs.hilt.compiler)
-    implementation(libs.coil.compose)
 
+    // --- Serialization ---
+    implementation(libs.kotlinx.serialization.json)
+
+    // --- Permissions ---
+    implementation(libs.accompanist.permissions)
+
+    // --- Map SDK ---
+    implementation(libs.play.services.location)
+
+    // --- Lifecycle & ViewModel Compose ---
+    implementation(libs.androidx.lifecycle.viewmodel.compose)
+
+    implementation(libs.androidx.compose.ui.tooling.preview)
+
+    // --- Test ---
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
+
+    // --- Debug ---
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
 }

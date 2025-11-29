@@ -98,6 +98,7 @@ class LocationRepositoryImpl @Inject constructor(
             token = "Bearer $token",
             location = location.toRequestDTO()
         )
+        Log.d("TAG-LcationRepositoryImpl", "post pet location response : $response")
         emit(AuthResult.Success(response.toDomain()))
     }.catch { e ->
         Log.e("LocationRepositoryImpl", "postPetLocation failed", e)

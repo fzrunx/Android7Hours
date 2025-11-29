@@ -24,7 +24,7 @@ interface PetsApi {
     ): Unit
 
     @GET("pets/{id}/")
-    suspend fun getPetInfo(@Path("id") petId: Int): List<PetDTO>
+    suspend fun getPetInfo(@Path("id") petId: Int): PetDTO
 
     @PATCH("pets/{id}/")
     suspend fun updatePet(

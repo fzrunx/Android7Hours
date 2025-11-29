@@ -19,6 +19,8 @@ data class AuthDTO(
     val profileImage: String? = null,
     @Json(name = "invitation_code") // NEW FIELD
     val invitationCode: String? = null,
+    @Json(name = "is_pet")
+    val isPet: Boolean? = null,
 )
 
 @JsonClass(generateAdapter = true)

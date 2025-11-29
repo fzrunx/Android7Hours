@@ -23,7 +23,7 @@ class PetRepositoryImpl @Inject constructor(
         val result = petsApi.getUserPets("Bearer $token").toPetList()
         emit(AuthResult.Success(result))
     }.catch {
-        Log.d("TAG-PetRepositoryImpl", "getPets(): error: $it")
+        Log.e("TAG-PetRepositoryImpl", "getPets(): error: $it")
         emit(AuthResult.NetworkError(it))
     }
 
@@ -33,16 +33,16 @@ class PetRepositoryImpl @Inject constructor(
         Log.d("TAG-PetRepositoryImpl", "result : $result")
         emit(AuthResult.Success(Unit))
     }.catch {
-        Log.d("TAG-PetRepositoryImpl", "postUserPets(): error: $it")
+        Log.e("TAG-PetRepositoryImpl", "postUserPets(): error: $it")
         emit(AuthResult.NetworkError(it))
     }
 
-    override suspend fun getPetInfo(petId: Int): Flow<AuthResult<List<Pet>>> = flow {
+    override suspend fun getPetInfo(petId: Int): Flow<AuthResult<Pet>> = flow {
         emit(AuthResult.Loading)
-        val result = petsApi.getPetInfo(petId).toPetList()
+        val result = petsApi.getPetInfo(petId).toPet()
         emit(AuthResult.Success(result))
     }.catch {
-        Log.d("TAG-PetRepositoryImpl", "getUserPets(): error: $it")
+        Log.e("TAG-PetRepositoryImpl", "getPetInfo(): error: $it")
         emit(AuthResult.NetworkError(it))
     }
 
@@ -51,7 +51,7 @@ class PetRepositoryImpl @Inject constructor(
         val result = petsApi.updatePet("Bearer $token", petId, pet.toPetDTO()).toPet()
         emit(AuthResult.Success(result))
     }.catch {
-        Log.d("TAG-PetRepostioryImpl", "updatePets(): error: $it")
+        Log.e("TAG-PetRepostioryImpl", "updatePets(): error: $it")
         emit(AuthResult.NetworkError(it))
     }
 
@@ -60,7 +60,7 @@ class PetRepositoryImpl @Inject constructor(
         petsApi.deletePet("Bearer $token", petId)
         emit(AuthResult.Success(Unit))
     }.catch {
-        Log.d("TAG-PetRepostioryImpl", "deletePets(): error: $it")
+        Log.e("TAG-PetRepostioryImpl", "deletePets(): error: $it")
         emit(AuthResult.NetworkError(it))
     }
 
@@ -69,7 +69,7 @@ class PetRepositoryImpl @Inject constructor(
         val result = petsApi.getBreeds().toBreedsList()
         emit(AuthResult.Success(result))
     }.catch {
-        Log.d("TAG-PetRepostioryImpl", "getBreeds(): error: $it")
+        Log.e("TAG-PetRepostioryImpl", "getBreeds(): error: $it")
         emit(AuthResult.NetworkError(it))
     }
 }

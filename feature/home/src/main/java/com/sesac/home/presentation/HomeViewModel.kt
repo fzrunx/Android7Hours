@@ -1,7 +1,11 @@
 package com.sesac.home.presentation
 
+import android.content.Context
+import android.content.Intent
+import android.os.Build
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.sesac.common.service.CurrentLocationService
 import com.sesac.domain.model.BannerData
 import com.sesac.domain.model.Community
 import com.sesac.domain.usecase.community.CommunityUseCase
@@ -36,6 +40,20 @@ class HomeViewModel @Inject constructor(
             getRecommendedPaths()
             communityUseCase.getAllCommunityUseCase().collectLatest { _communityList.value = it }
         }
+    }
+
+    fun startLocationService(context: Context) {
+        val intent = Intent(context, CurrentLocationService::class.java)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            context.startForegroundService(intent)
+        } else {
+            context.startService(intent)
+        }
+    }
+
+    fun stopLocationService(context: Context) {
+        val intent = Intent(context, CurrentLocationService::class.java)
+        context.stopService(intent)
     }
 
     fun getRecommendedPaths() {

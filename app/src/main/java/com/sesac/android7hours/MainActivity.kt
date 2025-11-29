@@ -1,14 +1,23 @@
 package com.sesac.android7hours
 
+import android.Manifest
+import android.app.AlertDialog
 import android.content.Context
+import android.content.Intent
+import android.content.pm.PackageManager
 import android.graphics.Rect
+import android.net.Uri
+import android.os.Build
 import android.os.Bundle
+import android.provider.Settings
+import android.util.Log
 import android.view.MotionEvent
 import android.view.inputmethod.InputMethodManager
 import android.widget.EditText
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
@@ -21,11 +30,14 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.core.content.ContextCompat
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import com.sesac.android7hours.common.AppTopBarData
 import com.sesac.android7hours.common.topBarAsRouteName
 import com.sesac.android7hours.nav_graph.AppBottomBarItem
@@ -34,6 +46,7 @@ import com.sesac.auth.nav_graph.AuthNavigationRoute
 import com.sesac.common.CommonViewModel
 import com.sesac.common.component.CommonMapLifecycle
 import com.sesac.common.component.CommonMapView
+import com.sesac.common.service.CurrentLocationService
 import com.sesac.common.ui.theme.Android7HoursTheme
 import com.sesac.community.presentation.CommunityViewModel
 import com.sesac.home.nav_graph.EntryPointScreen
@@ -50,7 +63,83 @@ import com.sesac.common.R as cR
 class MainActivity : ComponentActivity() {
 
     private val commonViewModel: CommonViewModel by viewModels()
+    // 권한 요청 런처
+    private val permissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        val allGranted = permissions.all { it.value }
+        if (allGranted) {
+            startLocationServiceIfNeeded()
+        } else {
+            // 권한 거부 처리
+            showPermissionDeniedDialog()
+        }
+    }
 
+    // 권한 체크 및 요청
+    private fun checkAndRequestPermissions() {
+        val requiredPermissions = mutableListOf(
+            Manifest.permission.ACCESS_FINE_LOCATION,
+            Manifest.permission.ACCESS_COARSE_LOCATION
+        )
+
+        // Android 13 이상: 알림 권한 추가
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            requiredPermissions.add(Manifest.permission.POST_NOTIFICATIONS)
+        }
+
+        val deniedPermissions = requiredPermissions.filter {
+            ContextCompat.checkSelfPermission(this, it) != PackageManager.PERMISSION_GRANTED
+        }
+
+        if (deniedPermissions.isEmpty()) {
+            // 모든 권한 있음 -> Service 시작
+            startLocationServiceIfNeeded()
+        } else {
+            // 권한 요청
+            permissionLauncher.launch(deniedPermissions.toTypedArray())
+        }
+    }
+
+    // Service 시작
+    private fun startLocationServiceIfNeeded() {
+        try {
+            val intent = Intent(this, CurrentLocationService::class.java)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                startForegroundService(intent)
+            } else {
+                startService(intent)
+            }
+            Log.d("TAG-MainActivity", "Location service started")
+        } catch (e: SecurityException) {
+            Log.e("TAG-MainActivity", "SecurityException: ${e.message}")
+            showPermissionDeniedDialog()
+        } catch (e: Exception) {
+            Log.e("TAG-MainActivity", "Failed to start service: ${e.message}")
+        }
+    }
+
+    // 권한 거부 시 안내 다이얼로그
+    private fun showPermissionDeniedDialog() {
+        AlertDialog.Builder(this)
+            .setTitle("권한 필요")
+            .setMessage("위치 추적 서비스를 사용하려면 위치 권한과 알림 권한이 필요합니다.")
+            .setPositiveButton("설정으로 이동") { _, _ ->
+                openAppSettings()
+            }
+            .setNegativeButton("취소", null)
+            .show()
+    }
+
+    // 앱 설정 화면으로 이동
+    private fun openAppSettings() {
+        val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+            data = Uri.fromParts("package", packageName, null)
+        }
+        startActivity(intent)
+    }
+
+    @OptIn(ExperimentalPermissionsApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -105,7 +194,16 @@ class MainActivity : ComponentActivity() {
             val appBottomBarItem = remember { AppBottomBarItem().fetch() }
             val isSearchOpen = remember { mutableStateOf(false) }
             val permissionStates = remember { mutableStateMapOf<String, Boolean>() }
-            val LocalIsSearchOpen = compositionLocalOf { mutableStateOf(false) }
+
+            // 로그인 상태 변경 시 권한 체크
+            LaunchedEffect(uiState.isLoggedIn) {
+                if (uiState.isLoggedIn) {
+                    checkAndRequestPermissions()
+                } else {
+                    stopService(Intent(context, CurrentLocationService::class.java))
+                }
+            }
+
 
             Android7HoursTheme {
                 LaunchedEffect(uiState) {

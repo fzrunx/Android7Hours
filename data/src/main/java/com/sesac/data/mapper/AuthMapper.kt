@@ -36,7 +36,8 @@ fun AuthDTO.toUser() = User(
     nickname = this.nickname,
     fullName = this.fullName,
     email = this.email,
-    profileImageUrl = this.profileImage
+    profileImageUrl = this.profileImage,
+    isPet = this.isPet,
 )
 
 fun List<AuthDTO>.toUserList() = this.map {

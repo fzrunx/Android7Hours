@@ -69,8 +69,8 @@ class MonitorViewModel @Inject constructor (
                 petUseCase.getPetInfoUseCase(petId).collectLatest { result ->
                     when (result) {
                         is AuthResult.Success -> {
-                            val pet = result.resultData.firstOrNull() // getPetInfoUseCase returns List<Pet>
-                            if (pet != null) {
+                            val pet = result.resultData // getPetInfoUseCase returns List<Pet>
+                            if (pet.lastLocation != null) {
                                 _monitoredPet.value = ResponseUiState.Success("위치를 가져왔습니다.", pet)
                             } else {
                                 _monitoredPet.value = ResponseUiState.Error("해당 펫을 찾을 수 없습니다.")

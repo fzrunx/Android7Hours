@@ -1,20 +1,20 @@
-package com.sesac.android7hours.service
+package com.sesac.common.service
 
+import android.Manifest
 import android.annotation.SuppressLint
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.Service
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Build
 import android.os.IBinder
 import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
-import com.sesac.android7hours.R
-import com.sesac.data.mapper.toPetLocation
-import com.sesac.domain.model.PetLocation
-import com.sesac.domain.repository.LocationRepository
+import androidx.core.content.ContextCompat
+import com.sesac.common.R
 import com.sesac.domain.result.AuthResult
 import com.sesac.domain.result.LocationException
 import com.sesac.domain.result.LocationFlowResult
@@ -33,16 +33,21 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-const val NOTIFICATION_ID = 12345
-private const val CHANNEL_ID = "location_service_channel"
+//const val NOTIFICATION_ID = 12345
+//private const val CHANNEL_ID = "location_service_channel"
 
 @AndroidEntryPoint
-class CurrentLocationService @Inject constructor(
-//    private val locationRepository: LocationRepository,
-    private val locationUseCase: LocationUseCase, // NEW
-    private val sessionUseCase: SessionUseCase, // NEW
-): Service() {
+class CurrentLocationService: Service() {
+    @Inject
+    lateinit var locationUseCase: LocationUseCase
+    @Inject
+    lateinit var sessionUseCase: SessionUseCase
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
+    companion object {
+        private const val NOTIFICATION_ID = 1001
+        private const val CHANNEL_ID = "location_notification_channel"
+    }
 
     override fun onCreate() {
         super.onCreate()
@@ -62,6 +67,14 @@ class CurrentLocationService @Inject constructor(
                 return@launch
             }
 
+            // 권한 체크
+            if (!hasLocationPermissions()) {
+                Log.e("TAG-CurrentLocationService", "Location permissions not granted")
+                stopSelf()
+                return@launch
+            }
+            val userInfo = sessionUseCase.getUserInfo().first()
+
             locationUseCase.getCurrentLocationUseCase()
                 .onEach { locationFlowResult ->
                     when (locationFlowResult) {
@@ -71,30 +84,58 @@ class CurrentLocationService @Inject constructor(
                             Log.d("TAG-CurrentLocationService", "Location updated : $coord")
 
                             // Send location to backend
-                            locationUseCase.postPetLocationUseCase(token, petLocation)
-                                .collectLatest { result ->
-                                    when (result) {
-                                        is AuthResult.Success -> {
-                                            Log.d("TAG-CurrentLocationService", "Location sent to backend: ${result.resultData}")
+                            if (userInfo != null && userInfo.isPet ?: true) {
+                                locationUseCase.postPetLocationUseCase(token, petLocation)
+                                    .collectLatest { result ->
+                                        when (result) {
+                                            is AuthResult.Success -> {
+                                                Log.d("TAG-CurrentLocationService", "Location sent to backend: ${result.resultData}")
+                                            }
+                                            is AuthResult.NetworkError -> {
+                                                Log.e("TAG-CurrentLocationService", "Failed to send location to backend: ${result.exception.message}")
+                                            }
+                                            else -> { /* Loading or other states */ }
                                         }
-                                        is AuthResult.NetworkError -> {
-                                            Log.e("TAG-CurrentLocationService", "Failed to send location to backend: ${result.exception.message}")
-                                        }
-                                        else -> { /* Loading or other states */ }
                                     }
-                                }
+                            }
                         }
                         is LocationFlowResult.Error -> handleLocationError(locationFlowResult.exception)
                     }
                 }
                 .catch { e ->
-                    Log.e("TAG-CurrentLocationService", "Error collecting location: $e", e)
+                    when (e) {
+                        is SecurityException -> {
+                            Log.e("TAG-CurrentLocationService", "SecurityException: ${e.message}")
+                            stopSelf()
+                            return@catch
+                        }
+                        is Exception -> {
+                            Log.e("TAG-CurrentLocationService", "Failed to start foreground: ${e.message}")
+                            stopSelf()
+                            return@catch
+                        }
+                    }
                 }
                 .launchIn(this) // Use the serviceScope
         }
 
 
         return START_STICKY
+    }
+
+    private fun hasLocationPermissions(): Boolean {
+//        val context = Context
+        val fineLocation = ContextCompat.checkSelfPermission(
+            this,
+            Manifest.permission.ACCESS_FINE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED
+
+        val coarseLocation = ContextCompat.checkSelfPermission(
+            this,
+            Manifest.permission.ACCESS_COARSE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED
+
+        return fineLocation || coarseLocation
     }
 
     private fun handleLocationError(exception: LocationException) {
@@ -128,7 +169,7 @@ class CurrentLocationService @Inject constructor(
     private fun startForegroundNotify() {
         val channelId = "location_notification_channel"
         notificationManager =
-            getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            getSystemService(NOTIFICATION_SERVICE) as NotificationManager
 
         val channel = NotificationChannel(
             channelId,
@@ -173,6 +214,7 @@ class CurrentLocationService @Inject constructor(
     override fun onDestroy() {
         super.onDestroy()
         serviceScope.cancel()
+        Log.d("TAG-CurrentLocationService", "Service Destroyed")
     }
 
     override fun onBind(intent: Intent?): IBinder? = null

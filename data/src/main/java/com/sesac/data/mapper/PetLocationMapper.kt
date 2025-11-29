@@ -2,14 +2,14 @@ package com.sesac.data.mapper
 
 import com.sesac.data.dto.PetLocationRequestDTO
 import com.sesac.data.dto.PetLocationResponseDTO
-import com.sesac.domain.model.Coord
+import com.sesac.data.util.truncateWithBigDecimal
 import com.sesac.domain.model.PetLocation
 
 // Domain to DTO (for sending location updates)
 fun PetLocation.toRequestDTO(): PetLocationRequestDTO {
     return PetLocationRequestDTO(
-        latitude = this.latitude,
-        longitude = this.longitude,
+        latitude = truncateWithBigDecimal(this.latitude, 6),
+        longitude = truncateWithBigDecimal(this.longitude, 6),
         accuracy = this.accuracy,
         batteryLevel = this.batteryLevel
     )
@@ -26,17 +26,3 @@ fun PetLocationResponseDTO.toDomain(): PetLocation {
     )
 }
 
-// NEW: Coord to PetLocation mapper
-fun Coord.toPetLocation(
-    accuracy: Float? = null,
-    batteryLevel: Int? = null,
-    createdAt: String = "" // createdAt is server-generated, not sent by client
-): PetLocation {
-    return PetLocation(
-        latitude = this.latitude,
-        longitude = this.longitude,
-        accuracy = accuracy,
-        batteryLevel = batteryLevel,
-        createdAt = createdAt // Will be an empty string for outbound PetLocation, server will populate on inbound
-    )
-}

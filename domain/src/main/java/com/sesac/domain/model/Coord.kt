@@ -18,4 +18,21 @@ data class Coord(
             longitude = 129.1237,
         )
     }
+
+    fun toPetLocation(
+        accuracy: Float? = null,
+        batteryLevel: Int? = null,
+        createdAt: String = "" // createdAt is server-generated, not sent by client
+    ): PetLocation {
+        return PetLocation(
+            latitude = this.latitude,
+            longitude = this.longitude,
+            accuracy = accuracy,
+            batteryLevel = batteryLevel,
+            createdAt = createdAt // Will be an empty string for outbound PetLocation, server will populate on inbound
+        )
+    }
+
 }
+
+// NEW: Coord to PetLocation mapper

@@ -64,13 +64,13 @@ dependencies {
     // --- Hilt ---
     implementation(libs.hilt.android)
     implementation(libs.androidx.hilt.navigation.compose)
-    implementation(libs.play.services.location)
     ksp(libs.hilt.compiler)
 
     // --- Serialization ---
     implementation(libs.kotlinx.serialization.json)
 
     // --- Map SDK ---
+    implementation(libs.play.services.location)
     implementation(libs.map.sdk)
 
     // --- Lifecycle & ViewModel Compose ---

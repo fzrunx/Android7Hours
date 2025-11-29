@@ -1,11 +1,14 @@
 package com.sesac.monitor.presentation.ui
 
+import android.content.Intent
+import android.os.Build
 import android.util.Log
 import android.view.ViewGroup
 import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
@@ -15,6 +18,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.content.ContextCompat.startForegroundService
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -50,12 +54,14 @@ fun MonitorGpsScreen (
     var petMarker by remember { mutableStateOf<Marker?>(null) } // NEW: To manage the pet's marker
 
     // NEW: Start monitoring the pet
-    LaunchedEffect(petId) {
+
+    LaunchedEffect(true) {
         viewModel.startMonitoringPet(petId)
     }
 
     // NEW: Update map marker when pet location changes
     LaunchedEffect(monitoredPetState, currentNaverMap) {
+        Log.d("TAG-MonitorGpsScreen", "pet state : $monitoredPetState")
         val naverMap = currentNaverMap ?: return@LaunchedEffect
         when (val state = monitoredPetState) {
             is ResponseUiState.Success -> {
@@ -75,6 +81,7 @@ fun MonitorGpsScreen (
                     petMarker = newMarker // Store reference to the new marker
 
                     // Move camera to pet's location
+                    Log.d("TAG-MonitorGpsScreen", "camera positon : $latLng")
                     val cameraUpdate = CameraUpdate.scrollTo(latLng)
                     naverMap.moveCamera(cameraUpdate)
                 }
@@ -83,7 +90,7 @@ fun MonitorGpsScreen (
                 Log.e("MonitorGpsScreen", "Error monitoring pet: ${state.message}")
                 // Optionally show a Toast or error message
             }
-            else -> { /* Loading or Idle states */ }
+            else -> { Log.e("MonitorGpsScreen", "Unknown Error monitoring pet: $state") }
         }
     }
 
@@ -94,6 +101,7 @@ fun MonitorGpsScreen (
         commonMapLifecycle.mapView?.onStop()
         Log.d("Tag-MonitorGpsScreen", "📌 Monitor GPS Paused → MapView pause/stop 호출됨")
     }
+
     Box(
         modifier = Modifier.fillMaxSize()
     ) {
@@ -129,6 +137,14 @@ fun MonitorGpsScreen (
                     }
                 )
             }
+        }
+    }
+
+    DisposableEffect(Unit) {
+        onDispose {
+            petMarker?.map = null // 지도에서 마커 제거
+            petMarker = null     // Compose 상태에서 마커 참조 제거
+            Log.d("TAG-MonitorGpsScreen", "Map marker cleared on screen exit.")
         }
     }
 }

@@ -29,12 +29,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
-import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import com.sesac.common.R as cR
 import com.sesac.common.component.LocalIsSearchOpen
+import com.sesac.common.ui.theme.paddingNone
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -80,7 +79,7 @@ fun EntryPointScreen(
                                 fontWeight = FontWeight.Bold
                             )
                         },
-                        colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                        colors = TopAppBarDefaults.topAppBarColors(
                             containerColor = MaterialTheme.colorScheme.primaryContainer
                         ),
                         navigationIcon = {
@@ -181,11 +180,11 @@ fun EntryPointScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(
-                        top = if (isGlobalTopBarVisible) paddingValues.calculateTopPadding() else 0.dp,
+                        top = if (isGlobalTopBarVisible) paddingValues.calculateTopPadding() else paddingNone,
                         bottom = paddingValues.calculateBottomPadding()
                     )
             ) {
-                navHost(PaddingValues(0.dp))
+                navHost(PaddingValues(paddingNone))
             }
         }
     }

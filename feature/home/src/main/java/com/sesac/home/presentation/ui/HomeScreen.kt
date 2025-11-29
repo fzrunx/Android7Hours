@@ -1,5 +1,6 @@
 package com.sesac.home.presentation.ui
 
+import android.Manifest
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -11,6 +12,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
@@ -32,6 +34,8 @@ import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import coil3.request.crossfade
 import coil3.size.Scale
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import com.sesac.common.component.CommonLazyRow
 import com.sesac.common.model.PathParceler
 import com.sesac.common.model.toPathParceler
@@ -39,6 +43,7 @@ import com.sesac.common.ui.theme.bannerHeight
 import com.sesac.common.ui.theme.cardWidth
 import com.sesac.common.ui.theme.paddingLarge
 import com.sesac.common.ui.theme.paddingMedium
+import com.sesac.domain.result.AuthUiState
 import com.sesac.domain.result.ResponseUiState
 import com.sesac.home.presentation.HomeViewModel
 import kotlinx.coroutines.delay
@@ -46,18 +51,41 @@ import com.sesac.common.R as cR
 
 
 // --- 4. HomePage ---
+@OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun HomeScreen(
     modifier: Modifier = Modifier,
     viewModel: HomeViewModel = hiltViewModel(),
-//    uiState: AuthUiState,
+    uiState: AuthUiState,
     onNavigateToPathDetail: (PathParceler?) -> Unit = {},
     onNavigateToCommunity: () -> Unit = {},
 ) {
+    val context = LocalContext.current
     val banners by viewModel.bannerList.collectAsStateWithLifecycle()
     val pathList by viewModel.recommendPathList.collectAsStateWithLifecycle()
     val communityList by viewModel.communityList.collectAsStateWithLifecycle()
     val pagerState = rememberPagerState(pageCount = { banners.size })
+    val permissionState = rememberMultiplePermissionsState(
+        permissions = listOf(
+            Manifest.permission.ACCESS_FINE_LOCATION,
+            Manifest.permission.ACCESS_COARSE_LOCATION
+        )
+    )
+
+    // ✅ 로그인 상태일 때만 Service 시작
+    LaunchedEffect(uiState.isLoggedIn, permissionState.allPermissionsGranted) {
+        if (uiState.isLoggedIn && permissionState.allPermissionsGranted) {
+            viewModel.startLocationService(context)
+        } else {
+            viewModel.stopLocationService(context)
+        }
+    }
+
+    if (!permissionState.allPermissionsGranted) {
+        Button(onClick = { permissionState.launchMultiplePermissionRequest() }) {
+            Text("위치 권한 허용")
+        }
+    }
 
     LaunchedEffect(Unit) {
         viewModel.getRecommendedPaths()
