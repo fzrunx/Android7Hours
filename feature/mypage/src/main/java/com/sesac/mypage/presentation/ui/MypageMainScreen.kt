@@ -76,8 +76,8 @@ fun MypageMainScreen(
     ) {
         item {
             ProfileHeaderView(
-                name = uiState.fullName ?: "",
-                email = uiState.email ?: "",
+                name = uiState.user?.fullName ?: "",
+                email = uiState.user?.email ?: "",
                 imageUrl = "",
                 onNavigateToProfile = { navController.navigate(MypageNavigationRoute.DetailScreen) }
             )
@@ -133,7 +133,7 @@ fun MypageMainScreen(
         item {
             MypageButtonView(
                 onClick = {
-                    viewModel.signOut(uiState.id)
+                    viewModel.signOut(uiState.user?.id ?: -1)
                     uiState.reset()
                     viewModel.logout()
                     nav2LoginScreen()

@@ -56,7 +56,7 @@ class UserRepositoryImpl @Inject constructor(
     ): Flow<AuthResult<User>> = flow {
         emit(AuthResult.Loading) // 로딩 상태 추가하면 좋습니다
         try {
-            val response = authApi.updateProfile(token, image, nickname)
+            val response = authApi.updateProfile("Bearer $token", image, nickname)
 
             if (response.isSuccessful && response.body() != null) {
                 val dto = response.body()!!

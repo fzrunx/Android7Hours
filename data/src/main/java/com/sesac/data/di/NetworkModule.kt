@@ -9,6 +9,7 @@ import com.sesac.data.source.api.AuthApi
 import com.sesac.data.source.api.BookmarkApi
 import com.sesac.data.source.api.PathApi
 import com.sesac.data.source.api.PetsApi
+import com.sesac.data.source.api.PlaceApi
 import com.sesac.data.source.api.PostApi
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.adapters.PolymorphicJsonAdapterFactory
@@ -132,6 +133,14 @@ object NetworkModule {
         retrofit: Retrofit
     ): BookmarkApi =
         retrofit.create(BookmarkApi::class.java)
+
+    @Provides
+    @Singleton
+    fun providePlaceApi(
+        retrofit: Retrofit
+    ): PlaceApi =
+        retrofit.create(PlaceApi::class.java)
+
 }
 
 //@Module

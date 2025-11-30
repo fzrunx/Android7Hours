@@ -27,11 +27,12 @@ class CommonViewModel @Inject constructor(
             AuthUiState(
                 isLoggedIn = true,
                 token = token,
-                id = user.id,
-                nickname = user.nickname,
-                fullName = user.fullName,
-                email = user.email,
-                profileImageUrl = user.profileImageUrl,
+                user = user,
+//                id = user.id,
+//                nickname = user.nickname,
+//                fullName = user.fullName,
+//                email = user.email,
+//                profileImageUrl = user.profileImageUrl,
             )
         } else {
             AuthUiState().reset()

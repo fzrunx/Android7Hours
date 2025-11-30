@@ -1,4 +1,4 @@
-package com.sesac.trail.presentation
+package com.sesac.trail.utils
 
 import com.naver.maps.geometry.LatLng
 import com.sesac.domain.model.Coord

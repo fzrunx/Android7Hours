@@ -228,7 +228,7 @@ fun AddPetScreen(
                         birthday = birthday,
                         neutering = isNeutered,
                         breed = selectedBreed,
-                        owner = uiState.id.toString(),
+                        owner = uiState.user?.id.toString(),
                         image = "",
                         linkedUser = "",
                         lastLocation = PetLocation.EMPTY,

@@ -123,17 +123,15 @@ fun MypageDetailScreen(
             selectedImageUri = uri
             // 1. URI -> MultipartBody.Part 변환
             val imagePart = FileUtils.createMultipartBody(context, uri, "profile_image")
-            Log.d("TOKEN_CHECK", "Raw Token: ${uiState.token}")
-            Log.d("TOKEN_CHECK", "Sending Token: Bearer ${uiState.token}")
             // 2. 서버로 전송 (토큰이 있을 때만)
-            if (imagePart != null && !uiState.token.isNullOrEmpty()) {
-                viewModel.updateProfileImage("Bearer ${uiState.token}", imagePart)
+            if (imagePart != null) {
+                viewModel.updateProfileImage(imagePart)
             }
         }
     }
 
-    LaunchedEffect(uiState.id) {
-        if (uiState.id != -1) {
+    LaunchedEffect(uiState) {
+        if (uiState.user?.id != -1) {
             viewModel.getAllUserPets()
             viewModel.clearSelectedPet()
             Log.d("TAG-MypageDetailScreen", "pets : $pets")
@@ -187,9 +185,9 @@ fun MypageDetailScreen(
         ) {
             item {
                 MypageDetailHeader(
-                    name = uiState.fullName ?: "-",
+                    name = uiState.user?.fullName ?: "-",
                     description = "반려견과 함께하는 즐거운 산책",
-                    imageUrl = uiState.profileImageUrl,
+                    imageUrl = uiState.user?.profileImageUrl,
                     localImageUri = selectedImageUri,
                     onCameraClick = {
                         photoPickerLauncher.launch(
@@ -203,7 +201,7 @@ fun MypageDetailScreen(
 
             item {
                 UserInfoSection(
-                    email = uiState.email ?: "-",
+                    email = uiState.user?.email ?: "-",
                     phone = "-",
                     address = "-"
                 )
@@ -287,14 +285,14 @@ fun AddPetOptionsDialog(
                     onClick = onAddAnimalPet,
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text("반려동물 정보 등록")
+                    Text("반려동물 정보 등록", color = White)
                 }
                 Spacer(modifier = Modifier.height(paddingSmall))
                 Button(
                     onClick = onInviteUser,
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text("친구 위치 추적 (초대)")
+                    Text("친구 위치 추적 (초대)", color = White)
                 }
             }
         },

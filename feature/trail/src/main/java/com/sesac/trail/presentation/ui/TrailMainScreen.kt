@@ -65,9 +65,11 @@ import androidx.compose.ui.graphics.toArgb
 import com.naver.maps.map.CameraUpdate
 import com.naver.maps.map.overlay.OverlayImage
 import com.sesac.common.model.toPathParceler
+import com.sesac.domain.model.Place
 import com.sesac.trail.nav_graph.NestedNavigationRoute
 import com.sesac.trail.presentation.component.FollowGuide
-import com.sesac.trail.presentation.toLatLng
+import com.sesac.trail.utils.toLatLng
+import com.sesac.common.model.toParceler
 
 enum class WalkPathTab { RECOMMENDED, MY_RECORDS }
 
@@ -106,7 +108,12 @@ fun TrailMainScreen(
     // ✅ 수정: tempPathCoords는 이제 ViewModel에서 제공
     val tempPathCoords by viewModel.tempPathCoords.collectAsStateWithLifecycle()
     val polylineFromVM by viewModel.polylineOverlay.collectAsStateWithLifecycle()
+    // ✅ Place 상태 수집
+    val placesState by viewModel.placesState.collectAsStateWithLifecycle()
     var isTracking by remember { mutableStateOf(false) }
+
+
+
     // 네이버 지도 위치 소스
     val locationSource = remember {
         activity?.let { FusedLocationSource(it, 1000) }
@@ -119,6 +126,7 @@ fun TrailMainScreen(
             ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
         )
     }
+
     // 위치 권한 요청
     val locationPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions()
@@ -135,11 +143,19 @@ fun TrailMainScreen(
     var showMemoDialog by remember { mutableStateOf(false) }
     var selectedCoord by remember { mutableStateOf<LatLng?>(null) }
     var memoText by remember { mutableStateOf("") }
+
     // NaverMap 저장 위한 변수
     var currentNaverMap by remember { mutableStateOf<NaverMap?>(null) }
+
     // 마커 관리 리스트/맵
     val currentMarkers = viewModel.currentMarkers
     val infoWindowStates = remember { mutableStateMapOf<Marker, Boolean>() }
+
+    // ✅ Place 마커 관리 (ViewModel 외부)
+    val placeMarkers = remember { mutableListOf<Marker>() }
+
+    var initialCameraMoved by remember(currentNaverMap) { mutableStateOf(false) }
+
     // 위치 콜백
     val locationCallback = remember {
         object : LocationCallback() {
@@ -202,21 +218,8 @@ fun TrailMainScreen(
         viewModel.loadDrafts()
         viewModel.updateIsEditMode(false)
         viewModel.getMyPaths(uiState.token)
-
-//        if (hasLocationPermission) {
-//            @SuppressLint("MissingPermission")
-//            fusedLocationClient.getCurrentLocation(Priority.PRIORITY_BALANCED_POWER_ACCURACY, null)
-//                .addOnSuccessListener { location: Location? ->
-//                    val coord = location?.let { Coord(it.latitude, it.longitude) } ?: Coord.DEFAULT
-//                    viewModel.getRecommendedPaths(coord, 50000f)
-//                }.addOnFailureListener {
-//                    Log.w("TrailMainScreen", "Failed to get current location", it)
-//                    viewModel.getRecommendedPaths(Coord.DEFAULT, 50000f)
-//                }
-//        } else {
-//            viewModel.getRecommendedPaths(Coord.DEFAULT, 50000f)
-//        }
         viewModel.getCurrentLocation()
+
         when (val location = currentLocation) {
             is ResponseUiState.Success -> {
                 location.result?.let {
@@ -235,6 +238,26 @@ fun TrailMainScreen(
     LaunchedEffect(isRecording) {
         if (!isRecording) {
             Log.d("TrailMainScreen", "🧹 녹화 중지 시 폴리라인, 마커, 좌표 초기화 완료")
+        }
+    }
+
+    var lastFetchLocation by remember { mutableStateOf<Location?>(null) }
+
+    // ✅ 현재 위치 기반으로 병원 데이터 로드 (최초 1회 및 500m 이상 이동 시)
+    LaunchedEffect(lastSmoothedLocation, currentNaverMap) {
+        val map = currentNaverMap ?: return@LaunchedEffect
+        val currentLocation = lastSmoothedLocation ?: return@LaunchedEffect
+
+        val distance = lastFetchLocation?.distanceTo(currentLocation) ?: Float.MAX_VALUE
+
+        if (distance > 500) { // 최초 로드이거나 500m 이상 이동했을 때만 호출
+            Log.d("TrailMainScreen", "Fetching new places. Moved ${distance}m")
+            lastFetchLocation = currentLocation
+            viewModel.loadPlaces(
+                lat = currentLocation.latitude,
+                lng = currentLocation.longitude,
+                radius = 5 // 5km 반경
+            )
         }
     }
 
@@ -261,8 +284,8 @@ fun TrailMainScreen(
             .setMaxUpdateDelayMillis(1000L)
             .build()
 
-        // ✅ 녹화 중이거나 따라가기 중일 때 위치 업데이트
-        val shouldUpdateLocation = (isRecording && !isPaused) || isFollowingPath
+        // ✅ 녹화 중이거나 따라가기 중, 또는 단순히 지도를 보고 있을 때도 위치 업데이트
+        val shouldUpdateLocation = hasLocationPermission
 
         if (shouldUpdateLocation) {
             if (hasLocationPermission) {  // ⭐ state 사용
@@ -295,6 +318,8 @@ fun TrailMainScreen(
                 Log.d("TrailMainScreen", "📍 화면 사라짐, 위치 업데이트 중지 및 NaverMap locationSource 해제")
             }
         }
+
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -342,7 +367,7 @@ fun TrailMainScreen(
                                     selectedCoord = coord
                                     memoText = ""
                                     showMemoDialog = true
-                                 }
+                                }
                             }
                         }
                         mapView
@@ -351,6 +376,81 @@ fun TrailMainScreen(
                         it.requestLayout()
                     }
                 )
+            }
+        }
+        // ✅ Place 마커 표시 (지도 준비 후)
+        LaunchedEffect(placesState, currentNaverMap, isRecording, isFollowingPath) {
+            Log.d("TrailMainScreen", "Place Marker Effect Triggered: isRecording=$isRecording, isFollowingPath=$isFollowingPath, placesState=${placesState.javaClass.simpleName}")
+            val map = currentNaverMap ?: return@LaunchedEffect
+
+            // 녹화나 따라가기 중일 때는 Place 마커 숨기기
+            if (isRecording || isFollowingPath) {
+                Log.d("TrailMainScreen", "Place Markers Hidden: isRecording or isFollowingPath is true.")
+                placeMarkers.forEach { it.map = null }
+                placeMarkers.clear()
+                return@LaunchedEffect
+            }
+
+            // 기존 마커 제거
+            placeMarkers.forEach { it.map = null }
+            placeMarkers.clear()
+
+            // Place 마커 추가
+            when (placesState) {
+                is ResponseUiState.Success -> {
+                    val places = (placesState as ResponseUiState.Success<List<Place>>).result
+                    Log.d("TrailMainScreen", "Place Markers Success: ${places.size} places loaded.")
+
+                    places.forEach { place ->
+                        val marker = Marker().apply {
+                            position = LatLng(place.latitude, place.longitude)
+                            icon = Marker.DEFAULT_ICON
+
+                            // 💡 캡션 관련 코드는 이제 필요 없으므로 제거하거나 주석 처리합니다。
+                            // captionText = place.title
+                            // captionColor = Color.Black.toArgb()
+                            // captionTextSize = 14f
+                            // captionRequestedWidth = 200
+
+                            // ✅ 마커 클릭 시 동작
+                            setOnClickListener { clickedMarker ->
+                                // 1. 다른 마커들의 캡션 숨기기 로직도 이제 필요 없습니다. (캡션을 안쓰므로)
+                                // placeMarkers.forEach {
+                                //     if (it != clickedMarker) {
+                                //         it.captionText = ""
+                                //     }
+                                // }
+
+                                // 💡 즉시 상세 페이지로 이동
+                                navController.navigate(
+                                    NestedNavigationRoute.PlaceDetail(place.toParceler())
+                                )
+
+                                true // 이벤트 소비 완료를 나타냄
+                            }
+
+                            this.map = map
+                        }
+                        placeMarkers.add(marker)
+                    }
+
+                    Log.d("TrailMainScreen", "✅ 병원 마커 ${places.size}개 표시됨")
+                }
+                is ResponseUiState.Loading -> {
+                    Log.d("TrailMainScreen", "⏳ 병원 데이터 로딩 중...")
+                }
+                is ResponseUiState.Error -> {
+                    Log.e("TrailMainScreen", "❌ 병원 로드 실패: ${(placesState as ResponseUiState.Error).message}")
+                }
+                else -> {}
+            }
+        }
+
+        // Place 마커 정리
+        DisposableEffect(Unit) {
+            onDispose {
+                placeMarkers.forEach { it.map = null }
+                placeMarkers.clear()
             }
         }
         // 🔹 선택된 경로의 폴리라인 표시

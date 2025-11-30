@@ -159,7 +159,7 @@ class MainActivity : ComponentActivity() {
 
             val topBarActions = if (uiState.isLoggedIn) {
                 listOf(
-                    TopBarAction.TextAction(text = uiState.nickname ?: "User"),
+                    TopBarAction.TextAction(text = uiState.user?.nickname ?: "User"),
                     TopBarAction.IconAction(
                         icon = Icons.AutoMirrored.Filled.ExitToApp,
                         contentDescription = "Logout",

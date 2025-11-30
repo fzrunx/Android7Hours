@@ -153,7 +153,7 @@ fun TrailDetailScreen(
                                 color = GrayTabText
                             )
                         }
-                        if (selected.uploader == uiState.nickname) {
+                        if (selected.uploader == uiState.user?.nickname) {
                             Row {
                                 TextButton(
 //                                    onClick = { onEditClick(selected) },
@@ -252,7 +252,7 @@ fun TrailDetailScreen(
                 PathSection(title = "이용자 후기") {
                     CommonCommentSection(
                         commentsState = commentsState,
-                        currentUserId = uiState.id,
+                        currentUserId = uiState.user?.id ?: -1,
                         onPostComment = { content ->
                             uiState.token?.let { token ->
                                 viewModel.createComment(token, selected.id, content)

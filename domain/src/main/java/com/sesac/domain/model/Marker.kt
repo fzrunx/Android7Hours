@@ -10,3 +10,9 @@ data class MemoMarker(
     val longitude: Double,
     val memo: String = ""
 )
+
+data class InfoMarker(
+    val latitude: Double,
+    val longitude: Double,
+    val name: String,
+)

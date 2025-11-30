@@ -320,7 +320,7 @@ class MypageViewModel @Inject constructor(
                     _stats.value = ResponseUiState.Error(e.message ?: "알 수 없는 오류가 발생했습니다.")
                 }
                 .collectLatest { myPathResult ->
-                    val userNickname = uiState.nickname
+                    val userNickname = uiState.user?.nickname
                     when (myPathResult) {
                         is AuthResult.Success -> {
                             val pathList =
@@ -435,39 +435,42 @@ class MypageViewModel @Inject constructor(
         }
     }
 
-    fun updateProfileImage(token: String, imagePart: MultipartBody.Part) {
+    fun updateProfileImage(imagePart: MultipartBody.Part) {
         viewModelScope.launch {
+            val token = sessionUseCase.getAccessToken().first()
             // [수정] authUseCase 안에 있는 updateProfile 호출
-            userUseCase.updateProfile(token, imagePart, null)
-                .collectLatest { result ->
-                    when (result) {
-                        is AuthResult.Loading -> {
-                            Log.d("MypageViewModel", "업로드 진행 중: Loading")
-                        }
+            token?.let {
+                userUseCase.updateProfile(token, imagePart, null)
+                    .collectLatest { result ->
+                        when (result) {
+                            is AuthResult.Loading -> {
+                                Log.d("MypageViewModel", "업로드 진행 중: Loading")
+                            }
 
-                        is AuthResult.Success -> {
-                            val updatedUser = result.resultData
-                            Log.d(
-                                "MypageViewModel",
-                                "업로드 성공, 유저 정보: ${updatedUser.profileImageUrl}"
-                            )
-                            // 성공 후 유저 정보 갱신
-                            sessionUseCase.saveUser(updatedUser)
-                            getAllUserPets()
-                        }
+                            is AuthResult.Success -> {
+                                val updatedUser = result.resultData
+                                Log.d(
+                                    "MypageViewModel",
+                                    "업로드 성공, 유저 정보: ${updatedUser.profileImageUrl}"
+                                )
+                                // 성공 후 유저 정보 갱신
+                                sessionUseCase.saveUser(updatedUser)
+                                getAllUserPets()
+                            }
 
-                        is AuthResult.NetworkError -> {
-                            Log.e(
-                                "MypageViewModel",
-                                "업로드 실패: 네트워크 오류 - ${result.exception.message}"
-                            )
-                        }
+                            is AuthResult.NetworkError -> {
+                                Log.e(
+                                    "MypageViewModel",
+                                    "업로드 실패: 네트워크 오류 - ${result.exception.message}"
+                                )
+                            }
 
-                        else -> {
-                            Log.e("MypageViewModel", "업로드 실패: 알 수 없는 오류 - $result")
+                            else -> {
+                                Log.e("MypageViewModel", "업로드 실패: 알 수 없는 오류 - $result")
+                            }
                         }
                     }
-                }
+            }
         }
     }
 }
