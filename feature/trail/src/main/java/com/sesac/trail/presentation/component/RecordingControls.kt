@@ -26,8 +26,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.sesac.common.ui.theme.Android7HoursTheme
 import com.sesac.common.ui.theme.ColorOrange
 import com.sesac.common.ui.theme.Purple600
 import com.sesac.common.ui.theme.Red500
@@ -39,9 +41,7 @@ import java.util.concurrent.TimeUnit
 
 @Composable
 fun RecordingControls(
-    isPaused: Boolean,
     recordingTime: Long,
-    onPauseToggle: () -> Unit,
     onStopRecording: () -> Unit
 ) {
     // 시간 포맷팅
@@ -70,21 +70,21 @@ fun RecordingControls(
                         modifier = Modifier
                             .size(12.dp)
                             .background(
-                                if (isPaused) ColorOrange else Red500,
+                                Red500,
                                 CircleShape
                             )
                     )
                     Spacer(Modifier.width(paddingMicro))
                     Text(
-                        text = if (isPaused) "일시정지" else "기록 중",
+                        text = "기록 중",
                         fontWeight = FontWeight.Bold
                     )
                 }
                 Text(formattedTime, fontSize = 24.sp, fontWeight = FontWeight.Bold)
                 Row(horizontalArrangement = Arrangement.spacedBy(paddingSmall)) {
-                    Text("0.0 km", fontSize = 14.sp, color = Color.Gray)
-                    Text("•", fontSize = 14.sp, color = Color.Gray)
-                    Text("0 걸음", fontSize = 14.sp, color = Color.Gray)
+//                    Text("0.0 km", fontSize = 14.sp, color = Color.Gray)
+//                    Text("•", fontSize = 14.sp, color = Color.Gray)
+//                    Text("0 걸음", fontSize = 14.sp, color = Color.Gray)
                 }
             }
         }
@@ -95,33 +95,26 @@ fun RecordingControls(
             horizontalArrangement = Arrangement.spacedBy(paddingLarge)
         ) {
             // Stop Button
-            FloatingActionButton(
+            LargeFloatingActionButton(
                 onClick = onStopRecording,
                 containerColor = Red500,
-                contentColor = Color.White,
-                shape = CircleShape,
-                modifier = Modifier.size(56.dp)
-            ) {
-                Icon(Icons.Filled.Stop, contentDescription = "기록 중지")
-            }
-
-            // Play/Pause Button
-            LargeFloatingActionButton(
-                onClick = onPauseToggle,
-                containerColor = if (isPaused) Purple600 else ColorOrange,
-                contentColor = Color.White,
+                contentColor = White,
                 shape = CircleShape,
                 modifier = Modifier.size(80.dp)
             ) {
-                if (isPaused) {
-                    Icon(Icons.Filled.PlayArrow, contentDescription = "재개", modifier = Modifier.size(40.dp))
-                } else {
-                    Icon(Icons.Filled.Pause, contentDescription = "일시정지", modifier = Modifier.size(40.dp))
-                }
+                Icon(Icons.Filled.Stop, contentDescription = "기록 중지", modifier = Modifier.size(40.dp))
             }
-
-            // React 코드에는 Stop/Play/Pause만 있지만, 좌우 균형을 위해 Spacer 추가
-            Spacer(Modifier.size(56.dp))
         }
+    }
+}
+
+@Preview
+@Composable
+fun RecordingControlsPreview() {
+    Android7HoursTheme {
+        RecordingControls(
+            recordingTime = 0,
+            onStopRecording = {},
+        )
     }
 }

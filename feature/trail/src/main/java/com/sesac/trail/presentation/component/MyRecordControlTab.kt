@@ -74,13 +74,7 @@ fun MyRecordsTabContent(
                     myPath = myPath,
                     isEditMode = isEditMode,
                     onPathClick = onPathClick,
-                    onFollowClick = { path ->
-                        viewModel.startFollowing(path) // ✅ ViewModel 함수 호출
-                        viewModel.updateIsSheetOpen(false) // 시트 닫기
-                        viewModel.updateIsFollowingPath(true) // 상태 업데이트
-                    },
-//                    onRegisterClick = onRegisterClick,
-//                    onModifyClick = onModifyClick,
+                    onFollowClick = onFollowClick,
                     onDeleteClick = onDeleteClick
                 )
             }
@@ -129,11 +123,6 @@ fun MyRecordItem(
             Spacer(Modifier.width(paddingSmall))
             if (isEditMode) {
                 Column(verticalArrangement = Arrangement.spacedBy(paddingMicro)) {
-//                    Button(
-//                        onClick = { onModifyClick(myPath) },
-//                        colors = ButtonDefaults.buttonColors(containerColor = Purple600),
-//                        contentPadding = PaddingValues(horizontal = paddingSmall, vertical = paddingMicro)
-//                    ) { Text("수정") }
                     IconButton(
                         onClick = { onDeleteClick(myPath.id) },
                     ) {
@@ -143,32 +132,14 @@ fun MyRecordItem(
                             tint = MaterialTheme.colorScheme.error
                         )
                     }
-
-//                    Button(
-//                        onClick = { onDeleteClick(myPath.id) },
-//                        colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
-//                        contentPadding = PaddingValues(horizontal = paddingSmall, vertical = paddingMicro)
-//                    ) { Text("삭제") }
                 }
             } else {
                 Column(verticalArrangement = Arrangement.spacedBy(paddingMicro)) {
                     Button(
-                        onClick = {
-                            viewModel.startFollowing(myPath)
-                            onFollowClick(myPath)
-                            },
+                        onClick = { onFollowClick(myPath) },
                         colors = ButtonDefaults.buttonColors(containerColor = Purple600),
                         contentPadding = PaddingValues(horizontal = paddingSmall, vertical = paddingMicro)
                     ) { Text("따라가기", color = White) }
-//                    Button(
-//                        onClick = {
-//                            viewModel.updateSelectedPath(myPath)
-//                            Log.d("Tag-MyRecordControlTab", "record = $myPath")
-//                            onRegisterClick()
-//                        },
-//                        colors = ButtonDefaults.buttonColors(containerColor = PrimaryGreenDark),
-//                        contentPadding = PaddingValues(horizontal = paddingSmall, vertical = paddingMicro)
-//                    ) { Text("등록하기", color = White) }
                 }
             }
         }

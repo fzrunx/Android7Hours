@@ -8,5 +8,6 @@ import kotlinx.coroutines.flow.Flow
 
 interface LocationRepository {
     fun getCurrentCoord(): Flow<LocationFlowResult<Coord>>
+    fun getRealtimePathLocation(): Flow<LocationFlowResult<Coord>>
     suspend fun postPetLocation(token: String, location: PetLocation): Flow<AuthResult<PetLocation>>
 }

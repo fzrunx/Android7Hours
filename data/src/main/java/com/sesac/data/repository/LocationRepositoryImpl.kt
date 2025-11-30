@@ -30,11 +30,13 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.flow
 import javax.inject.Inject
 import java.util.concurrent.TimeUnit
+import android.location.Location
+import com.sesac.common.utils.smoothLocation
 
 class LocationRepositoryImpl @Inject constructor(
     @ApplicationContext private val context: Context,
     private val petsApi: PetsApi,
-): LocationRepository {
+) : LocationRepository {
     private val fusedLocationClient: FusedLocationProviderClient =
         LocationServices.getFusedLocationProviderClient(context)
 
@@ -46,7 +48,6 @@ class LocationRepositoryImpl @Inject constructor(
             close()
             return@callbackFlow
         }
-
         val locationRequest = LocationRequest.Builder(
             Priority.PRIORITY_HIGH_ACCURACY,
             TimeUnit.SECONDS.toMillis(10)
@@ -54,7 +55,6 @@ class LocationRepositoryImpl @Inject constructor(
             setMinUpdateIntervalMillis(TimeUnit.SECONDS.toMillis(5))
             setMaxUpdateDelayMillis(TimeUnit.SECONDS.toMillis(15))
         }.build()
-
         val locationCallback = object : LocationCallback() {
             override fun onLocationResult(locationResult: LocationResult) {
                 /* 가장 최신 위치 정보만을 갸져옴 */
@@ -78,21 +78,71 @@ class LocationRepositoryImpl @Inject constructor(
             }
         } catch (e: SecurityException) {
             trySend(LocationFlowResult.Error(LocationException.PermissionDenied))
-            close()
         } catch (e: Exception) {
             trySend(LocationFlowResult.Error(LocationException.Unknown(e)))
-            close()
         }
-
-        /**
-         * Flow 가 취소(Coroutine Finish)될 때  위치 갱신 중지
-         */
         awaitClose {
             fusedLocationClient.removeLocationUpdates(locationCallback)
         }
     }
 
-    override suspend fun postPetLocation(token: String, location: PetLocation): Flow<AuthResult<PetLocation>> = flow {
+    @SuppressLint("MissingPermission")
+    override fun getRealtimePathLocation(): Flow<LocationFlowResult<Coord>> = callbackFlow {
+        if (!isLocationEnabled()) {
+            trySend(LocationFlowResult.Error(LocationException.LocationDisabled))
+            close()
+            return@callbackFlow
+        }
+
+        val locationRequest = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 2000L)
+            .setWaitForAccurateLocation(false)
+            .setMinUpdateIntervalMillis(500L)
+            .setMaxUpdateDelayMillis(1000L)
+            .build()
+
+        var lastSmoothedLocation: Location? = null
+        val locationCallback = object : LocationCallback() {
+            override fun onLocationResult(result: LocationResult) {
+                result.locations.forEach { loc ->
+                    if (loc.accuracy > 25f) {
+                        Log.d("LocationRepository", "Ignored: accuracy=${loc.accuracy}")
+                        return@forEach
+                    }
+                    val smoothLoc = smoothLocation(lastSmoothedLocation, loc)
+                    lastSmoothedLocation = smoothLoc
+                    trySend(LocationFlowResult.Success(smoothLoc.toCoord()))
+                }
+            }
+        }
+
+        try {
+            fusedLocationClient.requestLocationUpdates(
+                locationRequest,
+                locationCallback,
+                Looper.getMainLooper()
+            ).addOnFailureListener { exception ->
+                val error = when (exception) {
+                    is SecurityException -> LocationException.PermissionDenied
+                    is ApiException -> LocationException.Timeout
+                    else -> LocationException.Unknown(exception)
+                }
+                trySend(LocationFlowResult.Error(error))
+            }
+        } catch (e: SecurityException) {
+            trySend(LocationFlowResult.Error(LocationException.PermissionDenied))
+        } catch (e: Exception) {
+            trySend(LocationFlowResult.Error(LocationException.Unknown(e)))
+        }
+
+        awaitClose {
+            fusedLocationClient.removeLocationUpdates(locationCallback)
+        }
+    }
+
+    override suspend fun postPetLocation(
+        token: String,
+        location: PetLocation
+    ): Flow<AuthResult<PetLocation>> = flow {
         emit(AuthResult.Loading)
         val response = petsApi.postPetLocation(
             token = "Bearer $token",
@@ -110,6 +160,5 @@ class LocationRepositoryImpl @Inject constructor(
         return locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) ||
                 locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
     }
-
 
 }

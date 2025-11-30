@@ -42,6 +42,7 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import android.location.Location
 
 @HiltViewModel
 class TrailViewModel @Inject constructor(
@@ -51,9 +52,11 @@ class TrailViewModel @Inject constructor(
     private val bookmarkUseCase: BookmarkUseCase,
     private val commentUseCases: CommentUseCases,
     private val placeUseCases: PlaceUseCase
-): ViewModel() {
+) : ViewModel() {
     private val _invalidToken = Channel<UiEvent>()
     val invalidToken = _invalidToken.receiveAsFlow()
+
+    private var lastRecommendedPathFetchLocation: LatLng? = null
 
     // =================================================================
     // 📌 1. 지도 녹화 관련 데이터 (MainScreen에서 사용)
@@ -61,11 +64,57 @@ class TrailViewModel @Inject constructor(
 
     private val _currentLocation = MutableStateFlow<ResponseUiState<Coord?>>(ResponseUiState.Idle)
     val currentLocation: StateFlow<ResponseUiState<Coord?>> = _currentLocation.asStateFlow()
-    // ✅ 수정: LatLng 타입으로 변경 (UI 레이어에서 사용하는 타입)
+
     private val _tempPathCoords = MutableStateFlow<List<LatLng>>(emptyList())
     val tempPathCoords = _tempPathCoords.asStateFlow()
 
 
+
+    fun startLocationUpdates() {
+        Log.d("TrailViewModel", "startLocationUpdates() called")
+        viewModelScope.launch {
+            locationUseCase.getRealtimeLocationUseCase().collect { result ->
+                when (result) {
+                    is LocationFlowResult.Success -> {
+                        val newLocation = result.coord
+                        val newPoint = newLocation.toLatLng()
+
+                        // 경로 따라가기 모드일 때 위치 업데이트
+                        if (_isFollowingPath.value) {
+                            updateUserLocation(newPoint)
+                            updateUserLocationMarker(newPoint)
+                        }
+
+                        // 녹화 중일 때 좌표 추가
+                        if (_isRecording.value) {
+                            val lastPoint = _tempPathCoords.value.lastOrNull()
+                            if (lastPoint != null) {
+                                val diff = lastPoint.distanceTo(newPoint)
+                                if (diff < 5) { // 5m 미만 이동은 무시
+                                    return@collect
+                                }
+                            }
+                            addTempPoint(newPoint)
+                        }
+
+                        // 스마트 데이터 로딩
+                        val distance = lastRecommendedPathFetchLocation?.distanceTo(newLocation.toLatLng()) ?: Double.MAX_VALUE
+                        if (distance > 1000) { // 1km 이상 이동 시 갱신
+                            Log.d("TAG-TrailViewModel", "Fetching new recommended paths. Moved ${distance}m")
+                            getRecommendedPaths(newLocation, 5000f)
+                            loadPlaces(lat = newLocation.latitude, lng = newLocation.longitude, radius = 5)
+                            lastRecommendedPathFetchLocation = newLocation.toLatLng()
+                        }
+                    }
+                    is LocationFlowResult.Error -> {
+                        Log.e("TrailViewModel", "Location error: ${result.exception.message}")
+                    }
+                }
+            }
+        }
+    }
+    
+    // TODO: 이 함수는 일회성 위치를 가져오는 데 사용될 수 있으므로 다른 화면에서 사용되는지 확인 후 삭제가 필요합니다.
     fun getCurrentLocation() {
         viewModelScope.launch {
             _currentLocation.value = ResponseUiState.Idle
@@ -75,12 +124,15 @@ class TrailViewModel @Inject constructor(
                         _currentLocation.value = ResponseUiState.Success("현재 위치 갱신 성공", location.coord)
                         Log.d("TAG-TrailViewModel", "현재 위치 : ${location.coord}")
                     }
-                    is LocationFlowResult.Error -> _currentLocation.value = ResponseUiState.Error(location.exception.message ?: "unknown error")
+
+                    is LocationFlowResult.Error -> _currentLocation.value =
+                        ResponseUiState.Error(location.exception.message ?: "unknown error")
                 }
             }
         }
     }
-    fun addTempPoint(point: LatLng) {
+
+    private fun addTempPoint(point: LatLng) {
         _tempPathCoords.value = _tempPathCoords.value + point
     }
 
@@ -95,31 +147,20 @@ class TrailViewModel @Inject constructor(
     private val _isRecording = MutableStateFlow(false)
     val isRecording = _isRecording.asStateFlow()
 
-    private val _isPaused = MutableStateFlow(false)
-    val isPaused = _isPaused.asStateFlow()
 
     private val _recordingTime = MutableStateFlow(0L)
     val recordingTime = _recordingTime.asStateFlow()
 
     fun startRecording() {
         _isRecording.value = true
-        _isPaused.value = false
         _recordingTime.value = 0L
         clearTempPath()
         clearMemoMarkers()
     }
 
-    fun pauseRecording() {
-        _isPaused.value = true
-    }
-
-    fun resumeRecording() {
-        _isPaused.value = false
-    }
 
     fun stopRecording() {
         _isRecording.value = false
-        _isPaused.value = false
         _recordingTime.value = 0L
     }
 
@@ -130,12 +171,6 @@ class TrailViewModel @Inject constructor(
     // ✅ 추가: MainScreen에서 사용하는 편의 함수
     fun updateRecordingTime(changeRate: Long?) {
         _recordingTime.value += changeRate ?: -_recordingTime.value
-    }
-
-    fun updateIsPaused(newState: Boolean?) {
-        viewModelScope.launch {
-            _isPaused.value = newState ?: !_isPaused.value
-        }
     }
 
     fun updateIsRecording(newState: Boolean?) {
@@ -183,7 +218,8 @@ class TrailViewModel @Inject constructor(
     private val _myPaths = MutableStateFlow<ResponseUiState<List<Path>>>(ResponseUiState.Idle)
     val myPaths = _myPaths.asStateFlow()
 
-    private val _bookmarkedPaths = MutableStateFlow<ResponseUiState<List<BookmarkedPath>>>(ResponseUiState.Idle)
+    private val _bookmarkedPaths =
+        MutableStateFlow<ResponseUiState<List<BookmarkedPath>>>(ResponseUiState.Idle)
     val bookmarkedPaths = _bookmarkedPaths.asStateFlow()
 
 
@@ -200,20 +236,25 @@ class TrailViewModel @Inject constructor(
             _recommendedPaths.value = ResponseUiState.Loading
             pathUseCase.getAllRecommendedPathsUseCase(coord, radius)
                 .catch { e ->
-                    _recommendedPaths.value = ResponseUiState.Error(e.message ?: "알 수 없는 오류가 발생했습니다.")
+                    _recommendedPaths.value =
+                        ResponseUiState.Error(e.message ?: "알 수 없는 오류가 발생했습니다.")
                 }
                 .collectLatest { pathsResult ->
-                when (pathsResult) {
-                    is AuthResult.Success -> {
-                        Log.d("TAG-TarilVieModel", "현재 위치 : $coord")
-                        _recommendedPaths.value = ResponseUiState.Success("추천 경로를 불러왔습니다.", pathsResult.resultData)
+                    when (pathsResult) {
+                        is AuthResult.Success -> {
+                            Log.d("TAG-TarilVieModel", "현재 위치 : $coord")
+                            _recommendedPaths.value =
+                                ResponseUiState.Success("추천 경로를 불러왔습니다.", pathsResult.resultData)
+                        }
+
+                        is AuthResult.NetworkError -> {
+                            _recommendedPaths.value =
+                                ResponseUiState.Error(pathsResult.exception.message ?: "unknown")
+                        }
+
+                        else -> Unit
                     }
-                    is AuthResult.NetworkError -> {
-                        _recommendedPaths.value = ResponseUiState.Error(pathsResult.exception.message ?: "unknown")
-                    }
-                    else -> Unit
                 }
-            }
         }
     }
 
@@ -229,16 +270,20 @@ class TrailViewModel @Inject constructor(
                     _myPaths.value = ResponseUiState.Error(e.message ?: "알 수 없는 오류가 발생했습니다.")
                 }
                 .collectLatest { pathsResult ->
-                when (pathsResult) {
-                    is AuthResult.Success -> {
-                        _myPaths.value = ResponseUiState.Success("내 경로를 불러왔습니다.", pathsResult.resultData)
+                    when (pathsResult) {
+                        is AuthResult.Success -> {
+                            _myPaths.value =
+                                ResponseUiState.Success("내 경로를 불러왔습니다.", pathsResult.resultData)
+                        }
+
+                        is AuthResult.NetworkError -> {
+                            _myPaths.value =
+                                ResponseUiState.Error(pathsResult.exception.message ?: "unknown")
+                        }
+
+                        else -> Unit
                     }
-                    is AuthResult.NetworkError -> {
-                        _myPaths.value = ResponseUiState.Error(pathsResult.exception.message ?: "unknown")
-                    }
-                    else -> Unit
                 }
-            }
         }
     }
 
@@ -273,12 +318,17 @@ class TrailViewModel @Inject constructor(
                 .collectLatest { bookmarksResult ->
                     when (bookmarksResult) {
                         is AuthResult.Success -> {
-                            val pathList = bookmarksResult.resultData.mapNotNull { it.bookmarkedItem as? BookmarkedPath }
-                            _bookmarkedPaths.value = ResponseUiState.Success("북마크를 불러왔습니다.", pathList)
+                            val pathList =
+                                bookmarksResult.resultData.mapNotNull { it.bookmarkedItem as? BookmarkedPath }
+                            _bookmarkedPaths.value =
+                                ResponseUiState.Success("북마크를 불러왔습니다.", pathList)
                         }
+
                         is AuthResult.NetworkError -> {
-                            _bookmarkedPaths.value = ResponseUiState.Error(bookmarksResult.exception.message ?: "unknown")
+                            _bookmarkedPaths.value =
+                                ResponseUiState.Error(bookmarksResult.exception.message ?: "unknown")
                         }
+
                         else -> {
                             // Other AuthResult states are not handled here.
                         }
@@ -300,17 +350,14 @@ class TrailViewModel @Inject constructor(
                         getUserBookmarkedPaths(token)
                         _selectedPath.value = _selectedPath.value?.copy(bookmarksCount = bookmarkResponse.resultData.bookmarksCount)
                     } else if (bookmarkResponse is AuthResult.NetworkError) {
-                        Log.e("MypageViewModel", "Toggle bookmark failed: ${bookmarkResponse.exception}")
+                        Log.e(
+                            "MypageViewModel",
+                            "Toggle bookmark failed: ${bookmarkResponse.exception}"
+                        )
                     }
                 }
         }
     }
-
-
-    fun updatePausedState() {
-        viewModelScope.launch { _isPaused.value = !_isPaused.value }
-    }
-
 
     fun updateSelectedPathLikes(isLiked: Boolean): Boolean {
         viewModelScope.launch {
@@ -327,7 +374,7 @@ class TrailViewModel @Inject constructor(
     // =================================================================
     // 📌 6. 경로 CRUD (생성, 수정, 삭제)
     // =================================================================
-    
+
     private val _createState = MutableStateFlow<ResponseUiState<Path>>(ResponseUiState.Idle)
     val createState = _createState.asStateFlow()
     private val _updateState = MutableStateFlow<ResponseUiState<Path>>(ResponseUiState.Idle)
@@ -352,6 +399,7 @@ class TrailViewModel @Inject constructor(
             }
         }
     }
+
     fun updatePath() {
         viewModelScope.launch {
             val token = sessionUseCase.getAccessToken().first()
@@ -366,16 +414,20 @@ class TrailViewModel @Inject constructor(
                         _updateState.value = ResponseUiState.Error(e.message ?: "알 수 없는 오류")
                     }
                     .collectLatest { result ->
-                    when (result) {
-                        is AuthResult.Success -> {
-                            _updateState.value = ResponseUiState.Success("산책로가 수정되었습니다.", result.resultData)
+                        when (result) {
+                            is AuthResult.Success -> {
+                                _updateState.value =
+                                    ResponseUiState.Success("산책로가 수정되었습니다.", result.resultData)
+                            }
+
+                            is AuthResult.NetworkError -> {
+                                _updateState.value =
+                                    ResponseUiState.Error(result.exception.message ?: "네트워크 오류")
+                            }
+
+                            else -> {}
                         }
-                        is AuthResult.NetworkError -> {
-                            _updateState.value = ResponseUiState.Error(result.exception.message ?: "네트워크 오류")
-                        }
-                        else -> {}
                     }
-                }
             }
         }
     }
@@ -504,7 +556,10 @@ class TrailViewModel @Inject constructor(
     suspend fun saveDraft(draft: Path): Path? {
         return try {
             Log.d("TrailViewModel", "🔄 Calling trailUseCase.saveDraftUseCase...")
-            Log.d("TrailViewModel", "Draft details: id=${draft.id}, name=${draft.pathName}, coords=${draft.coord?.size}")
+            Log.d(
+                "TrailViewModel",
+                "Draft details: id=${draft.id}, name=${draft.pathName}, coords=${draft.coord?.size}"
+            )
 
             val savedPath = pathUseCase.saveDraftUseCase(draft).first()
 
@@ -565,10 +620,11 @@ class TrailViewModel @Inject constructor(
                     val result = pathUseCase.createPathUseCase(token, savedPathWithId)
                         .first { it is AuthResult.Success || it is AuthResult.NetworkError }
                     when (result) {
-                        is AuthResult.Loading -> { }
+                        is AuthResult.Loading -> {}
                         is AuthResult.Success -> {
                             Log.d("TrailViewModel", "Path uploaded successfully to server.")
-                            _createState.value = ResponseUiState.Success("경로가 서버로 업로드되었습니다.", savedPathWithId)
+                            _createState.value =
+                                ResponseUiState.Success("경로가 서버로 업로드되었습니다.", savedPathWithId)
                             // RoomDB 삭제
                             val deleted = deleteDraft(savedPathWithId)
                             if (deleted) {
@@ -577,7 +633,8 @@ class TrailViewModel @Inject constructor(
                                 Log.d("TAG-TrailViewModel", "result : ${result.resultData}")
                                 getMyPaths(token)
                                 loadDrafts()
-                                _createState.value = ResponseUiState.Success("경로가 서버로 업로드되었습니다.", savedPathWithId)
+                                _createState.value =
+                                    ResponseUiState.Success("경로가 서버로 업로드되었습니다.", savedPathWithId)
                             }
                         }
 
@@ -598,10 +655,14 @@ class TrailViewModel @Inject constructor(
 //                                    _invalidToken.send(UiEvent.ToastEvent("경로가 서버로 업로드되었습니다"))
                                     getMyPaths(token)
                                     loadDrafts()
-                                    _createState.value = ResponseUiState.Success("경로가 서버로 업로드되었습니다.", savedPathWithId)
+                                    _createState.value =
+                                        ResponseUiState.Success("경로가 서버로 업로드되었습니다.", savedPathWithId)
                                 } else {
 //                                    _invalidToken.send(UiEvent.ToastEvent("서버 업로드 완료, RoomDB 삭제 실패"))
-                                    _createState.value = ResponseUiState.Success("서버 업로드 완료, RoomDB 삭제 실패", savedPathWithId)
+                                    _createState.value = ResponseUiState.Success(
+                                        "서버 업로드 완료, RoomDB 삭제 실패",
+                                        savedPathWithId
+                                    )
                                 }
                             } else {
                                 // 진짜 네트워크 에러
@@ -610,11 +671,16 @@ class TrailViewModel @Inject constructor(
                                 _createState.value = ResponseUiState.Error("서버 업로드 실패 $errorMsg")
                             }
                         }
+
                         else -> {}
                     }
                 }
             } catch (e: Exception) {
-                Log.e("TrailViewModel", "An exception occurred in savePathAndUpload: ${e.message}", e)
+                Log.e(
+                    "TrailViewModel",
+                    "An exception occurred in savePathAndUpload: ${e.message}",
+                    e
+                )
                 _invalidToken.send(UiEvent.ToastEvent("오류 발생: ${e.message}"))
                 _createState.value = ResponseUiState.Error("오류 발생: ${e.message}")
             }
@@ -625,7 +691,8 @@ class TrailViewModel @Inject constructor(
     // 📌 9. 댓글 관리
     // =================================================================
 
-    private val _commentsState = MutableStateFlow<ResponseUiState<List<Comment>>>(ResponseUiState.Idle)
+    private val _commentsState =
+        MutableStateFlow<ResponseUiState<List<Comment>>>(ResponseUiState.Idle)
     val commentsState: StateFlow<ResponseUiState<List<Comment>>> = _commentsState
 
     fun getComments(pathId: Int) {
@@ -638,11 +705,15 @@ class TrailViewModel @Inject constructor(
                 .collectLatest { result ->
                     when (result) {
                         is AuthResult.Success -> {
-                            _commentsState.value = ResponseUiState.Success("댓글을 불러왔습니다.", result.resultData)
+                            _commentsState.value =
+                                ResponseUiState.Success("댓글을 불러왔습니다.", result.resultData)
                         }
+
                         is AuthResult.NetworkError -> {
-                            _commentsState.value = ResponseUiState.Error(result.exception.message ?: "네트워크 오류")
+                            _commentsState.value =
+                                ResponseUiState.Error(result.exception.message ?: "네트워크 오류")
                         }
+
                         else -> {}
                     }
                 }
@@ -666,12 +737,19 @@ class TrailViewModel @Inject constructor(
 
     fun updateComment(token: String, pathId: Int, commentId: Int, content: String) {
         viewModelScope.launch {
-            commentUseCases.updateCommentUseCase(token, pathId, commentId, content, CommentType.PATH)
+            commentUseCases.updateCommentUseCase(
+                token,
+                pathId,
+                commentId,
+                content,
+                CommentType.PATH
+            )
                 .collectLatest { result ->
                     when (result) {
                         is AuthResult.Success -> getComments(pathId) // Refresh comments list
                         is AuthResult.NetworkError -> _commentsState.value =
                             ResponseUiState.Error(result.exception.message ?: "네트워크 오류")
+
                         else -> {}
                     }
                 }
@@ -697,12 +775,15 @@ class TrailViewModel @Inject constructor(
     // 댓글 상태
     private val _comments = MutableStateFlow<List<Comment>>(emptyList())
     val comments: StateFlow<List<Comment>> get() = _comments.asStateFlow()
+
     // 선택된 게시물
     var selectedPostForComments by mutableStateOf<Post?>(null)
         private set
+
     // 댓글 시트 열림 여부
     var isCommentsOpen by mutableStateOf(false)
         private set
+
     // 새 댓글 내용
     var newCommentContent by mutableStateOf("")
 
@@ -737,7 +818,8 @@ class TrailViewModel @Inject constructor(
 
         // We don't need to update a list of posts here, as we only have one "post"
         // But we could update the comment count on the selectedPostForComments
-        selectedPostForComments = selectedPostForComments?.copy(commentsCount = selectedPostForComments!!.commentsCount + 1)
+        selectedPostForComments =
+            selectedPostForComments?.copy(commentsCount = selectedPostForComments!!.commentsCount + 1)
 
 
         newCommentContent = ""
@@ -771,7 +853,10 @@ class TrailViewModel @Inject constructor(
             return
         }
 
-        Log.d("TrailViewModel", "Starting to follow path: ${path.pathName}. Markers in path: ${path.markers?.size ?: 0}")
+        Log.d(
+            "TrailViewModel",
+            "Starting to follow path: ${path.pathName}. Markers in path: ${path.markers?.size ?: 0}"
+        )
 
         Log.d("TrailViewModel", "✅ 따라가기 시작: ${path.pathName}, 좌표 ${coords.size}개")
         _selectedPath.value = path
@@ -846,9 +931,10 @@ class TrailViewModel @Inject constructor(
     private val _userLocationMarker = MutableStateFlow<LatLng?>(null)
     val userLocationMarker = _userLocationMarker.asStateFlow()
 
-    fun updateUserLocationMarker(location: LatLng) {
+    private fun updateUserLocationMarker(location: LatLng) {
         _userLocationMarker.value = location
     }
+
     // 마커 제거 함수
     fun clearUserLocationMarker() {
         _userLocationMarker.value = null
@@ -858,7 +944,6 @@ class TrailViewModel @Inject constructor(
     // =================================================================
     private val _placesState = MutableStateFlow<ResponseUiState<List<Place>>>(ResponseUiState.Idle)
     val placesState: StateFlow<ResponseUiState<List<Place>>> = _placesState
-
 
 
     fun loadPlaces(
@@ -879,11 +964,15 @@ class TrailViewModel @Inject constructor(
             }.collectLatest { result ->
                 when (result) {
                     is AuthResult.Success -> {
-                        _placesState.value = ResponseUiState.Success("장소를 불러왔습니다.", result.resultData)
+                        _placesState.value =
+                            ResponseUiState.Success("장소를 불러왔습니다.", result.resultData)
                     }
+
                     is AuthResult.NetworkError -> {
-                        _placesState.value = ResponseUiState.Error(result.exception.message ?: "네트워크 오류")
+                        _placesState.value =
+                            ResponseUiState.Error(result.exception.message ?: "네트워크 오류")
                     }
+
                     else -> {
                         // You might want to handle other states like Loading, NoToken, etc.
                     }
@@ -891,7 +980,6 @@ class TrailViewModel @Inject constructor(
             }
         }
     }
-
 
 
     fun loadPlaceComments(placeId: Int) {
@@ -912,11 +1000,13 @@ class TrailViewModel @Inject constructor(
                                 result.resultData
                             )
                         }
+
                         is AuthResult.NetworkError -> {
                             _commentsState.value = ResponseUiState.Error(
                                 result.exception.message ?: "네트워크 오류"
                             )
                         }
+
                         else -> {}
                     }
                 }
@@ -941,11 +1031,13 @@ class TrailViewModel @Inject constructor(
                     is AuthResult.Success -> {
                         loadPlaceComments(placeId) // 댓글 목록 새로고침
                     }
+
                     is AuthResult.NetworkError -> {
                         _commentsState.value = ResponseUiState.Error(
                             result.exception.message ?: "네트워크 오류"
                         )
                     }
+
                     else -> {}
                 }
             }
@@ -971,11 +1063,13 @@ class TrailViewModel @Inject constructor(
                     is AuthResult.Success -> {
                         loadPlaceComments(placeId)
                     }
+
                     is AuthResult.NetworkError -> {
                         _commentsState.value = ResponseUiState.Error(
                             result.exception.message ?: "네트워크 오류"
                         )
                     }
+
                     else -> {}
                 }
             }
@@ -1000,11 +1094,13 @@ class TrailViewModel @Inject constructor(
                     is AuthResult.Success -> {
                         loadPlaceComments(placeId)
                     }
+
                     is AuthResult.NetworkError -> {
                         _commentsState.value = ResponseUiState.Error(
                             result.exception.message ?: "네트워크 오류"
                         )
                     }
+
                     else -> {}
                 }
             }

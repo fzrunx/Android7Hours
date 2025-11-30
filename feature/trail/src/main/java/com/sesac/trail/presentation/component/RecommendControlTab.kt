@@ -1,5 +1,6 @@
 package com.sesac.trail.presentation.component
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -22,21 +23,30 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.sesac.common.ui.theme.PrimaryGreenLight
 import com.sesac.common.ui.theme.Purple600
 import com.sesac.common.ui.theme.White
 import com.sesac.common.ui.theme.paddingMicro
 import com.sesac.common.ui.theme.paddingSmall
+import com.sesac.domain.model.Coord
 import com.sesac.domain.model.Path
+import com.sesac.domain.result.ResponseUiState
+import com.sesac.trail.presentation.TrailViewModel
 
 
 @Composable
