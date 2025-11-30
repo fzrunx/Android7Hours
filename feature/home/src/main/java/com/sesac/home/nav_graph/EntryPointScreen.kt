@@ -1,9 +1,7 @@
 package com.sesac.home.nav_graph
 
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Search
@@ -29,16 +27,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.navigation.NavHostController
 import androidx.navigation.NavGraph.Companion.findStartDestination
-import com.sesac.common.R as cR
+import androidx.navigation.NavHostController
 import com.sesac.common.component.LocalIsSearchOpen
-import com.sesac.common.ui.theme.paddingNone
+import com.sesac.common.R as cR
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EntryPointScreen(
+    isRecording: Boolean,
     startDestination: Any,
     navController: NavHostController,
     scaffoldActionCases: List<String>,
@@ -49,9 +47,14 @@ fun EntryPointScreen(
     navHost: @Composable (PaddingValues) -> Unit,
 ) {
     // 2. 현재 화면의 Route(경로) 감지 -> Community 탭일 때 TopBar 숨기기
-    val isGlobalTopBarVisible by remember(appTopBarData.title) {
+    val isHideTopBar by remember(appTopBarData.title) {
         derivedStateOf {
-            appTopBarData.title != "커뮤니티" && appTopBarData.title != "Community"
+            appTopBarData.title == "커뮤니티" || appTopBarData.title == "Community"
+        }
+    }
+    val isHideBottomBar by remember(isRecording) {
+        derivedStateOf {
+            isRecording
         }
     }
 
@@ -71,7 +74,7 @@ fun EntryPointScreen(
 
             // 5. TopBar 조건부 렌더링
             topBar = {
-                if (isGlobalTopBarVisible) {
+                if (!isHideTopBar && !isRecording) {
                     CenterAlignedTopAppBar(
                         title = {
                             Text(
@@ -141,51 +144,45 @@ fun EntryPointScreen(
                 }
             },
             bottomBar = {
-                NavigationBar {
-                    appBottomBarItem.forEach { bottomBarItem ->
-                        val isSelected = bottomBarItem.tabName == appTopBarData.title
+                if (!isHideBottomBar) {
+                    NavigationBar {
+                        appBottomBarItem.forEach { bottomBarItem ->
+                            val isSelected = bottomBarItem.tabName == appTopBarData.title
 
-                        NavigationBarItem(
-                            selected = isSelected,
-                            label = {
-                                Text(text = bottomBarItem.tabName, color = Color.Unspecified)
-                            },
-                            icon = {
-                                Icon(
-                                    imageVector = bottomBarItem.icon,
-                                    contentDescription = bottomBarItem.tabName,
-                                    tint = Color.Unspecified,
-                                )
-                            },
-                            // 🌟🌟🌟 [핵심 수정 부분] 🌟🌟🌟
-                            onClick = {
-                                val targetRoute = bottomBarItem.destination ?: startDestination
+                            NavigationBarItem(
+                                selected = isSelected,
+                                label = {
+                                    Text(text = bottomBarItem.tabName, color = Color.Unspecified)
+                                },
+                                icon = {
+                                    Icon(
+                                        imageVector = bottomBarItem.icon,
+                                        contentDescription = bottomBarItem.tabName,
+                                        tint = Color.Unspecified,
+                                    )
+                                },
+                                // 🌟🌟🌟 [핵심 수정 부분] 🌟🌟🌟
+                                onClick = {
+                                    val targetRoute = bottomBarItem.destination ?: startDestination
 
-                                navController.navigate(targetRoute) {
-                                    // 중요: popUpTo의 대상을 "이동하려는 곳"이 아니라 "그래프의 시작점(Home)"으로 설정해야 합니다.
-                                    // 이렇게 해야 탭 이동 시 백스택이 계속 쌓이지 않고 깔끔하게 교체됩니다.
-                                    popUpTo(navController.graph.findStartDestination().id) {
+                                    navController.navigate(targetRoute) {
+                                        // 중요: popUpTo의 대상을 "이동하려는 곳"이 아니라 "그래프의 시작점(Home)"으로 설정해야 합니다.
+                                        // 이렇게 해야 탭 이동 시 백스택이 계속 쌓이지 않고 깔끔하게 교체됩니다.
+                                        popUpTo(navController.graph.findStartDestination().id) {
 //                                        saveState = true
+                                        }
+                                        launchSingleTop = true
+                                        restoreState = true
                                     }
-                                    launchSingleTop = true
-                                    restoreState = true
                                 }
-                            }
-                        )
+                            )
+                        }
                     }
+
                 }
             },
         ) { paddingValues ->
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(
-                        top = if (isGlobalTopBarVisible) paddingValues.calculateTopPadding() else paddingNone,
-                        bottom = paddingValues.calculateBottomPadding()
-                    )
-            ) {
-                navHost(PaddingValues(paddingNone))
-            }
+            navHost(paddingValues)
         }
     }
 }

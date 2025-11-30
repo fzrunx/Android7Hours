@@ -23,7 +23,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
@@ -37,7 +36,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
-import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import com.sesac.android7hours.common.AppTopBarData
 import com.sesac.android7hours.common.topBarAsRouteName
 import com.sesac.android7hours.nav_graph.AppBottomBarItem
@@ -194,6 +192,7 @@ class MainActivity : ComponentActivity() {
             val appBottomBarItem = remember { AppBottomBarItem().fetch() }
             val isSearchOpen = remember { mutableStateOf(false) }
             val permissionStates = remember { mutableStateMapOf<String, Boolean>() }
+            val isRecording by trailViewModel.isRecording.collectAsStateWithLifecycle()
 
             // 로그인 상태 변경 시 권한 체크
             LaunchedEffect(uiState.isLoggedIn) {
@@ -212,6 +211,7 @@ class MainActivity : ComponentActivity() {
                     }
                 }
                 EntryPointScreen(
+                    isRecording = isRecording,
                     navController = navController,
                     startDestination = startDestination,
                     scaffoldActionCases = listOf(
