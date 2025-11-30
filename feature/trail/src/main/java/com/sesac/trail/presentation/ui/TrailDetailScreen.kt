@@ -178,7 +178,10 @@ fun TrailDetailScreen(
                 }
                 // Follow Button
                 Button(
-                    onClick = { onStartFollowing(selected) },
+                    onClick = {
+                        onStartFollowing(selected)
+                        navController.navigate(TrailNavigationRoute.TrailMainTab)
+                    },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(52.dp),

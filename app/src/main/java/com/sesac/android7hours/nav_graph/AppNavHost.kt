@@ -14,6 +14,7 @@ import com.sesac.common.component.CommonMapLifecycle
 import com.sesac.common.model.PathParceler
 import com.sesac.community.nav_graph.communityRoute
 import com.sesac.community.presentation.CommunityViewModel
+import com.sesac.domain.model.Path
 import com.sesac.domain.result.AuthUiState
 import com.sesac.home.nav_graph.homeRoute
 import com.sesac.monitor.nav_graph.monitorRoute
@@ -37,7 +38,7 @@ fun AppNavHost(
     startDestination: Any,
     uiState: AuthUiState,
     isSearchOpen: MutableState<Boolean>,
-    onStartFollowing: (Any) -> Unit,
+    onStartFollowing: (Path) -> Unit,
     commonMapLifecycle: CommonMapLifecycle,
 //    onSave: () -> Unit,
     permissionState: SnapshotStateMap<String, Boolean>,

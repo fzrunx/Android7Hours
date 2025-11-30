@@ -36,6 +36,7 @@
     <!-- ========= Trail ========== -->
     <string name="trail_create_page">산책로 생성</string>
     <string name="trail_detail_page">산책로 상세</string>
+    <string name="trail_info_detail_page">장소 상세</string>
 
     <string name="trail_button_start">Start</string>
     <string name="trail_button_pause">Pause</string>

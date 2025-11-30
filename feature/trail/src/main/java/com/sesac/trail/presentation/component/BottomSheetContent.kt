@@ -1,6 +1,5 @@
 package com.sesac.trail.presentation.component
 
-import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -28,7 +27,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.sesac.common.ui.theme.GrayTabText
@@ -38,6 +36,7 @@ import com.sesac.common.ui.theme.Purple600
 import com.sesac.common.ui.theme.SheetHandle
 import com.sesac.common.ui.theme.SheetHandleHeight
 import com.sesac.common.ui.theme.SheetHandleWidth
+import com.sesac.common.ui.theme.White
 import com.sesac.common.ui.theme.paddingLarge
 import com.sesac.common.ui.theme.paddingMicro
 import com.sesac.common.ui.theme.paddingSmall
@@ -100,7 +99,7 @@ fun BottomSheetContent(
             // Tabs
             TabRow(
                 selectedTabIndex = activeTab.ordinal,
-                containerColor = Color.White,
+                containerColor = White,
                 contentColor = Purple600,
                 indicator = { tabPositions ->
                     TabRowDefaults.Indicator(
@@ -134,11 +133,12 @@ fun BottomSheetContent(
                     .padding(bottom = paddingLarge) // 하단 여백
             ) {
                 when (activeTab) {
-                    WalkPathTab.RECOMMENDED -> RecommendedTabContent(
-                        paths = recommendedPaths.filterNotNull(),
-                        onPathClick = onPathClick,
-                        onFollowClick = onFollowClick,
-                    )
+                    WalkPathTab.RECOMMENDED ->
+                        RecommendedTabContent(
+                            paths = recommendedPaths.filterNotNull(),
+                            onPathClick = onPathClick,
+                            onFollowClick = onFollowClick,
+                        )
                     WalkPathTab.MY_RECORDS -> {
                         MyRecordsTabContent(
                             viewModel = viewModel,

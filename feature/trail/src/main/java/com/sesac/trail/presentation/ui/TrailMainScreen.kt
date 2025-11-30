@@ -72,7 +72,8 @@ fun TrailMainScreen(
     navController: NavController,
     uiState: AuthUiState,
     commonMapLifecycle : CommonMapLifecycle,
-    onMapReady: ((NaverMap) -> Unit)? = null
+    onStartFollowing: (Path) -> Unit,
+    onMapReady: ((NaverMap) -> Unit)? = null,
 ) {
 
     val context = LocalContext.current
@@ -401,46 +402,49 @@ fun TrailMainScreen(
                 Log.d("TrailMainScreen", "🧹 폴리라인 + 마커 제거")
             }
         }
-        // 🔹 사용자 현재 위치 마커
-        val userLocation by viewModel.userLocationMarker.collectAsStateWithLifecycle()
-        var userMarker by remember { mutableStateOf<Marker?>(null) }
-
-        LaunchedEffect(userLocation, currentNaverMap, isFollowingPath) {
-            Log.d(
-                "TrailMainScreen",
-                "🔹 마커 LaunchedEffect: location=$userLocation, map=$currentNaverMap, isFollowing=$isFollowingPath"
-            )
-            val map = currentNaverMap ?: return@LaunchedEffect
-            val location = userLocation
-
-            if (isFollowingPath && location != null) {
-                try {
-                    if (userMarker == null) {
-                        Log.d("TrailMainScreen", "🎯 마커 생성 시작...")
-                        userMarker = Marker().apply {
-                            icon = OverlayImage.fromResource(android.R.drawable.ic_menu_mylocation)
-                            width = 60
-                            height = 60
-                            this.map = map
-                        }
-                        Log.d("TrailMainScreen", "✅ 마커 생성 완료")
-                    }
-                    userMarker?.position = location
+                // 🔹 사용자 현재 위치 마커
+                val userLocation by viewModel.userLocationMarker.collectAsStateWithLifecycle()
+                var userMarker by remember { mutableStateOf<Marker?>(null) }
+        
+                LaunchedEffect(userLocation, currentNaverMap, isFollowingPath) {
                     Log.d(
                         "TrailMainScreen",
-                        "📍 마커 위치 업데이트: (${location.latitude}, ${location.longitude})"
+                        "🔹 마커 LaunchedEffect: location=$userLocation, map=$currentNaverMap, isFollowing=$isFollowingPath"
                     )
-                } catch (e: Exception) {
-                    Log.e("TrailMainScreen", "❌ 마커 생성/업데이트 실패: ${e.message}", e)
+                    val map = currentNaverMap ?: return@LaunchedEffect
+                    val location = userLocation
+        
+                    if (isFollowingPath && location != null) {
+                        try {
+                            if (userMarker == null) {
+                                Log.d("TrailMainScreen", "🎯 마커 생성 시작...")
+                                userMarker = Marker().apply {
+                                    this.position = location // Set position FIRST
+                                    this.icon = OverlayImage.fromResource(android.R.drawable.ic_menu_mylocation)
+                                    this.width = 60
+                                    this.height = 60
+                                    this.map = map // Set map LAST
+                                }
+                                Log.d("TrailMainScreen", "✅ 마커 생성 완료")
+                            } else {
+                                // If marker already exists, just update its position
+                                userMarker?.position = location
+                            }
+                            Log.d(
+                                "TrailMainScreen",
+                                "📍 마커 위치 업데이트: (${location.latitude}, ${location.longitude})"
+                            )
+                        } catch (e: Exception) {
+                            Log.e("TrailMainScreen", "❌ 마커 생성/업데이트 실패: ${e.message}", e)
+                        }
+                    } else {
+                        if (userMarker != null) {
+                            Log.d("TrailMainScreen", "🗑️ 마커 제거")
+                        }
+                        userMarker?.map = null
+                        userMarker = null
+                    }
                 }
-            } else {
-                if (userMarker != null) {
-                    Log.d("TrailMainScreen", "🗑️ 마커 제거")
-                }
-                userMarker?.map = null
-                userMarker = null
-            }
-        }
 
         // 🔹 따라가기 안내 UI
         AnimatedVisibility(
@@ -529,12 +533,7 @@ fun TrailMainScreen(
                             viewModel.updateSelectedPath(it)
                             navController.navigate(NestedNavigationRoute.TrailDetail(it.toPathParceler()))
                         },
-                        onFollowClick = { path ->
-                            viewModel.startFollowing(path) // ✅ ViewModel 함수 호출
-                            viewModel.updateIsSheetOpen(false) // 시트 닫기
-                            viewModel.updateIsFollowingPath(true) // 상태 업데이트
-                            Log.d("Tag-TrailMainScree", "Following path: ${path.pathName}")
-                        },
+                        onFollowClick = onStartFollowing,
                         onEditModeToggle = { viewModel.updateIsEditMode() },
                         onDeleteClick = { viewModel.deletePath(uiState.token, it) }
                     )

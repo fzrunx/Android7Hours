@@ -225,6 +225,7 @@ class MainActivity : ComponentActivity() {
                         stringResource(cR.string.trail_detail_page),
                         stringResource(cR.string.mypage_myinfo),
                         stringResource(cR.string.mypage_register_pet),
+                        stringResource(cR.string.trail_info_detail_page),
                     ),
                     appTopBarData = finalTopBarData,
                     appBottomBarItem = appBottomBarItem,
@@ -246,7 +247,12 @@ class MainActivity : ComponentActivity() {
                             startDestination = startDestination,
                             uiState = uiState,
                             isSearchOpen = isSearchOpen,
-                            onStartFollowing = { Any -> Unit },
+                            onStartFollowing = { path ->
+                                trailViewModel.startFollowing(path) // ✅ ViewModel 함수 호출
+                                trailViewModel.updateIsSheetOpen(false) // 시트 닫기
+                                trailViewModel.updateIsFollowingPath(true) // 상태 업데이트
+                                Log.d("Tag-MainActivity", "Following path: ${path.pathName}")
+                            },
                             commonMapLifecycle = commonMapLifecycle,
                             permissionState = permissionStates,
                         )
