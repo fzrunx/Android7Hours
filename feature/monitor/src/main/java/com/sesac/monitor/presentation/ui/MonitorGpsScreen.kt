@@ -1,7 +1,5 @@
 package com.sesac.monitor.presentation.ui
 
-import android.content.Intent
-import android.os.Build
 import android.util.Log
 import android.view.ViewGroup
 import androidx.activity.compose.LocalActivity
@@ -18,24 +16,20 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.core.content.ContextCompat.startForegroundService
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.currentStateAsState
 import com.naver.maps.map.CameraUpdate
-import com.naver.maps.map.LocationTrackingMode
 import com.naver.maps.map.NaverMap
 import com.naver.maps.map.overlay.Marker
-import com.naver.maps.map.util.FusedLocationSource
 import com.sesac.common.component.CommonMapLifecycle
 import com.sesac.common.component.CommonMapView
 import com.sesac.common.utils.EffectPauseStop
 import com.sesac.monitor.presentation.MonitorViewModel
 import com.naver.maps.geometry.LatLng
 import com.sesac.domain.result.ResponseUiState // NEW IMPORT
-import kotlinx.coroutines.launch
 
 
 @Composable
@@ -56,7 +50,7 @@ fun MonitorGpsScreen (
     // NEW: Start monitoring the pet
 
     LaunchedEffect(true) {
-        viewModel.startMonitoringPet(petId)
+        viewModel.startMonitoringPetLocation(petId)
     }
 
     // NEW: Update map marker when pet location changes

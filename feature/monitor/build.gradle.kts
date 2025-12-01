@@ -64,6 +64,11 @@ dependencies {
     implementation(libs.hilt.android)
     implementation(libs.androidx.hilt.navigation.compose)
     ksp(libs.hilt.compiler)
+    // --- Permissions ---
+    implementation(libs.accompanist.permissions)
+
+    implementation(libs.stream.webrtc.android)
+    implementation(libs.play.services.location)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

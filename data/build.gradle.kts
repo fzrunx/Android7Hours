@@ -84,6 +84,8 @@ dependencies {
     // --- Map SDK ---
     implementation(libs.map.sdk)
 
+    implementation(libs.stream.webrtc.android)
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

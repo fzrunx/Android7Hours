@@ -66,6 +66,8 @@ dependencies {
     implementation(libs.hilt.android)
     implementation(libs.androidx.navigation.fragment.ktx)
     ksp(libs.hilt.compiler)
+    // WebRTC
+    implementation(libs.stream.webrtc.android)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
