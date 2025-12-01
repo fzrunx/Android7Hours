@@ -28,11 +28,11 @@ fun parseDate(
     }
 
     val formats = arrayOf(
+        "yyyy-MM-dd HH:mm:ss",          // Common format (added for robustness)
         "yyyy-MM-dd'T'HH:mm:ss.SSSXXX", // ISO 8601 with timezone offset and 3 fractional seconds
         "yyyy-MM-dd'T'HH:mm:ssXXX",     // ISO 8601 with timezone offset (no fractional seconds)
         "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", // ISO 8601 with Z and 3 fractional seconds
         "yyyy-MM-dd'T'HH:mm:ss'Z'",     // ISO 8601 with Z (no fractional seconds)
-        "yyyy-MM-dd HH:mm:ss",          // Common format (added for robustness)
         "yyyy-MM-dd"                    // Date only format (added for robustness)
     )
     for (format in formats) {

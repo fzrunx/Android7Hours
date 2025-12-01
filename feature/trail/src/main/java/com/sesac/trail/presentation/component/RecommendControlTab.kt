@@ -1,6 +1,5 @@
 package com.sesac.trail.presentation.component
 
-import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -17,36 +16,32 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
+import com.sesac.common.ui.theme.Gray200
+import com.sesac.common.ui.theme.Gray500
+import com.sesac.common.ui.theme.LightBlue
 import com.sesac.common.ui.theme.PrimaryGreenLight
 import com.sesac.common.ui.theme.Purple600
+import com.sesac.common.ui.theme.Red500
 import com.sesac.common.ui.theme.White
 import com.sesac.common.ui.theme.paddingMicro
 import com.sesac.common.ui.theme.paddingSmall
-import com.sesac.domain.model.Coord
 import com.sesac.domain.model.Path
-import com.sesac.domain.result.ResponseUiState
-import com.sesac.trail.presentation.TrailViewModel
 
 
 @Composable
@@ -92,14 +87,19 @@ fun RecommendedPathItem(
             Spacer(Modifier.width(paddingSmall))
             Column(modifier = Modifier.weight(1f)) {
                 Text(path.pathName, fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                Text("@${path.uploader}", fontSize = 12.sp, color = Color.Gray)
-                Text("${path.distance} · ${path.duration} 코스", fontSize = 14.sp)
+                Text("@${path.uploader}", fontSize = 12.sp, color = Gray500)
+//                Text("${path.distance} · ${path.duration} 코스", fontSize = 14.sp)
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Filled.Favorite, contentDescription = "Likes", tint = Purple600, modifier = Modifier.size(16.dp))
-                    Text(" ${path.likes}", fontSize = 12.sp, color = Purple600)
+                    Icon(Icons.Filled.Favorite, contentDescription = "BookmarkCount", tint = Purple600, modifier = Modifier.size(16.dp))
+                    Text(" ${path.bookmarksCount}", fontSize = 12.sp, color = Purple600)
                     Spacer(Modifier.width(paddingSmall))
-                    Icon(Icons.Filled.LocationOn, contentDescription = "Distance", tint = Color.Gray, modifier = Modifier.size(16.dp))
-                    Text(" ${path.distanceFromMe} 거리", fontSize = 12.sp, color = Color.Gray)
+                    Icon(Icons.Filled.LocationOn, contentDescription = "Distance", tint = Red500, modifier = Modifier.size(16.dp))
+                    Text(" ${path.distance}m", fontSize = 12.sp, color = Red500)
+                    Spacer(Modifier.width(paddingSmall))
+                    Text(" ${path.duration}분", fontSize = 12.sp, color = Gray500)
+                    Spacer(Modifier.width(paddingSmall))
+                    Icon(Icons.AutoMirrored.Filled.TrendingUp, contentDescription = "DistanceFromMe", tint = LightBlue, modifier = Modifier.size(16.dp))
+                    Text(" ${path.distanceFromMe}m", fontSize = 12.sp, color = LightBlue)
                 }
             }
             Button(
