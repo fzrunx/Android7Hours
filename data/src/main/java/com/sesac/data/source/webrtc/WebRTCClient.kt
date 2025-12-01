@@ -1,16 +1,9 @@
-package com.sesac.data.source.remote
+package com.sesac.data.source.webrtc
 
 import android.content.Context
 import android.util.Log
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.launch
 import org.webrtc.AudioTrack
 import org.webrtc.Camera2Enumerator
-import org.webrtc.DefaultVideoDecoderFactory
-import org.webrtc.DefaultVideoEncoderFactory
 import org.webrtc.EglBase
 import org.webrtc.IceCandidate
 import org.webrtc.MediaConstraints
@@ -26,11 +19,6 @@ class WebRTCClient @Inject constructor(
     private val eglBase: EglBase,
     private val peerConnectionFactory: PeerConnectionFactory // Hilt로 주입받도록 변경
 ) {
-    private val clientScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
-
-    // PeerConnectionFactory는 이제 주입받으므로, lazy 초기화는 필요 없음
-    // private val peerConnectionFactory: PeerConnectionFactory by lazy { ... }
-
     private val iceServer = listOf(
         PeerConnection.IceServer.builder("stun:stun.l.google.com:19302").createIceServer()
     )
@@ -40,29 +28,29 @@ class WebRTCClient @Inject constructor(
 
     private var localAudioTrack: AudioTrack? = null
     private var localVideoTrack: VideoTrack? = null
-    val remoteVideoTrackFlow = MutableSharedFlow<VideoTrack>() // private에서 public으로 변경
 
-    fun initializePeerConnection(onIceCandidate: (IceCandidate) -> Unit, onRemoteTrack: (VideoTrack) -> Unit) {
-        // PeerConnectionFactory는 이미 초기화된 상태이므로 여기서 다시 빌더 호출할 필요 없음
+    fun initializePeerConnection(
+        onIceCandidate: (IceCandidate) -> Unit,
+        onRemoteTrack: (VideoTrack) -> Unit,
+        onLocalTrack: (VideoTrack) -> Unit // 로컬 트랙 콜백 추가
+    ) {
         peerConnection = peerConnectionFactory.createPeerConnection(iceServer, object : PeerConnection.Observer {
             override fun onIceCandidate(candidate: IceCandidate?) {
                 candidate?.let {
                     Log.d("WebRTCClient", "onIceCandidate: $it")
                     onIceCandidate(it)
                 }
-
             }
+
             override fun onTrack(transceiver: org.webrtc.RtpTransceiver?) {
                 super.onTrack(transceiver)
                 val track = transceiver?.receiver?.track()
                 if (track is VideoTrack) {
                     Log.d("WebRTCClient", "Remote video track received")
-                    clientScope.launch {
-//                        _remoteVideoTrack.emit(track) // MutableSharedFlow를 통해 방출
-                        remoteVideoTrackFlow.emit(track)
-                    }
+                    onRemoteTrack(track)
                 }
             }
+
             override fun onSignalingChange(p0: PeerConnection.SignalingState?) {}
             override fun onIceConnectionChange(p0: PeerConnection.IceConnectionState?) {}
             override fun onIceConnectionReceivingChange(p0: Boolean) {}
@@ -74,10 +62,10 @@ class WebRTCClient @Inject constructor(
             override fun onRenegotiationNeeded() {}
             override fun onAddTrack(p0: org.webrtc.RtpReceiver?, p1: Array<out org.webrtc.MediaStream>?) {}
         })
-        startLocalStream()
+        startLocalStream(onLocalTrack) // 콜백 전달
     }
 
-    private fun startLocalStream() {
+    private fun startLocalStream(onLocalTrack: (VideoTrack) -> Unit) {
         val audioSource = peerConnectionFactory.createAudioSource(MediaConstraints())
         localAudioTrack = peerConnectionFactory.createAudioTrack("local_audio_track", audioSource)
 
@@ -93,7 +81,10 @@ class WebRTCClient @Inject constructor(
 
         localVideoTrack = peerConnectionFactory.createVideoTrack("local_video_track", videoSource)
         localAudioTrack?.let { peerConnection?.addTrack(it) }
-        localVideoTrack?.let { peerConnection?.addTrack(it) }
+        localVideoTrack?.let {
+            peerConnection?.addTrack(it)
+            onLocalTrack(it) // 로컬 비디오 트랙 생성 후 콜백 호출
+        }
     }
 
     suspend fun createOffer(): SessionDescription {

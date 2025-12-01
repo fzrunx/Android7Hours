@@ -1,8 +1,9 @@
-package com.sesac.data.source.remote
+package com.sesac.data.source.webrtc
 
 import android.util.Log
 import com.sesac.common.model.webrtc.SignalingEvent
 import com.sesac.data.BuildConfig
+import com.sesac.domain.repository.SessionRepository
 import com.squareup.moshi.Moshi
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -11,6 +12,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -24,14 +26,22 @@ import javax.inject.Inject
 
 class SignalingClient @Inject constructor(
     private val httpClient: OkHttpClient,
-    private val moshi: Moshi
+    private val moshi: Moshi,
+    private val sessionRepository: SessionRepository // SessionRepository 주입
 ) {
     private val signalingScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     private var webSocket: WebSocket? = null
 
     companion object {
         private const val TAG = "SignalingClient"
-        private val SERVER_URL = "ws://${BuildConfig.SERVER_URL}/ws/call/"
+        // URL을 안전하게 생성하기 위해 로직 변경
+        private val SERVER_URL: String by lazy {
+            val cleanUrl = BuildConfig.SERVER_URL
+                .removePrefix("http://")
+                .removePrefix("https://")
+                .removeSuffix("/")
+            "ws://$cleanUrl/ws/call/"
+        }
     }
 
     fun observeEvents(): Flow<SignalingEvent> = callbackFlow {
@@ -89,9 +99,20 @@ class SignalingClient @Inject constructor(
             }
         }
 
-        Log.d(TAG, "Initializing WebSocket connection to $SERVER_URL")
-        val request = Request.Builder().url(SERVER_URL).build()
-        webSocket = httpClient.newWebSocket(request, webSocketListener)
+        signalingScope.launch {
+            val token = sessionRepository.getAccessToken().first()
+            if (token.isNullOrEmpty()) {
+                close(IllegalStateException("Access token is not available."))
+                return@launch
+            }
+
+            Log.d(TAG, "Initializing WebSocket connection to $SERVER_URL")
+            val request = Request.Builder()
+                .url(SERVER_URL)
+                .addHeader("Authorization", "Bearer $token") // 인증 헤더 추가
+                .build()
+            webSocket = httpClient.newWebSocket(request, webSocketListener)
+        }
 
         awaitClose {
             Log.d(TAG, "Closing WebSocket connection.")
@@ -100,38 +121,38 @@ class SignalingClient @Inject constructor(
         }
     }
 
-    fun sendOffer(sdp: SessionDescription, targetUserId: String) {
-        val message = createBaseMessage(targetUserId).apply {
+    fun sendOffer(sdp: SessionDescription, targetUser: String) {
+        val message = createBaseMessage(targetUser).apply {
             put("type", "offer")
             put("sdp", sdp.description)
         }
         sendMessage(message)
     }
 
-    fun sendAnswer(sdp: SessionDescription, targetUserId: String) {
-        val message = createBaseMessage(targetUserId).apply {
+    fun sendAnswer(sdp: SessionDescription, targetUser: String) {
+        val message = createBaseMessage(targetUser).apply {
             put("type", "answer")
             put("sdp", sdp.description)
         }
         sendMessage(message)
     }
 
-    fun sendIceCandidate(candidate: IceCandidate, targetUserId: String) {
+    fun sendIceCandidate(candidate: IceCandidate, targetUser: String) {
         val candidateJson = JSONObject().apply {
             put("candidate", candidate.sdp)
             put("sdpMid", candidate.sdpMid)
             put("sdpMLineIndex", candidate.sdpMLineIndex)
         }
-        val message = createBaseMessage(targetUserId).apply {
+        val message = createBaseMessage(targetUser).apply {
             put("type", "ice_candidate")
             put("candidate", candidateJson)
         }
         sendMessage(message)
     }
 
-    private fun createBaseMessage(targetUserId: String): JSONObject {
+    private fun createBaseMessage(targetUser: String): JSONObject {
         return JSONObject().apply {
-            put("target_user_id", targetUserId)
+            put("user_id", targetUser)
         }
     }
 

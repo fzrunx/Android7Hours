@@ -13,6 +13,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
@@ -22,11 +23,17 @@ import com.sesac.common.ui.theme.paddingMedium
 import com.sesac.domain.model.Pet
 import com.sesac.common.ui_state.MonitorUiState
 import com.sesac.monitor.presentation.MonitorViewModel
+import org.webrtc.EglBase
+import org.webrtc.SurfaceViewRenderer
+import org.webrtc.VideoTrack
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun MonitorCamScreen(viewModel: MonitorViewModel = hiltViewModel()) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val remoteVideoTrack by viewModel.remoteVideoTrack.collectAsStateWithLifecycle()
+    val localVideoTrack by viewModel.localVideoTrack.collectAsStateWithLifecycle()
+    val eglBase = viewModel.getEglBase()
 
     // WebRTC에 필요한 카메라 및 오디오 권한 요청
     val permissionsState = rememberMultiplePermissionsState(
@@ -66,17 +73,31 @@ fun MonitorCamScreen(viewModel: MonitorViewModel = hiltViewModel()) {
                 CallingContent(petName = state.pet.name, onCancel = { viewModel.endCall() })
             }
             is MonitorUiState.Viewing -> {
-                // TODO: WebRTC 영상 뷰 구현
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text(text = "${state.pet.name} 모니터링 중...")
-                    Button(onClick = { viewModel.endCall() }, modifier = Modifier.align(Alignment.BottomCenter)) {
+                Box(modifier = Modifier.fillMaxSize()) {
+                    VideoView(
+                        videoTrack = remoteVideoTrack,
+                        eglBase = eglBase,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                    Button(
+                        onClick = { viewModel.endCall() },
+                        modifier = Modifier
+                            .align(Alignment.BottomCenter)
+                            .padding(paddingLarge)
+                    ) {
                         Text("종료")
                     }
                 }
             }
             is MonitorUiState.Streaming -> {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text(text = "스트리밍 중입니다...")
+                    // 로컬 카메라 미리보기 화면
+                    VideoView(
+                        videoTrack = localVideoTrack,
+                        eglBase = eglBase,
+                        modifier = Modifier.fillMaxSize(),
+                        isMirror = true // 로컬 카메라는 좌우 반전
+                    )
                 }
             }
             is MonitorUiState.Error -> {
@@ -89,9 +110,35 @@ fun MonitorCamScreen(viewModel: MonitorViewModel = hiltViewModel()) {
 }
 
 @Composable
+fun VideoView(
+    videoTrack: VideoTrack?,
+    eglBase: EglBase?,
+    modifier: Modifier = Modifier,
+    isMirror: Boolean = false // 좌우 반전 여부 파라미터 추가
+) {
+    val eglContext = eglBase?.eglBaseContext
+    AndroidView(
+        factory = { context ->
+            SurfaceViewRenderer(context).apply {
+                init(eglContext, null)
+                setEnableHardwareScaler(true)
+                setMirror(isMirror) // 파라미터로 설정
+            }
+        },
+        update = { surfaceViewRenderer ->
+            videoTrack?.addSink(surfaceViewRenderer)
+        },
+        modifier = modifier
+    )
+}
+
+
+@Composable
 fun PetSelectionContent(pets: List<Pet>, onPetSelect: (Pet) -> Unit) {
     Column(
-        modifier = Modifier.fillMaxSize().padding(paddingLarge),
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(paddingLarge),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text("모니터링할 펫을 선택하세요", style = MaterialTheme.typography.titleLarge)
@@ -102,7 +149,9 @@ fun PetSelectionContent(pets: List<Pet>, onPetSelect: (Pet) -> Unit) {
             LazyColumn(verticalArrangement = Arrangement.spacedBy(paddingMedium)) {
                 items(pets) { pet ->
                     Card(
-                        modifier = Modifier.fillMaxWidth().clickable { onPetSelect(pet) },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { onPetSelect(pet) },
                         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
                     ) {
                         Row(
@@ -153,4 +202,3 @@ fun CallingContent(petName: String, onCancel: () -> Unit) {
         }
     }
 }
-

@@ -3,8 +3,8 @@ package com.sesac.common.usecase.webrtc
 import com.sesac.common.repository.WebRTCRepository
 import javax.inject.Inject
 
-class InitializeWebRTCUseCase @Inject constructor(
+class ObserveLocalVideoTrackUseCase @Inject constructor(
     private val webRTCRepository: WebRTCRepository
 ) {
-    operator fun invoke(myUserName: String, targetUser: String) = webRTCRepository.initialize(myUserName, targetUser)
+    operator fun invoke() = webRTCRepository.observeLocalVideoTrack()
 }

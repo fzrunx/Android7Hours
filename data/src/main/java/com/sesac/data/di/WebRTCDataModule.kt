@@ -1,8 +1,10 @@
 package com.sesac.data.di
 
 import android.content.Context
-import com.sesac.data.source.remote.SignalingClient
-import com.sesac.data.source.remote.WebRTCClient
+import com.sesac.data.repository.SessionRepositoryImpl
+import com.sesac.data.source.webrtc.SignalingClient
+import com.sesac.data.source.webrtc.WebRTCClient
+import com.sesac.domain.repository.SessionRepository
 import com.squareup.moshi.Moshi
 import dagger.Module
 import dagger.Provides
@@ -48,9 +50,10 @@ object WebRTCDataModule {
     @Singleton
     fun provideSignalingClient(
         okHttpClient: OkHttpClient,
-        moshi: Moshi
+        moshi: Moshi,
+        sessionRepository: SessionRepository // SessionRepository 주입 추가
     ): SignalingClient {
-        return SignalingClient(okHttpClient, moshi)
+        return SignalingClient(okHttpClient, moshi, sessionRepository) // 생성자에 전달
     }
 
     @Provides

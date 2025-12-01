@@ -7,5 +7,5 @@ import javax.inject.Inject
 class SendIceCandidateUseCase @Inject constructor(
     private val webRTCRepository: WebRTCRepository
 ) {
-    fun invoke(iceCandidate: IceCandidate) = webRTCRepository.sendIceCandidate(iceCandidate)
+    operator fun invoke(iceCandidate: IceCandidate) = webRTCRepository.sendIceCandidate(iceCandidate)
 }

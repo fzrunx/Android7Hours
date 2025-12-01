@@ -1,14 +1,15 @@
-package com.sesac.data.source.remote
+package com.sesac.data.source.webrtc
 
 import org.webrtc.SdpObserver
 import org.webrtc.SessionDescription
+import kotlin.coroutines.Continuation
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
 
 internal class SimpleSdpObserver : SdpObserver {
 
-    private var continuation: kotlin.coroutines.Continuation<SessionDescription>? = null
+    private var continuation: Continuation<SessionDescription>? = null
 
     suspend fun await(): SessionDescription = suspendCoroutine {
         continuation = it

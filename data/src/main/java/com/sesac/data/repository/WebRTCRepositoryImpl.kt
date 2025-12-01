@@ -1,8 +1,8 @@
 package com.sesac.data.repository
 
 import android.util.Log
-import com.sesac.data.source.remote.SignalingClient
-import com.sesac.data.source.remote.WebRTCClient
+import com.sesac.data.source.webrtc.SignalingClient
+import com.sesac.data.source.webrtc.WebRTCClient
 import com.sesac.common.model.webrtc.SignalingEvent
 import com.sesac.common.model.webrtc.WebRTCSessionState
 import com.sesac.common.repository.WebRTCRepository
@@ -28,25 +28,31 @@ class WebRTCRepositoryImpl @Inject constructor(
 
     private val _sessionState = MutableStateFlow<WebRTCSessionState>(WebRTCSessionState.Idle)
     private val _remoteVideoTrack = MutableSharedFlow<VideoTrack?>()
+    private val _localVideoTrack = MutableSharedFlow<VideoTrack?>() // 로컬 비디오 트랙 Flow 추가
 
-    private var myId: String? = null
-    private var targetId: String? = null
+    private var myUserName: String? = null
+    private var targetUser: String? = null
 
     companion object {
         private const val TAG = "WebRTCRepositoryImpl"
     }
 
-    override fun initialize(myId: String, targetId: String) {
-        this.myId = myId
-        this.targetId = targetId
+    override fun initialize(myUserName: String, targetUser: String) {
+        this.myUserName = myUserName
+        this.targetUser = targetUser
 
         webRTCClient.initializePeerConnection(
             onIceCandidate = { iceCandidate ->
-                signalingClient.sendIceCandidate(iceCandidate, targetId)
+                signalingClient.sendIceCandidate(iceCandidate, targetUser)
             },
             onRemoteTrack = { videoTrack ->
                 repositoryScope.launch {
                     _remoteVideoTrack.emit(videoTrack)
+                }
+            },
+            onLocalTrack = { videoTrack -> // onLocalTrack 콜백 처리
+                repositoryScope.launch {
+                    _localVideoTrack.emit(videoTrack)
                 }
             }
         )
@@ -58,11 +64,13 @@ class WebRTCRepositoryImpl @Inject constructor(
 
     override fun observeRemoteVideoTrack(): Flow<VideoTrack?> = _remoteVideoTrack
 
+    override fun observeLocalVideoTrack(): Flow<VideoTrack?> = _localVideoTrack // 함수 구현
+
     override suspend fun sendOffer() {
         Log.d(TAG, "sendOffer called")
         val offer = webRTCClient.createOffer()
         webRTCClient.setLocalDescription(offer)
-        signalingClient.sendOffer(offer, targetId!!)
+        signalingClient.sendOffer(offer, targetUser!!)
         _sessionState.value = WebRTCSessionState.SendingOffer
     }
 
@@ -71,7 +79,7 @@ class WebRTCRepositoryImpl @Inject constructor(
         webRTCClient.setRemoteDescription(sessionDescription)
         val answer = webRTCClient.createAnswer()
         webRTCClient.setLocalDescription(answer)
-        signalingClient.sendAnswer(answer, targetId!!)
+        signalingClient.sendAnswer(answer, targetUser!!)
         _sessionState.value = WebRTCSessionState.Connected
     }
 

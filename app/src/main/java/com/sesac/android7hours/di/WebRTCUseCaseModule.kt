@@ -22,6 +22,7 @@ object WebRTCUseCaseModule {
             sendIceCandidate = SendIceCandidateUseCase(repository),
             observeSignalingEvents = ObserveSignalingEventsUseCase(repository),
             observeRemoteVideoTrack = ObserveRemoteVideoTrackUseCase(repository),
+            observeLocalVideoTrack = ObserveLocalVideoTrackUseCase(repository),
             observeSessionState = ObserveSessionStateUseCase(repository),
             closeSession = CloseSessionUseCase(repository)
         )
