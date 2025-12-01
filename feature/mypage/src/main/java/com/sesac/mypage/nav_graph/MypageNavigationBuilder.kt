@@ -10,7 +10,7 @@ import com.sesac.domain.result.AuthUiState
 import com.sesac.mypage.presentation.MypageViewModel
 import com.sesac.mypage.presentation.ui.AddPetScreen
 import com.sesac.mypage.presentation.ui.MypageDetailScreen
-import com.sesac.mypage.presentation.ui.MypageFavoriteScreen
+import com.sesac.mypage.presentation.ui.MypageBookmarkScreen
 import com.sesac.mypage.presentation.ui.MypageMainScreen
 import com.sesac.mypage.presentation.ui.MypageManageScreen
 import com.sesac.mypage.presentation.ui.MypageSettingScreen
@@ -34,7 +34,7 @@ fun NavGraphBuilder.mypageRoute(
         MypageManageScreen()
     }
     composable<MypageNavigationRoute.FavoriteTab> {
-        MypageFavoriteScreen(uiStatus = uiState, onNavigateToPathDetail = onNavigateToPathDetail)
+        MypageBookmarkScreen(uiStatus = uiState, onNavigateToPathDetail = onNavigateToPathDetail)
     }
     composable<MypageNavigationRoute.SettingTab> {
         MypageSettingScreen(permissionStates = permissionState)

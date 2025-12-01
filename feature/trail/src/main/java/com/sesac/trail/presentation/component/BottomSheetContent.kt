@@ -41,24 +41,23 @@ import com.sesac.common.ui.theme.paddingLarge
 import com.sesac.common.ui.theme.paddingMicro
 import com.sesac.common.ui.theme.paddingSmall
 import com.sesac.domain.model.Path
+import com.sesac.domain.model.User
 import com.sesac.domain.result.AuthUiState
-import com.sesac.trail.presentation.TrailViewModel
 import com.sesac.trail.presentation.ui.WalkPathTab
 
 @Composable
 fun BottomSheetContent(
-    viewModel: TrailViewModel,
     uiState: AuthUiState,
     activeTab: WalkPathTab,
-    recommendedPaths: List<Path?>,
-    myPaths: List<Path?>,
-    isEditMode: Boolean,
+    recommendedPaths: List<Path>,
+    myPaths: List<Path>,
+    currentUser: User?,
     onSheetOpenToggle: () -> Unit,
     onStartRecording: () -> Unit,
     onTabChange: (WalkPathTab) -> Unit,
     onPathClick: (Path) -> Unit,
     onFollowClick: (Path) -> Unit,
-    onEditModeToggle: () -> Unit,
+    onModifyClick: (Path) -> Unit,
     onDeleteClick: (Int) -> Unit
 ) {
     Surface(
@@ -125,33 +124,22 @@ fun BottomSheetContent(
                 )
             }
 
-            // Content
+            // Content - 이제 PathListContent 하나로 통합됩니다.
             Box(
                 modifier = Modifier
                     .padding(horizontal = paddingLarge)
-                    .heightIn(max = 240.dp) // max-h-[240px]
-                    .padding(bottom = paddingLarge) // 하단 여백
+                    .heightIn(max = 240.dp)
+                    .padding(bottom = paddingLarge)
             ) {
-                when (activeTab) {
-                    WalkPathTab.RECOMMENDED ->
-                        RecommendedTabContent(
-                            paths = recommendedPaths.filterNotNull(),
-                            onPathClick = onPathClick,
-                            onFollowClick = onFollowClick,
-                        )
-                    WalkPathTab.MY_RECORDS -> {
-                        MyRecordsTabContent(
-                            viewModel = viewModel,
-                            myPaths = myPaths.filterNotNull(),
-                            isEditMode = isEditMode,
-                            onPathClick = onPathClick,
-                            onFollowClick = onFollowClick,
-                            onEditModeToggle = onEditModeToggle,
-                            onDeleteClick = onDeleteClick,
-                        )
-                    }
-
-                }
+                val pathsToShow = if (activeTab == WalkPathTab.RECOMMENDED) recommendedPaths else myPaths
+                PathListContent(
+                    paths = pathsToShow,
+                    currentUser = currentUser,
+                    onPathClick = onPathClick,
+                    onFollowClick = onFollowClick,
+                    onModifyClick = onModifyClick,
+                    onDeleteClick = onDeleteClick,
+                )
             }
         }
     }

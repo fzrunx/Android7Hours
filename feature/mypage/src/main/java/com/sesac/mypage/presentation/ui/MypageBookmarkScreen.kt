@@ -29,7 +29,7 @@ import com.sesac.domain.result.ResponseUiState
 import com.sesac.mypage.presentation.MypageViewModel
 
 @Composable
-fun MypageFavoriteScreen(
+fun MypageBookmarkScreen(
     uiStatus: AuthUiState,
     viewModel: MypageViewModel = hiltViewModel(),
     onNavigateToPost: (Int) -> Unit = {},

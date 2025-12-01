@@ -81,23 +81,18 @@ fun TrailMainScreen(
     val lifecycle = LocalLifecycleOwner.current.lifecycle
 
     val lifecycleState by lifecycle.currentStateAsState()
-    // ✅ 수정: ViewModel State 수집
+    // ViewModel State 수집
     val recommendedPaths by viewModel.recommendedPaths.collectAsStateWithLifecycle()
     val myPaths by viewModel.myPaths.collectAsStateWithLifecycle()
-//    val drafts by viewModel.drafts.collectAsStateWithLifecycle()
-//    val currentLocation by viewModel.currentLocation.collectAsStateWithLifecycle()
-
+    val userInfo by viewModel.userInfo.collectAsStateWithLifecycle()
     val isSheetOpen by viewModel.isSheetOpen.collectAsStateWithLifecycle()
     val isFollowingPath by viewModel.isFollowingPath.collectAsStateWithLifecycle()
     val isRecording by viewModel.isRecording.collectAsStateWithLifecycle()
     val recordingTime by viewModel.recordingTime.collectAsStateWithLifecycle()
-    val isEditMode by viewModel.isEditMode.collectAsStateWithLifecycle()
     val activeTab by viewModel.activeTab.collectAsStateWithLifecycle()
     val selectedPath by viewModel.selectedPath.collectAsStateWithLifecycle()
-    // ✅ 수정: tempPathCoords는 이제 ViewModel에서 제공
     val tempPathCoords by viewModel.tempPathCoords.collectAsStateWithLifecycle()
     val polylineFromVM by viewModel.polylineOverlay.collectAsStateWithLifecycle()
-    // ✅ Place 상태 수집
     val placesState by viewModel.placesState.collectAsStateWithLifecycle()
 
 
@@ -134,12 +129,12 @@ fun TrailMainScreen(
     val currentMarkers = viewModel.currentMarkers
     val infoWindowStates = remember { mutableStateMapOf<Marker, Boolean>() }
 
-    // ✅ Place 마커 관리 (ViewModel 외부)
+    // Place 마커 관리 (ViewModel 외부)
     val placeMarkers = remember { mutableListOf<Marker>() }
 
     var initialCameraMoved by remember(currentNaverMap) { mutableStateOf(false) }
 
-    // ⭐⭐ 폴리라인 좌표 업데이트
+    // 폴리라인 좌표 업데이트
     LaunchedEffect(tempPathCoords.size, isRecording) {
         val currentPolyline = polylineFromVM
 
@@ -152,7 +147,7 @@ fun TrailMainScreen(
             Log.d("TrailMainScreen", "❌ 폴리라인 지도에서 제거")
         }
     }
-    // ⭐ Draft 및 경로 목록 초기화
+    // Draft, 경로 목록, 사용자 정보 초기화
     LaunchedEffect(Unit, hasLocationPermission, uiState) {
         if (hasLocationPermission) {
             viewModel.startLocationUpdates()
@@ -166,12 +161,11 @@ fun TrailMainScreen(
         }
 
         viewModel.loadDrafts()
-        viewModel.updateIsEditMode(false)
-        viewModel.getMyPaths(uiState.token)
-//        viewModel.getCurrentLocation()
+        viewModel.getMyPaths()
+        viewModel.getCurrentUserInfo() // 현재 사용자 정보 요청
     }
 
-    // ⭐ 녹화 종료 시 초기화
+    // 녹화 종료 시 초기화
     LaunchedEffect(isRecording) {
         if (!isRecording) {
             Log.d("TrailMainScreen", "🧹 녹화 중지 시 폴리라인, 마커, 좌표 초기화 완료")
@@ -187,7 +181,7 @@ fun TrailMainScreen(
         }
         Log.d("effectPauseStop", "타이머 자동 정지됨 (lifecycle or paused)")
     }
-    // 🔴 effectPauseStop 적용  // 화면 Pause/Stop 시 MapView도 같이 pause/stop 호출
+    // effectPauseStop 적용  // 화면 Pause/Stop 시 MapView도 같이 pause/stop 호출
     lifecycle.EffectPauseStop {
         commonMapLifecycle.mapView?.onPause()
         commonMapLifecycle.mapView?.onStop()
@@ -207,32 +201,31 @@ fun TrailMainScreen(
         modifier = Modifier
             .fillMaxSize()
     ) {
-        // ✅ 지도 영역 (AsyncImage → AndroidView 로 대체) // 🔹 AndroidView 안에서 attach 처리
+        // 지도 영역 (AsyncImage → AndroidView 로 대체) // 🔹 AndroidView 안에서 attach 처리
         key(lifecycleState) {
             if (lifecycleState.isAtLeast(Lifecycle.State.CREATED)) {
                 AndroidView(
                     modifier = Modifier.fillMaxSize(),
                     factory = { context ->
-                        // 🔹 1. MapView 가져오기
+                        // 1. MapView 가져오기
                         val mapView = commonMapLifecycle.mapView ?: CommonMapView.getMapView(context).also {
                             commonMapLifecycle.setMapView(it)
                         }
 
-                        // 🔹 2. 이미 부모가 있으면 제거 (IllegalStateException 방지)
+                        // 2. 이미 부모가 있으면 제거 (IllegalStateException 방지)
                         (mapView.parent as? ViewGroup)?.removeView(mapView)
 
-                        // 🔹 3. MapView start/resume
+                        // 3. MapView start/resume
                         mapView.onStart()
                         mapView.onResume()
                         mapView.getMapAsync{ naverMap ->
                             currentNaverMap = naverMap   // ready 된 지도 저장!!
                             naverMap.locationSource = locationSource
                             naverMap.locationTrackingMode = LocationTrackingMode.Follow
-                            // ✅ Trail 용 지도 세팅 (기본 위치 / UI 세팅 등)
+                            // Trail 용 지도 세팅 (기본 위치 / UI 세팅 등)
                             naverMap.uiSettings.isLocationButtonEnabled = true
                             naverMap.uiSettings.isZoomControlEnabled = false
-                            onMapReady?.invoke(naverMap) // 🔹 화면마다 콜백 재등록
-                            // ✅ onMapReady 시점에 콜백 실행 가능
+                            onMapReady?.invoke(naverMap) // 화면마다 콜백 재등록
                             Log.d("TrailMainScreen", "지도 준비 완료")
 
                             // 지도에 연결하는 것은 LaunchedEffect(pathCoords.size, isRecording)에서 관리합니다.
@@ -261,7 +254,7 @@ fun TrailMainScreen(
                 )
             }
         }
-        // ✅ Place 마커 표시 (지도 준비 후)
+        // Place 마커 표시 (지도 준비 후)
         LaunchedEffect(placesState, currentNaverMap, isRecording, isFollowingPath) {
             Log.d("TAG-TrailMainScreen", "Place Marker Effect Triggered: isRecording=$isRecording, isFollowingPath=$isFollowingPath, placesState=${placesState.javaClass.simpleName}")
             val map = currentNaverMap ?: return@LaunchedEffect
@@ -289,26 +282,11 @@ fun TrailMainScreen(
                             position = place.toLatLng()
                             icon = Marker.DEFAULT_ICON
 
-                            // 💡 캡션 관련 코드는 이제 필요 없으므로 제거하거나 주석 처리합니다。
-                            // captionText = place.title
-                            // captionColor = Color.Black.toArgb()
-                            // captionTextSize = 14f
-                            // captionRequestedWidth = 200
-
-                            // ✅ 마커 클릭 시 동작
+                            // 즉시 상세 페이지로 이동
                             setOnClickListener { clickedMarker ->
-                                // 1. 다른 마커들의 캡션 숨기기 로직도 이제 필요 없습니다. (캡션을 안쓰므로)
-                                // placeMarkers.forEach {
-                                //     if (it != clickedMarker) {
-                                //         it.captionText = ""
-                                //     }
-                                // }
-
-                                // 💡 즉시 상세 페이지로 이동
                                 navController.navigate(
                                     NestedNavigationRoute.PlaceDetail(place.toParceler())
                                 )
-
                                 true // 이벤트 소비 완료를 나타냄
                             }
 
@@ -336,7 +314,7 @@ fun TrailMainScreen(
                 placeMarkers.clear()
             }
         }
-        // 🔹 선택된 경로의 폴리라인 표시
+        // 선택된 경로의 폴리라인 표시
         DisposableEffect(isFollowingPath, selectedPath, currentNaverMap) {
             Log.d("TrailMainScreen", "🔹 DisposableEffect 진입: isFollowing=$isFollowingPath, path=${selectedPath?.pathName}, map=$currentNaverMap")
             val map = currentNaverMap
@@ -365,7 +343,7 @@ fun TrailMainScreen(
                         this.map = map
                     }
 
-                    // ✅ 시작 마커 (초록색)
+                    // 시작 마커 (초록색)
                     startMarker = Marker().apply {
                         position = coords.first()
                         icon = OverlayImage.fromResource(android.R.drawable.ic_input_add) // 또는 커스텀 아이콘
@@ -374,7 +352,7 @@ fun TrailMainScreen(
                         this.map = map
                     }
 
-                    // ✅ 종료 마커 (빨간색)
+                    // 종료 마커 (빨간색)
                     endMarker = Marker().apply {
                         position = coords.last()
                         icon = OverlayImage.fromResource(android.R.drawable.ic_menu_close_clear_cancel)
@@ -402,7 +380,7 @@ fun TrailMainScreen(
                 Log.d("TrailMainScreen", "🧹 폴리라인 + 마커 제거")
             }
         }
-                // 🔹 사용자 현재 위치 마커
+                // 사용자 현재 위치 마커
                 val userLocation by viewModel.userLocationMarker.collectAsStateWithLifecycle()
                 var userMarker by remember { mutableStateOf<Marker?>(null) }
         
@@ -446,7 +424,7 @@ fun TrailMainScreen(
                     }
                 }
 
-        // 🔹 따라가기 안내 UI
+        // 따라가기 안내 UI
         AnimatedVisibility(
             visible = isFollowingPath,
             modifier = Modifier
@@ -462,12 +440,12 @@ fun TrailMainScreen(
             )
         }
 
-        // ✅ 메모 마커 표시 (ViewModel 상태 기반)
+        // 메모 마커 표시 (ViewModel 상태 기반)
         val memoMarkers by viewModel.memoMarkers.collectAsStateWithLifecycle()
         LaunchedEffect(memoMarkers, currentNaverMap, isRecording, isFollowingPath) {
             val map = currentNaverMap ?: return@LaunchedEffect
 
-            // 🔥 녹화 또는 따라가기 중일 때만 마커 표시
+            // 녹화 또는 따라가기 중일 때만 마커 표시
             if (!isRecording && !isFollowingPath) {
                 // 기존 마커 정리
                 currentMarkers.forEach { it.map = null }
@@ -492,7 +470,7 @@ fun TrailMainScreen(
             }
         }
 
-        // ✅ 하단 Bottom Sheet
+        // 하단 Bottom Sheet
         AnimatedVisibility(
             visible = isSheetOpen && !isRecording && !isFollowingPath,
             modifier = Modifier.align(Alignment.BottomCenter),
@@ -517,12 +495,11 @@ fun TrailMainScreen(
                 }
                 else -> { // Success or Idle
                     BottomSheetContent(
-                        viewModel = viewModel,
                         uiState = uiState,
                         activeTab = activeTab,
                         recommendedPaths = (recommendedPaths as? ResponseUiState.Success)?.result ?: emptyList(),
                         myPaths = (myPaths as? ResponseUiState.Success)?.result ?: emptyList(),
-                        isEditMode = isEditMode,
+                        currentUser = userInfo,
                         onSheetOpenToggle = { viewModel.updateIsSheetOpen(null) },
                         onStartRecording = {
                             viewModel.startRecording()
@@ -534,14 +511,17 @@ fun TrailMainScreen(
                             navController.navigate(NestedNavigationRoute.TrailDetail(it.toPathParceler()))
                         },
                         onFollowClick = onStartFollowing,
-                        onEditModeToggle = { viewModel.updateIsEditMode() },
-                        onDeleteClick = { viewModel.deletePath(uiState.token, it) }
+                        onModifyClick = { path ->
+                            viewModel.updateSelectedPath(path)
+                            navController.navigate(TrailNavigationRoute.TrailCreateTab)
+                        },
+                        onDeleteClick = { pathId -> viewModel.deletePath(pathId) }
                     )
                 }
             }
         }
 
-        // ✅ 시트 다시 열기 버튼
+        // 시트 다시 열기 버튼
         AnimatedVisibility(
             visible = !isSheetOpen && !isRecording && !isFollowingPath,
             modifier = Modifier
@@ -551,7 +531,7 @@ fun TrailMainScreen(
             ReopenSheetButton(onClick = { viewModel.updateIsSheetOpen(true) })
         }
 
-        // ✅ 녹화 중 UI
+        // 녹화 중 UI
         AnimatedVisibility(
             visible = isRecording,
             modifier = Modifier

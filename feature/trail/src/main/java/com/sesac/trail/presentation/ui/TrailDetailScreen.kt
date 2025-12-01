@@ -85,6 +85,7 @@ fun TrailDetailScreen(
     val selectedDetailPathState by viewModel.selectedPath.collectAsStateWithLifecycle()
     val bookmarkedPathsState by viewModel.bookmarkedPaths.collectAsStateWithLifecycle()
     val commentsState by viewModel.commentsState.collectAsStateWithLifecycle()
+    val userInfo by viewModel.userInfo.collectAsStateWithLifecycle()
 
     val isBookmarked by remember(bookmarkedPathsState, selectedDetailPathState) {
         derivedStateOf {
@@ -94,8 +95,11 @@ fun TrailDetailScreen(
         }
     }
 
+
+
     LaunchedEffect(selectedDetailPath) {
         selectedDetailPath?.let { selected ->
+            viewModel.getCurrentUserInfo()
             viewModel.updateSelectedPath(selected)
             viewModel.getComments(selected.id)
             viewModel.getUserBookmarkedPaths(uiState.token)
@@ -165,7 +169,7 @@ fun TrailDetailScreen(
                                 TextButton(
 //                                    onClick = { onDeleteClick(selected) },
                                     onClick = {
-                                        viewModel.deletePath(uiState.token, selected.id)
+                                        viewModel.deletePath(selected.id)
                                         navController.popBackStack()
                                     },
                                     modifier = Modifier.height(32.dp)
@@ -255,7 +259,7 @@ fun TrailDetailScreen(
                 PathSection(title = "이용자 후기") {
                     CommonCommentSection(
                         commentsState = commentsState,
-                        currentUserId = uiState.user?.id ?: -1,
+                        currentUserId = userInfo?.id ?: -1,
                         onPostComment = { content ->
                             uiState.token?.let { token ->
                                 viewModel.createComment(token, selected.id, content)

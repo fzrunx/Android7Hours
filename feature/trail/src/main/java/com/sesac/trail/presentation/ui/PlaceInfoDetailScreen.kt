@@ -54,6 +54,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
 import com.sesac.common.component.CommonCommentSection
 import com.sesac.common.ui.theme.Android7HoursTheme
@@ -88,11 +89,12 @@ fun PlaceInfoDetailScreen(
     val scope = rememberCoroutineScope()
 
     // ViewModel에서 댓글 상태 가져오기
-    val commentsState by viewModel.commentsState.collectAsState()
-    val currentUserId = viewModel.currentUserId
+    val commentsState by viewModel.commentsState.collectAsStateWithLifecycle()
+    val userInfo by viewModel.userInfo.collectAsStateWithLifecycle()
 
     // 화면 진입 시 댓글 로드
     LaunchedEffect(place.id) {
+        viewModel.getCurrentUserInfo()
         viewModel.loadPlaceComments(place.id)
     }
 
@@ -287,7 +289,7 @@ fun PlaceInfoDetailScreen(
 
                     CommonCommentSection(
                         commentsState = commentsState,
-                        currentUserId = currentUserId,
+                        currentUserId = userInfo?.id ?: -1,
                         onPostComment = { content ->
                             viewModel.postPlaceComment(place.id, content, CommentType.PATH)
                         },

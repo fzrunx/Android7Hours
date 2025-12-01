@@ -9,106 +9,300 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.TrendingUp
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Route
+import androidx.compose.material.icons.outlined.BarChart
+import androidx.compose.material.icons.outlined.DirectionsWalk
+import androidx.compose.material.icons.outlined.FavoriteBorder
+import androidx.compose.material.icons.outlined.Map
+import androidx.compose.material.icons.outlined.Route
+import androidx.compose.material.icons.outlined.Timer
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Divider
+import androidx.compose.material3.DividerDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.sesac.common.ui.theme.Gray200
-import com.sesac.common.ui.theme.Gray500
-import com.sesac.common.ui.theme.LightBlue
+import androidx.compose.ui.tooling.preview.Preview
+import com.sesac.common.R
+import com.sesac.common.ui.theme.Android7HoursTheme
+import com.sesac.common.ui.theme.ColorBlue
+import com.sesac.common.ui.theme.ColorGreen
+import com.sesac.common.ui.theme.ColorOrange
+import com.sesac.common.ui.theme.PrimaryGreenDark
 import com.sesac.common.ui.theme.PrimaryGreenLight
-import com.sesac.common.ui.theme.Purple600
 import com.sesac.common.ui.theme.Red500
-import com.sesac.common.ui.theme.White
+import com.sesac.common.ui.theme.cardImageHeight
+import com.sesac.common.ui.theme.elevationSmall
+import com.sesac.common.ui.theme.iconSizeLarge
+import com.sesac.common.ui.theme.iconSizeMedium
+import com.sesac.common.ui.theme.paddingLarge
+import com.sesac.common.ui.theme.paddingMedium
 import com.sesac.common.ui.theme.paddingMicro
 import com.sesac.common.ui.theme.paddingSmall
 import com.sesac.domain.model.Path
+import com.sesac.domain.model.User
 
-
+/**
+ * '추천 산책로'와 '내 기록' 탭의 리스트를 표시하는 통합 Composable
+ *
+ * @param paths 표시할 산책로 리스트
+ * @param currentUser 현재 로그인한 사용자 정보
+ * @param onPathClick 산책로 아이템 클릭 시 콜백
+ * @param onFollowClick '따라가기' 버튼 클릭 시 콜백
+ * @param onModifyClick '수정' 메뉴 클릭 시 콜백
+ * @param onDeleteClick '삭제' 메뉴 클릭 시 콜백
+ */
 @Composable
-fun RecommendedTabContent(
+fun PathListContent(
     paths: List<Path>,
+    currentUser: User?,
     onPathClick: (Path) -> Unit,
-    onFollowClick: (Path) -> Unit
+    onFollowClick: (Path) -> Unit,
+    onModifyClick: (Path) -> Unit,
+    onDeleteClick: (Int) -> Unit
 ) {
     LazyColumn(
-        contentPadding = PaddingValues(vertical = paddingSmall),
-        verticalArrangement = Arrangement.spacedBy(paddingMicro)
+        contentPadding = PaddingValues(vertical = paddingLarge),
+        verticalArrangement = Arrangement.spacedBy(paddingMedium)
     ) {
-        items(paths) { path ->
-            RecommendedPathItem(
+        items(paths, key = { it.id }) { path ->
+            PathItem(
                 path = path,
+                currentUser = currentUser,
                 onPathClick = onPathClick,
-                onFollowClick = onFollowClick
+                onFollowClick = onFollowClick,
+                onModifyClick = onModifyClick,
+                onDeleteClick = onDeleteClick,
             )
         }
     }
 }
 
+/**
+ * 산책로 정보를 보여주는 카드 아이템 Composable.
+ * 현재 사용자가 산책로 작성자인 경우 수정/삭제 메뉴를 포함합니다.
+ */
 @Composable
-fun RecommendedPathItem(
+fun PathItem(
     path: Path,
+    currentUser: User?,
     onPathClick: (Path) -> Unit,
-    onFollowClick: (Path) -> Unit
+    onFollowClick: (Path) -> Unit,
+    onModifyClick: (Path) -> Unit,
+    onDeleteClick: (Int) -> Unit
 ) {
+    var showMenu by remember { mutableStateOf(false) }
+    // 현재 사용자가 이 산책로의 작성자인지 확인
+    val isMyPath = currentUser?.nickname != null && currentUser.nickname == path.uploader
+
     Card(
-        modifier = Modifier.fillMaxWidth().clickable { onPathClick(path) },
-        colors = CardDefaults.cardColors(containerColor = White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = paddingLarge)
+            .clickable { onPathClick(path) },
+        shape = MaterialTheme.shapes.medium,
+        elevation = CardDefaults.cardElevation(defaultElevation = elevationSmall),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
-        Row(
-            modifier = Modifier.padding(paddingSmall),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
+        Column(modifier = Modifier.fillMaxWidth()) {
+            // 1. 썸네일 영역
             Box(
                 modifier = Modifier
-                    .size(48.dp)
-                    .background(PrimaryGreenLight, RoundedCornerShape(8.dp))
-            )
-            Spacer(Modifier.width(paddingSmall))
-            Column(modifier = Modifier.weight(1f)) {
-                Text(path.pathName, fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                Text("@${path.uploader}", fontSize = 12.sp, color = Gray500)
-//                Text("${path.distance} · ${path.duration} 코스", fontSize = 14.sp)
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Filled.Favorite, contentDescription = "BookmarkCount", tint = Purple600, modifier = Modifier.size(16.dp))
-                    Text(" ${path.bookmarksCount}", fontSize = 12.sp, color = Purple600)
-                    Spacer(Modifier.width(paddingSmall))
-                    Icon(Icons.Filled.LocationOn, contentDescription = "Distance", tint = Red500, modifier = Modifier.size(16.dp))
-                    Text(" ${path.distance}m", fontSize = 12.sp, color = Red500)
-                    Spacer(Modifier.width(paddingSmall))
-                    Text(" ${path.duration}분", fontSize = 12.sp, color = Gray500)
-                    Spacer(Modifier.width(paddingSmall))
-                    Icon(Icons.AutoMirrored.Filled.TrendingUp, contentDescription = "DistanceFromMe", tint = LightBlue, modifier = Modifier.size(16.dp))
-                    Text(" ${path.distanceFromMe}m", fontSize = 12.sp, color = LightBlue)
+                    .fillMaxWidth()
+                    .height(cardImageHeight)
+                    .background(PrimaryGreenLight),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.Map,
+                    contentDescription = "Path Thumbnail",
+                    modifier = Modifier.size(iconSizeLarge),
+                    tint = PrimaryGreenDark
+                )
+            }
+
+            // 2. 콘텐츠 영역
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(paddingLarge),
+                verticalArrangement = Arrangement.spacedBy(paddingMedium)
+            ) {
+                // 헤더: 산책로 이름, 작성자, 그리고 수정/삭제 메뉴
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.Top,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = path.pathName,
+                            style = MaterialTheme.typography.titleLarge,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Spacer(modifier = Modifier.height(paddingMicro))
+                        Text(
+                        text = "@${path.uploader}",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+
+                    // 내 경로인 경우에만 수정/삭제 메뉴 표시
+                    if (isMyPath) {
+                        Box {
+                            IconButton(onClick = { showMenu = true }) {
+                                Icon(Icons.Default.MoreVert, contentDescription = "옵션 더보기")
+                            }
+                            DropdownMenu(
+                                expanded = showMenu,
+                                onDismissRequest = { showMenu = false }
+                            ) {
+                                DropdownMenuItem(
+                                    text = { Text("수정") },
+                                    onClick = {
+                                        onModifyClick(path)
+                                        showMenu = false
+                                    }
+                                )
+                                DropdownMenuItem(
+                                    text = { Text("삭제") },
+                                    onClick = {
+                                        onDeleteClick(path.id)
+                                        showMenu = false
+                                    }
+                                )
+                            }
+                        }
+                    }
+                }
+
+                // 핵심 정보: 거리, 시간, 난이도
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceAround
+                ) {
+
+                    // m 단위를 km로 변환하여 표시
+                    val distanceInKm = "%.1f".format(path.distance / 1000f)
+                    InfoChip(icon = Icons.Outlined.Route, text = "${distanceInKm}km", iconTint = ColorGreen)
+                    InfoChip(icon = Icons.Outlined.Timer, text = "${path.duration}분", iconTint = ColorBlue)
+                    InfoChip(icon = Icons.Outlined.BarChart, text = "난이도 ${path.level}", iconTint = ColorOrange)
+                }
+
+                HorizontalDivider(Modifier, DividerDefaults.Thickness, DividerDefaults.color)
+
+                // 사용자 관련 정보 및 액션 버튼
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Column(verticalArrangement = Arrangement.spacedBy(paddingSmall)) {
+                        path.distanceFromMe?.let {
+                            val distanceFromMeInKm = "%.1f".format(it / 1000f)
+                            InfoChip(
+                                icon = Icons.Outlined.DirectionsWalk,
+                                text = "나와 ${distanceFromMeInKm}km",
+                                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
+                                iconTint = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                        InfoChip(
+                            icon = Icons.Outlined.FavoriteBorder,
+                            // Django Serializer의 bookmark_count 필드와 매칭
+                            text = "${path.bookmarksCount} 즐겨찾기",
+                            style = MaterialTheme.typography.bodyMedium,
+                            iconTint = Red500
+                        )
+                    }
+
+                    Button(
+                        onClick = { onFollowClick(path) },
+                        shape = MaterialTheme.shapes.small,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary,
+                            contentColor = MaterialTheme.colorScheme.onPrimary
+                        )
+                    ) {
+                        Icon(Icons.Default.Route, contentDescription = null)
+                        Spacer(modifier = Modifier.width(paddingSmall))
+                        Text(stringResource(id = R.string.trail_button_follow))
+                    }
                 }
             }
-            Button(
-                onClick = { onFollowClick(path) },
-                colors = ButtonDefaults.buttonColors(containerColor = Purple600),
-                contentPadding = PaddingValues(horizontal = paddingSmall, vertical = paddingMicro)
-            ) {
-                Text("따라가기", color = White)
-            }
         }
+    }
+}
+
+/**
+ * 아이콘과 텍스트를 함께 보여주는 작은 재사용 가능 Composable
+ */
+@Composable
+private fun InfoChip(
+    icon: ImageVector,
+    text: String,
+    modifier: Modifier = Modifier,
+    iconTint: Color = MaterialTheme.colorScheme.onSurfaceVariant,
+    style: TextStyle = MaterialTheme.typography.bodyMedium
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = modifier
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = text,
+            modifier = Modifier.size(iconSizeMedium),
+            tint = iconTint
+        )
+        Spacer(Modifier.width(paddingSmall))
+        Text(
+            text = text,
+            style = style,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+    }
+}
+
+@Preview
+@Composable
+fun PathListContentPreview() {
+    Android7HoursTheme {
+        PathListContent(
+            paths = listOf(Path.EMPTY, Path.EMPTY),
+            currentUser = User(username = "tt", nickname = "nn", fullName = "name", email = ""),
+            onPathClick = {},
+            onDeleteClick = {},
+            onFollowClick = {},
+            onModifyClick = {},
+        )
     }
 }

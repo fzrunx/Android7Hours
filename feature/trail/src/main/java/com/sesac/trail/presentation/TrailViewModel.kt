@@ -43,6 +43,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import android.location.Location
+import com.sesac.domain.model.User
 
 @HiltViewModel
 class TrailViewModel @Inject constructor(
@@ -55,7 +56,6 @@ class TrailViewModel @Inject constructor(
 ) : ViewModel() {
     private val _invalidToken = Channel<UiEvent>()
     val invalidToken = _invalidToken.receiveAsFlow()
-
     private var lastRecommendedPathFetchLocation: LatLng? = null
 
     // =================================================================
@@ -221,6 +221,8 @@ class TrailViewModel @Inject constructor(
     private val _bookmarkedPaths =
         MutableStateFlow<ResponseUiState<List<BookmarkedPath>>>(ResponseUiState.Idle)
     val bookmarkedPaths = _bookmarkedPaths.asStateFlow()
+    private val _userInfo = MutableStateFlow<User?>(null)
+    val userInfo = _userInfo.asStateFlow()
 
 
     private val _selectedPath = MutableStateFlow<Path?>(null)
@@ -230,6 +232,12 @@ class TrailViewModel @Inject constructor(
 //        getRecommendedPaths()
 //        getMyRecords()
 //    }
+
+    fun getCurrentUserInfo() {
+        viewModelScope.launch {
+            _userInfo.value = sessionUseCase.getUserInfo().first()
+        }
+    }
 
     fun getRecommendedPaths(coord: Coord, radius: Float = 5000f) {
         viewModelScope.launch {
@@ -258,9 +266,10 @@ class TrailViewModel @Inject constructor(
         }
     }
 
-    fun getMyPaths(token: String?) {
+    fun getMyPaths() {
         viewModelScope.launch {
             _myPaths.value = ResponseUiState.Loading
+            val token = sessionUseCase.getAccessToken().first()
             if (token == null) {
                 _myPaths.value = ResponseUiState.Error("로그인이 필요합니다.")
                 return@launch
@@ -444,15 +453,16 @@ class TrailViewModel @Inject constructor(
         }
     }
 
-    fun deletePath(token: String?, pathId: Int) {
+    fun deletePath(pathId: Int) {
         viewModelScope.launch {
+            val token = sessionUseCase.getAccessToken().first()
             if (token.isNullOrEmpty()) {
                 _invalidToken.send(UiEvent.ToastEvent("유저 정보가 없습니다."))
                 return@launch
             }
             pathUseCase.deletePathUseCase(token, pathId).collectLatest { result ->
                 if (result is AuthResult.Success) {
-                    getMyPaths(token)
+                    getMyPaths()
                 }
             }
         }
@@ -471,9 +481,6 @@ class TrailViewModel @Inject constructor(
     private val _activeTab = MutableStateFlow(WalkPathTab.RECOMMENDED)
     val activeTab get() = _activeTab.asStateFlow()
 
-    private val _isEditMode = MutableStateFlow(false)
-    val isEditMode get() = _isEditMode.asStateFlow()
-
     fun updateIsSheetOpen(newState: Boolean?) {
         viewModelScope.launch {
             _isSheetOpen.value = newState ?: !_isSheetOpen.value
@@ -490,10 +497,6 @@ class TrailViewModel @Inject constructor(
         viewModelScope.launch {
             _activeTab.value = walkPathTab
         }
-    }
-
-    fun updateIsEditMode(isEditing: Boolean? = null) {
-        _isEditMode.value = isEditing ?: !_isEditMode.value
     }
 
     // =================================================================
@@ -631,7 +634,7 @@ class TrailViewModel @Inject constructor(
 //                                _invalidToken.send(UiEvent.ToastEvent("경로가 서버로 업로드되었습니다"))
                                 Log.d("TAG-TrailViewModel", "savedPathWithid : $savedPathWithId")
                                 Log.d("TAG-TrailViewModel", "result : ${result.resultData}")
-                                getMyPaths(token)
+                                getMyPaths()
                                 loadDrafts()
                                 _createState.value =
                                     ResponseUiState.Success("경로가 서버로 업로드되었습니다.", savedPathWithId)
@@ -653,7 +656,7 @@ class TrailViewModel @Inject constructor(
                                 val deleted = deleteDraft(savedPathWithId)
                                 if (deleted) {
 //                                    _invalidToken.send(UiEvent.ToastEvent("경로가 서버로 업로드되었습니다"))
-                                    getMyPaths(token)
+                                    getMyPaths()
                                     loadDrafts()
                                     _createState.value =
                                         ResponseUiState.Success("경로가 서버로 업로드되었습니다.", savedPathWithId)
@@ -771,60 +774,7 @@ class TrailViewModel @Inject constructor(
         }
     }
 
-    // ToDo 삭제, InfoDetailScreen build용
-    // 댓글 상태
-    private val _comments = MutableStateFlow<List<Comment>>(emptyList())
-    val comments: StateFlow<List<Comment>> get() = _comments.asStateFlow()
 
-    // 선택된 게시물
-    var selectedPostForComments by mutableStateOf<Post?>(null)
-        private set
-
-    // 댓글 시트 열림 여부
-    var isCommentsOpen by mutableStateOf(false)
-        private set
-
-    // 새 댓글 내용
-    var newCommentContent by mutableStateOf("")
-
-
-    fun handleOpenComments(path: Path) {
-        // Create a synthetic Post object from the UserPath
-        selectedPostForComments = path.toPost()
-        isCommentsOpen = true
-    }
-
-    fun handleCloseComments() {
-        isCommentsOpen = false
-        selectedPostForComments = null
-    }
-
-    fun handleAddComment(): Boolean {
-        val post = selectedPostForComments ?: return false
-        if (newCommentContent.isBlank()) return false
-
-        val newComment = Comment(
-            id = System.currentTimeMillis(),
-            postId = post.id.toInt(),
-            author = "나", // TODO: Replace with actual user info
-            authorImage = "https://picsum.photos/seed/me/200", // TODO: Replace with actual user profile
-            timeAgo = "방금 전",
-            content = newCommentContent,
-            authorId = -1,
-        )
-
-        // Update comments list
-        _comments.update { it + newComment }
-
-        // We don't need to update a list of posts here, as we only have one "post"
-        // But we could update the comment count on the selectedPostForComments
-        selectedPostForComments =
-            selectedPostForComments?.copy(commentsCount = selectedPostForComments!!.commentsCount + 1)
-
-
-        newCommentContent = ""
-        return true
-    }
     // =================================================================
     // 📌 10. 따라가기
     // =================================================================
@@ -1107,8 +1057,5 @@ class TrailViewModel @Inject constructor(
         }
     }
 
-    // 현재 로그인한 사용자 ID (댓글 작성자 확인용)
-    val currentUserId: Int
-        get() = -1 // TODO: 실제 사용자 ID로 변경 필요
 }
 
