@@ -6,5 +6,5 @@ import javax.inject.Inject
 class InitializeWebRTCUseCase @Inject constructor(
     private val webRTCRepository: WebRTCRepository
 ) {
-    operator fun invoke(myUserName: String, targetUser: String) = webRTCRepository.initialize(myUserName, targetUser)
+    operator fun invoke(myUserId: String, targetUserId: String) = webRTCRepository.initialize(myUserId, targetUserId)
 }

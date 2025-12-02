@@ -8,7 +8,7 @@ import org.webrtc.SessionDescription
 import org.webrtc.VideoTrack
 
 interface WebRTCRepository {
-    fun initialize(myUserName: String, targetUser: String): Unit
+    fun initialize(myUserId: String, targetUserId: String): Unit
     fun observeSignalingEvents(): Flow<SignalingEvent>
     fun observeSessionState(): Flow<WebRTCSessionState>
     fun observeRemoteVideoTrack(): Flow<VideoTrack?>

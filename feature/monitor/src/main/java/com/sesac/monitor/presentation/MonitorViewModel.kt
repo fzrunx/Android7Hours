@@ -51,7 +51,7 @@ class MonitorViewModel @Inject constructor(
     val localVideoTrack = _localVideoTrack.asStateFlow()
 
     private var currentUser: User? = null
-    private var targetUser: String? = null // 주인 유저 아이디
+    private var targetUserId: String? = null // 주인 유저 아이디
 
     fun getEglBase(): EglBase { // EglBase getter 추가
         return eglBase
@@ -232,9 +232,8 @@ class MonitorViewModel @Inject constructor(
         viewModelScope.launch {
             Log.d("MonitorViewModel", "Starting call to pet: ${pet.name}")
             // 1. 상대방(펫)의 User ID를 가져옵니다.
-            Log.d("TAG-MonitorViewModel", "pet info : $pet")
-            targetUser = pet.linkedUser
-            if (targetUser == null) {
+            targetUserId = pet.linkedUser
+            if (targetUserId == null) {
                 _uiState.value = MonitorUiState.Error("연결된 펫 계정이 없습니다.")
                 return@launch
             }
@@ -245,8 +244,8 @@ class MonitorViewModel @Inject constructor(
 
             // 2. WebRTC 세션을 초기화합니다.
             webRTCUseCase.initializeWebRTC(
-                myUserName = currentUser!!.username ?: "",
-                targetUser = targetUser!!,
+                myUserId = currentUser!!.id.toString(),
+                targetUserId = targetUserId!!,
             )
 
             // 3. WebRTC 이벤트를 감지하기 시작합니다.
@@ -278,8 +277,8 @@ class MonitorViewModel @Inject constructor(
                 return@launch
             }
             webRTCUseCase.initializeWebRTC(
-                myUserName = currentUser!!.username ?: "",
-                targetUser = "" // targetId는 아직 모름
+                myUserId = currentUser!!.id.toString(),
+                targetUserId = "" // targetId는 아직 모름
             )
 
             _uiState.value = MonitorUiState.Streaming

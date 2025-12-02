@@ -30,20 +30,20 @@ class WebRTCRepositoryImpl @Inject constructor(
     private val _remoteVideoTrack = MutableSharedFlow<VideoTrack?>()
     private val _localVideoTrack = MutableSharedFlow<VideoTrack?>() // 로컬 비디오 트랙 Flow 추가
 
-    private var myUserName: String? = null
-    private var targetUser: String? = null
+    private var myUserId: String? = null
+    private var targetUserId: String? = null
 
     companion object {
         private const val TAG = "WebRTCRepositoryImpl"
     }
 
-    override fun initialize(myUserName: String, targetUser: String) {
-        this.myUserName = myUserName
-        this.targetUser = targetUser
+    override fun initialize(myUserId: String, targetUserId: String) {
+        this.myUserId = myUserId
+        this.targetUserId = targetUserId
 
         webRTCClient.initializePeerConnection(
             onIceCandidate = { iceCandidate ->
-                signalingClient.sendIceCandidate(iceCandidate, targetUser)
+                signalingClient.sendIceCandidate(iceCandidate, targetUserId)
             },
             onRemoteTrack = { videoTrack ->
                 repositoryScope.launch {
@@ -70,7 +70,7 @@ class WebRTCRepositoryImpl @Inject constructor(
         Log.d(TAG, "sendOffer called")
         val offer = webRTCClient.createOffer()
         webRTCClient.setLocalDescription(offer)
-        signalingClient.sendOffer(offer, targetUser!!)
+        signalingClient.sendOffer(offer, targetUserId!!)
         _sessionState.value = WebRTCSessionState.SendingOffer
     }
 
@@ -79,7 +79,7 @@ class WebRTCRepositoryImpl @Inject constructor(
         webRTCClient.setRemoteDescription(sessionDescription)
         val answer = webRTCClient.createAnswer()
         webRTCClient.setLocalDescription(answer)
-        signalingClient.sendAnswer(answer, targetUser!!)
+        signalingClient.sendAnswer(answer, targetUserId!!)
         _sessionState.value = WebRTCSessionState.Connected
     }
 

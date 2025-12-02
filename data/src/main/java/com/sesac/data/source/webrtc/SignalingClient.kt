@@ -137,22 +137,22 @@ class SignalingClient @Inject constructor(
         sendMessage(message)
     }
 
-    fun sendIceCandidate(candidate: IceCandidate, targetUser: String) {
+    fun sendIceCandidate(candidate: IceCandidate, targetUserId: String) {
         val candidateJson = JSONObject().apply {
             put("candidate", candidate.sdp)
             put("sdpMid", candidate.sdpMid)
             put("sdpMLineIndex", candidate.sdpMLineIndex)
         }
-        val message = createBaseMessage(targetUser).apply {
+        val message = createBaseMessage(targetUserId).apply {
             put("type", "ice_candidate")
             put("candidate", candidateJson)
         }
         sendMessage(message)
     }
 
-    private fun createBaseMessage(targetUser: String): JSONObject {
+    private fun createBaseMessage(targetUserId: String): JSONObject {
         return JSONObject().apply {
-            put("user_id", targetUser)
+            put("target_user_id", targetUserId)
         }
     }
 
