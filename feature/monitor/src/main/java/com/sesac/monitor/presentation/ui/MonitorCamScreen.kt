@@ -11,6 +11,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -20,10 +21,11 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import com.sesac.common.ui.theme.paddingLarge
 import com.sesac.common.ui.theme.paddingMedium
-import com.sesac.domain.model.Pet
 import com.sesac.common.ui_state.MonitorUiState
+import com.sesac.domain.model.Pet
 import com.sesac.monitor.presentation.MonitorViewModel
 import org.webrtc.EglBase
+import org.webrtc.RendererCommon
 import org.webrtc.SurfaceViewRenderer
 import org.webrtc.VideoTrack
 
@@ -117,21 +119,38 @@ fun VideoView(
     isMirror: Boolean = false // 좌우 반전 여부 파라미터 추가
 ) {
     val eglContext = eglBase?.eglBaseContext
+    val context = LocalContext.current
+    // remember를 사용하여 SurfaceViewRenderer 인스턴스를 리컴포지션 간에도 유지
+    val surfaceViewRenderer = remember { SurfaceViewRenderer(context) }
+
+    // videoTrack sink의 라이프사이클을 DisposableEffect로 관리
+    DisposableEffect(surfaceViewRenderer, videoTrack, eglContext, isMirror) {
+        surfaceViewRenderer.init(eglContext, null)
+        surfaceViewRenderer.setEnableHardwareScaler(true)
+        surfaceViewRenderer.setMirror(isMirror)
+        // 영상의 종횡비를 유지하면서 화면에 맞도록 스케일링 설정
+        surfaceViewRenderer.setScalingType(RendererCommon.ScalingType.SCALE_ASPECT_FIT)
+        // 뷰를 다른 UI 요소 위에 올리기 위해 Z-order 설정
+        surfaceViewRenderer.setZOrderMediaOverlay(true)
+
+
+        videoTrack?.addSink(surfaceViewRenderer)
+
+        onDispose {
+            videoTrack?.removeSink(surfaceViewRenderer)
+            surfaceViewRenderer.release() // Renderer 리소스 해제
+        }
+    }
+
     AndroidView(
-        factory = { context ->
-            SurfaceViewRenderer(context).apply {
-                init(eglContext, null)
-                setEnableHardwareScaler(true)
-                setMirror(isMirror) // 파라미터로 설정
-            }
+        factory = {
+            // factory는 기억된 인스턴스를 반환하기만 하면 됩니다.
+            surfaceViewRenderer
         },
-        update = { surfaceViewRenderer ->
-            videoTrack?.addSink(surfaceViewRenderer)
-        },
+        // update 람다는 DisposableEffect가 sink 관리를 처리하므로 필요 없음
         modifier = modifier
     )
 }
-
 
 @Composable
 fun PetSelectionContent(pets: List<Pet>, onPetSelect: (Pet) -> Unit) {

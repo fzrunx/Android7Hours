@@ -119,15 +119,37 @@ class MonitorViewModel @Inject constructor(
                 webRTCUseCase.observeSignalingEvents().collectLatest { event ->
                     when (event) {
                         is SignalingEvent.OfferReceived -> {
-                            Log.d("MonitorViewModel", "Offer received")
+                            Log.d("MonitorViewModel", "Offer received from user ${event.fromUserId}")
                             // 펫 입장에서 Offer를 받으면 Answer를 생성하여 보냅니다.
+                            // WebRTCRepository의 targetUserId를 업데이트합니다.
+                            if (currentUser == null) {
+                                _uiState.value = MonitorUiState.Error("사용자 정보가 없습니다.")
+                                return@collectLatest // 여기서 return@collectLatest를 사용하여 현재 collectLatest 블록을 종료
+                            }
+
+                            // 이미 연결 중이면 무시
+                            if (_uiState.value is MonitorUiState.Streaming) {
+                                Log.d("MonitorViewModel", "Already streaming, ignoring duplicate offer")
+                                return@collectLatest
+                            }
+
+                            // targetUserId 업데이트 (이제 누가 Offer를 보냈는지 알았으므로)
+                            targetUserId = event.fromUserId
+
+                            webRTCUseCase.initializeWebRTC(
+                                myUserId = currentUser!!.id.toString(),
+                                targetUserId = event.fromUserId // Offer를 보낸 사용자의 ID를 target으로 설정
+                            )
                             webRTCUseCase.sendAnswer(event.sdp)
+                            _uiState.value = MonitorUiState.Streaming // 상태 업데이트
                         }
 
                         is SignalingEvent.AnswerReceived -> {
                             Log.d("MonitorViewModel", "Answer received")
                             // 주인 입장에서 Answer를 받으면 원격 SDP로 설정합니다.
-                            // (WebRTCRepositoryImpl에서 이미 처리하고 있으므로 별도 호출 필요 없을 수 있음)
+                            viewModelScope.launch { // suspend 함수 호출을 위해 코루틴 런치
+                                webRTCUseCase.setRemoteDescription(event.sdp)
+                            }
                         }
 
                         is SignalingEvent.IceCandidateReceived -> {
@@ -147,7 +169,8 @@ class MonitorViewModel @Inject constructor(
             // 2. 원격 비디오 트랙을 관찰하고 StateFlow에 업데이트합니다.
             webRTCUseCase.observeRemoteVideoTrack().collectLatest { track ->
                 _remoteVideoTrack.value = track
-                if (track != null) {
+                // 주인인 경우에만 Viewing 상태로 변경
+                if (track != null && currentUser?.isPet == false) {
                     // 영상 수신이 시작되면 상태를 Viewing으로 변경
                     _uiState.value = MonitorUiState.Viewing(
                         (_uiState.value as? MonitorUiState.Calling)?.pet
@@ -183,8 +206,8 @@ class MonitorViewModel @Inject constructor(
                     }
 
                     is AuthResult.NetworkError -> {
-                        _monitorablePets.value =
-                            ResponseUiState.Error(result.exception.message ?: "네트워크 오류")
+                        _uiState.value = MonitorUiState.Error(result.exception.message ?: "펫 목록 로드 실패") // 이 부분이 _uiState로 가서 수정
+                        // _monitorablePets.value = ResponseUiState.Error(result.exception.message ?: "네트워크 오류")
                     }
 
                     else -> {
@@ -261,27 +284,24 @@ class MonitorViewModel @Inject constructor(
     /**
      * 펫(Pet)이 스트리밍을 준비할 때 호출합니다.
      */
+    private var isWebRTCInitialized = false // 플래그 추가
+
     fun prepareStreaming() {
         viewModelScope.launch {
             Log.d("MonitorViewModel", "Pet is preparing for streaming...")
 
-            // 1. WebRTC 이벤트를 감지하기 시작합니다. (주인으로부터 Offer가 올 것을 대비)
-            observeWebRTCEvents()
-
-            // 2. WebRTC 세션을 초기화합니다.
-            // myId는 필요하지만, targetId는 Offer를 보낸 사람으로부터 오기 때문에 임시 값을 넣거나,
-            // Offer 수신 시점에 Repository를 재초기화해야 합니다.
-            // 여기서는 먼저 내 ID로 초기화합니다.
-            if (currentUser == null) {
-                _uiState.value = MonitorUiState.Error("사용자 정보가 없습니다.")
+            // 이미 초기화되어 있으면 무시
+            if (isWebRTCInitialized) {
+                Log.d("MonitorViewModel", "WebRTC already initialized, skipping")
+                _uiState.value = MonitorUiState.PetScreen
                 return@launch
             }
-            webRTCUseCase.initializeWebRTC(
-                myUserId = currentUser!!.id.toString(),
-                targetUserId = "" // targetId는 아직 모름
-            )
 
-            _uiState.value = MonitorUiState.Streaming
+            // WebRTC 이벤트 감지 시작
+            observeWebRTCEvents()
+            isWebRTCInitialized = true
+
+            _uiState.value = MonitorUiState.PetScreen
         }
     }
 

@@ -31,6 +31,7 @@ class SignalingClient @Inject constructor(
 ) {
     private val signalingScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     private var webSocket: WebSocket? = null
+    private var isConnecting = false // 연결 중 플래그 추가
 
     companion object {
         private const val TAG = "SignalingClient"
@@ -45,9 +46,28 @@ class SignalingClient @Inject constructor(
     }
 
     fun observeEvents(): Flow<SignalingEvent> = callbackFlow {
+
+        if (webSocket != null) {
+            Log.d(TAG, "WebSocket already connected, skipping new connection")
+            awaitClose {
+                // 아무 것도 하지 않음 - 기존 연결 유지
+            }
+            return@callbackFlow
+        }
+
+        // 연결 중이면 대기
+        if (isConnecting) {
+            Log.d(TAG, "WebSocket connection in progress, waiting...")
+            awaitClose {}
+            return@callbackFlow
+        }
+
+        isConnecting = true
+
         val webSocketListener = object : WebSocketListener() {
             override fun onOpen(webSocket: WebSocket, response: Response) {
                 super.onOpen(webSocket, response)
+                isConnecting = false
                 Log.d(TAG, "WebSocket connection opened.")
             }
 
@@ -57,21 +77,23 @@ class SignalingClient @Inject constructor(
                 try {
                     val json = JSONObject(text)
                     val messageJson = json.getJSONObject("message")
+                    val fromUserId = json.getString("from_user_id") // from_user_id 추출
+
                     when (val type = messageJson.getString("type")) {
                         "offer" -> {
                             val sdp = messageJson.getString("sdp")
-                            trySend(SignalingEvent.OfferReceived(SessionDescription(SessionDescription.Type.OFFER, sdp)))
+                            trySend(SignalingEvent.OfferReceived(SessionDescription(SessionDescription.Type.OFFER, sdp), fromUserId))
                         }
                         "answer" -> {
                             val sdp = messageJson.getString("sdp")
-                            trySend(SignalingEvent.AnswerReceived(SessionDescription(SessionDescription.Type.ANSWER, sdp)))
+                            trySend(SignalingEvent.AnswerReceived(SessionDescription(SessionDescription.Type.ANSWER, sdp), fromUserId))
                         }
                         "ice_candidate" -> {
                             val candidateJson = messageJson.getJSONObject("candidate")
                             val sdpMid = candidateJson.getString("sdpMid")
                             val sdpMLineIndex = candidateJson.getInt("sdpMLineIndex")
                             val sdp = candidateJson.getString("candidate")
-                            trySend(SignalingEvent.IceCandidateReceived(IceCandidate(sdpMid, sdpMLineIndex, sdp)))
+                            trySend(SignalingEvent.IceCandidateReceived(IceCandidate(sdpMid, sdpMLineIndex, sdp), fromUserId))
                         }
                         else -> {
                             Log.w(TAG, "Unknown message type: $type")
@@ -84,16 +106,21 @@ class SignalingClient @Inject constructor(
 
             override fun onClosing(webSocket: WebSocket, code: Int, reason: String) {
                 super.onClosing(webSocket, code, reason)
+                isConnecting = false
                 Log.d(TAG, "WebSocket closing: $code / $reason")
             }
 
             override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
                 super.onClosed(webSocket, code, reason)
+                isConnecting = false
+                this@SignalingClient.webSocket = null
                 Log.d(TAG, "WebSocket closed: $code / $reason")
             }
 
             override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
                 super.onFailure(webSocket, t, response)
+                isConnecting = false
+                this@SignalingClient.webSocket = null
                 Log.e(TAG, "WebSocket failure", t)
                 close(t) // Close the flow on failure
             }
@@ -102,6 +129,7 @@ class SignalingClient @Inject constructor(
         signalingScope.launch {
             val token = sessionRepository.getAccessToken().first()
             if (token.isNullOrEmpty()) {
+                isConnecting = false
                 close(IllegalStateException("Access token is not available."))
                 return@launch
             }
@@ -117,20 +145,22 @@ class SignalingClient @Inject constructor(
         awaitClose {
             Log.d(TAG, "Closing WebSocket connection.")
             webSocket?.close(1000, "Client closing")
+            webSocket = null
+            isConnecting = false
             signalingScope.cancel()
         }
     }
 
-    fun sendOffer(sdp: SessionDescription, targetUser: String) {
-        val message = createBaseMessage(targetUser).apply {
+    fun sendOffer(sdp: SessionDescription, targetUserId: String) {
+        val message = createBaseMessage(targetUserId).apply {
             put("type", "offer")
             put("sdp", sdp.description)
         }
         sendMessage(message)
     }
 
-    fun sendAnswer(sdp: SessionDescription, targetUser: String) {
-        val message = createBaseMessage(targetUser).apply {
+    fun sendAnswer(sdp: SessionDescription, targetUserId: String) {
+        val message = createBaseMessage(targetUserId).apply {
             put("type", "answer")
             put("sdp", sdp.description)
         }

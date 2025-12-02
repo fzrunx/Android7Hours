@@ -15,6 +15,7 @@ interface WebRTCRepository {
     fun observeLocalVideoTrack(): Flow<VideoTrack?>
     suspend fun sendOffer(): Unit
     suspend fun sendAnswer(sessionDescription: SessionDescription): Unit
+    suspend fun setRemoteDescription(sessionDescription: SessionDescription)
     fun sendIceCandidate(iceCandidate: IceCandidate)
     fun closeSession()
 }

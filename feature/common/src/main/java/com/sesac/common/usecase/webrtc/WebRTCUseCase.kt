@@ -4,6 +4,7 @@ data class WebRTCUseCase(
     val initializeWebRTC: InitializeWebRTCUseCase,
     val sendOffer: SendOfferUseCase,
     val sendAnswer: SendAnswerUseCase,
+    val setRemoteDescription: SetRemoteDescriptionUseCase,
     val sendIceCandidate: SendIceCandidateUseCase,
     val observeSignalingEvents: ObserveSignalingEventsUseCase,
     val observeRemoteVideoTrack: ObserveRemoteVideoTrackUseCase,

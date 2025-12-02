@@ -19,6 +19,7 @@ object WebRTCUseCaseModule {
             initializeWebRTC = InitializeWebRTCUseCase(repository),
             sendOffer = SendOfferUseCase(repository),
             sendAnswer = SendAnswerUseCase(repository),
+            setRemoteDescription = SetRemoteDescriptionUseCase(repository),
             sendIceCandidate = SendIceCandidateUseCase(repository),
             observeSignalingEvents = ObserveSignalingEventsUseCase(repository),
             observeRemoteVideoTrack = ObserveRemoteVideoTrackUseCase(repository),

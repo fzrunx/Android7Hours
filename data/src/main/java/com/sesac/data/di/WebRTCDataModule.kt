@@ -12,6 +12,8 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import okhttp3.OkHttpClient
+import org.webrtc.DefaultVideoDecoderFactory
+import org.webrtc.DefaultVideoEncoderFactory
 import org.webrtc.EglBase
 import org.webrtc.PeerConnectionFactory
 import javax.inject.Singleton
@@ -39,10 +41,14 @@ object WebRTCDataModule {
                 .setFieldTrials("WebRTC-H264HighProfile/Enabled/") // H264 하드웨어 인코딩 활성화 등
                 .createInitializationOptions()
         )
+
+        val videoEncoderFactory = DefaultVideoEncoderFactory(eglBase.eglBaseContext, true, true)
+        val videoDecoderFactory = DefaultVideoDecoderFactory(eglBase.eglBaseContext)
+
         // WebRTCClient 내부에서 Encoder/Decoder Factory를 생성하므로, 여기서만 초기화하면 됩니다.
         return PeerConnectionFactory.builder()
-            // .setVideoEncoderFactory(...) 및 .setVideoDecoderFactory(...)는 WebRTCClient에서
-            // DefaultVideoEncoderFactory/DefaultVideoDecoderFactory를 사용하여 설정
+            .setVideoEncoderFactory(videoEncoderFactory)
+            .setVideoDecoderFactory(videoDecoderFactory)
             .createPeerConnectionFactory()
     }
 
