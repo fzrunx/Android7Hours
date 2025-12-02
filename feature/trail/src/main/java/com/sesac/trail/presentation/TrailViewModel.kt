@@ -1,9 +1,6 @@
 package com.sesac.trail.presentation
 
 import android.util.Log
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.naver.maps.geometry.LatLng
@@ -11,19 +8,19 @@ import com.naver.maps.map.NaverMap
 import com.naver.maps.map.overlay.Marker
 import com.naver.maps.map.overlay.PolylineOverlay
 import com.sesac.common.model.UiEvent
-import com.sesac.domain.model.BookmarkType
+import com.sesac.domain.type.BookmarkType
 import com.sesac.domain.model.BookmarkedPath
 import com.sesac.domain.model.Comment
-import com.sesac.domain.model.CommentType
+import com.sesac.domain.type.CommentType
 import com.sesac.domain.model.Coord
 import com.sesac.domain.model.Path
 import com.sesac.domain.model.Place
-import com.sesac.domain.model.Post
+import com.sesac.domain.model.User
 import com.sesac.domain.result.AuthResult
 import com.sesac.domain.result.LocationFlowResult
 import com.sesac.domain.result.ResponseUiState
 import com.sesac.domain.usecase.bookmark.BookmarkUseCase
-import com.sesac.domain.usecase.comment.CommentUseCases
+import com.sesac.domain.usecase.comment.CommentUseCase
 import com.sesac.domain.usecase.location.LocationUseCase
 import com.sesac.domain.usecase.path.PathUseCase
 import com.sesac.domain.usecase.place.PlaceUseCase
@@ -39,11 +36,8 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.receiveAsFlow
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-import android.location.Location
-import com.sesac.domain.model.User
 
 @HiltViewModel
 class TrailViewModel @Inject constructor(
@@ -51,7 +45,7 @@ class TrailViewModel @Inject constructor(
     private val pathUseCase: PathUseCase,
     private val locationUseCase: LocationUseCase,
     private val bookmarkUseCase: BookmarkUseCase,
-    private val commentUseCases: CommentUseCases,
+    private val commentUseCase: CommentUseCase,
     private val placeUseCases: PlaceUseCase
 ) : ViewModel() {
     private val _invalidToken = Channel<UiEvent>()
@@ -67,8 +61,6 @@ class TrailViewModel @Inject constructor(
 
     private val _tempPathCoords = MutableStateFlow<List<LatLng>>(emptyList())
     val tempPathCoords = _tempPathCoords.asStateFlow()
-
-
 
     fun startLocationUpdates() {
         Log.d("TrailViewModel", "startLocationUpdates() called")
@@ -357,7 +349,7 @@ class TrailViewModel @Inject constructor(
                     if (bookmarkResponse is AuthResult.Success) {
                         // Refresh the list on success
                         getUserBookmarkedPaths(token)
-                        _selectedPath.value = _selectedPath.value?.copy(bookmarksCount = bookmarkResponse.resultData.bookmarksCount)
+                        _selectedPath.value = _selectedPath.value?.copy(bookmarkCount = bookmarkResponse.resultData.bookmarkCount)
                     } else if (bookmarkResponse is AuthResult.NetworkError) {
                         Log.e(
                             "MypageViewModel",
@@ -701,7 +693,7 @@ class TrailViewModel @Inject constructor(
     fun getComments(pathId: Int) {
         viewModelScope.launch {
             _commentsState.value = ResponseUiState.Loading
-            commentUseCases.getCommentsUseCase(pathId, CommentType.PATH)
+            commentUseCase.getCommentsUseCase(pathId, CommentType.PATH)
                 .catch { e ->
                     _commentsState.value = ResponseUiState.Error(e.message ?: "알 수 없는 오류가 발생했습니다.")
                 }
@@ -725,7 +717,7 @@ class TrailViewModel @Inject constructor(
 
     fun createComment(token: String, pathId: Int, content: String) {
         viewModelScope.launch {
-            commentUseCases.createCommentUseCase(token, pathId, content, CommentType.PATH)
+            commentUseCase.createCommentUseCase(token, pathId, content, CommentType.PATH)
                 .collectLatest { result ->
                     when (result) {
                         is AuthResult.Success -> getComments(pathId) // Refresh comments list
@@ -740,7 +732,7 @@ class TrailViewModel @Inject constructor(
 
     fun updateComment(token: String, pathId: Int, commentId: Int, content: String) {
         viewModelScope.launch {
-            commentUseCases.updateCommentUseCase(
+            commentUseCase.updateCommentUseCase(
                 token,
                 pathId,
                 commentId,
@@ -761,7 +753,7 @@ class TrailViewModel @Inject constructor(
 
     fun deleteComment(token: String, pathId: Int, commentId: Int) {
         viewModelScope.launch {
-            commentUseCases.deleteCommentUseCase(token, pathId, commentId, CommentType.PATH)
+            commentUseCase.deleteCommentUseCase(token, pathId, commentId, CommentType.PATH)
                 .collectLatest { result ->
                     when (result) {
                         is AuthResult.Success -> getComments(pathId) // Refresh comments list
@@ -935,7 +927,7 @@ class TrailViewModel @Inject constructor(
     fun loadPlaceComments(placeId: Int) {
         viewModelScope.launch {
             _commentsState.value = ResponseUiState.Loading
-            commentUseCases.getCommentsUseCase(
+            commentUseCase.getCommentsUseCase(
                 objectId = placeId,
                 type = CommentType.PATH  // ✅ 장소 댓글도 PATH 타입 사용
             )
@@ -971,7 +963,7 @@ class TrailViewModel @Inject constructor(
                 return@launch
             }
 
-            commentUseCases.createCommentUseCase(
+            commentUseCase.createCommentUseCase(
                 token = token,
                 objectId = placeId,
                 content = content,
@@ -1002,7 +994,7 @@ class TrailViewModel @Inject constructor(
                 return@launch
             }
 
-            commentUseCases.updateCommentUseCase(
+            commentUseCase.updateCommentUseCase(
                 token = token,
                 objectId = placeId,
                 commentId = commentId,
@@ -1034,7 +1026,7 @@ class TrailViewModel @Inject constructor(
                 return@launch
             }
 
-            commentUseCases.deleteCommentUseCase(
+            commentUseCase.deleteCommentUseCase(
                 token = token,
                 objectId = placeId,
                 commentId = commentId,

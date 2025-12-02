@@ -3,7 +3,7 @@ package com.sesac.mypage.presentation
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.sesac.domain.model.BookmarkType
+import com.sesac.domain.type.BookmarkType
 import com.sesac.domain.model.BookmarkedPath
 import com.sesac.domain.model.Breed
 import com.sesac.domain.model.FavoriteCommunityPost

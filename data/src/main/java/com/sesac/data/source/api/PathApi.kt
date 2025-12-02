@@ -3,6 +3,7 @@ package com.sesac.data.source.api
 import com.sesac.data.dto.BookmarkResponseDTO
 import com.sesac.data.dto.CommentDTO
 import com.sesac.data.dto.CommentRequestDTO
+import com.sesac.data.dto.LikeResponseDTO
 import com.sesac.data.dto.PathDTO
 import com.sesac.data.dto.PathCreateRequestDTO
 import com.sesac.data.dto.PathUpdateRequestDTO
@@ -31,7 +32,6 @@ interface PathApi {
 
     @GET("paths/{id}/")
     suspend fun getPathById(
-//        @Header("Authorization") token: String,
         @Path("id") id: Int
     ): PathDTO
 
@@ -46,6 +46,12 @@ interface PathApi {
         @Header("Authorization") token: String,
         @Path("id") id: Int,
     ): BookmarkResponseDTO
+
+    @POST("paths/{id}/like_toggle/")
+    suspend fun likeToggle(
+        @Header("Authorization") token: String,
+        @Path("id") id: Int,
+    ): LikeResponseDTO
 
     @PATCH("paths/{id}/")
     suspend fun updatePath(

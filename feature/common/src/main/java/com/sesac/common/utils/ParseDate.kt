@@ -1,8 +1,6 @@
 package com.sesac.common.utils
 
-import android.os.Build
 import android.util.Log
-import androidx.annotation.RequiresApi
 import java.text.ParseException
 import java.text.SimpleDateFormat
 import java.time.format.DateTimeFormatter

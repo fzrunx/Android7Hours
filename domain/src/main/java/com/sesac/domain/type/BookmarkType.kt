@@ -1,4 +1,4 @@
-package com.sesac.domain.model
+package com.sesac.domain.type
 
 enum class BookmarkType {
     PATH,

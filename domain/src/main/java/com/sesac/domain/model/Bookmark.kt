@@ -20,14 +20,14 @@ data class Bookmark(
 )
 
 data class BookmarkResponse(
-    val bookmarked: Boolean,
-    val bookmarksCount: Int,
+    val isBookmarked: Boolean,
+    val bookmarkCount: Int,
     val status: String,
 ) {
     companion object{
         val EMPTY = BookmarkResponse(
-            bookmarked = false,
-            bookmarksCount = 0,
+            isBookmarked = false,
+            bookmarkCount = 0,
             status = "empty-state"
         )
     }

@@ -230,6 +230,7 @@ class MainActivity : ComponentActivity() {
                     appTopBarData = finalTopBarData,
                     appBottomBarItem = appBottomBarItem,
                     isSearchOpen = isSearchOpen,
+                    screensWithCustomTopBar = listOf(stringResource(cR.string.community)), // New parameter
                     navHost = { paddingValues ->
                         AppNavHost(
                             trailViewModel = trailViewModel,
@@ -246,7 +247,6 @@ class MainActivity : ComponentActivity() {
                             },
                             startDestination = startDestination,
                             uiState = uiState,
-                            isSearchOpen = isSearchOpen,
                             onStartFollowing = { path ->
                                 trailViewModel.startFollowing(path) // ✅ ViewModel 함수 호출
                                 trailViewModel.updateIsSheetOpen(false) // 시트 닫기

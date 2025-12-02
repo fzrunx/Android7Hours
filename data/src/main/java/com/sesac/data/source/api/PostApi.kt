@@ -1,100 +1,98 @@
 package com.sesac.data.source.api
 
-import com.sesac.data.dto.BookmarkToggleResponseDTO
+import com.sesac.data.dto.BookmarkResponseDTO
 import com.sesac.data.dto.CommentDTO
 import com.sesac.data.dto.CommentRequestDTO
-import com.sesac.data.dto.LikeToggleResponseDTO
-import com.sesac.data.dto.PostDTO
-import okhttp3.MultipartBody
-import okhttp3.RequestBody
+import com.sesac.data.dto.LikeResponseDTO
+import com.sesac.data.dto.post.request.PostCreateRequestDTO
+import com.sesac.data.dto.post.request.PostUpdateRequestDTO
+import com.sesac.data.dto.post.response.PostDTO
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.Header
-import retrofit2.http.Multipart
 import retrofit2.http.PATCH
 import retrofit2.http.POST
-import retrofit2.http.Part
 import retrofit2.http.Path
+import retrofit2.http.Query
 
 interface PostApi {
 
     @GET("posts/")
-    suspend fun getPosts(
+    suspend fun getPostsList(
+        @Header("Authorization") token: String,
+        @Query("query") query: String? = null
+    ): List<PostDTO>
+
+    @GET("posts/mine/")
+    suspend fun getMyPosts(
         @Header("Authorization") token: String
     ): List<PostDTO>
 
     @GET("posts/{id}/")
-    suspend fun getPostById(
+    suspend fun getPostDetail(
         @Header("Authorization") token: String,
         @Path("id") id: Int
     ): PostDTO
 
-    @Multipart
     @POST("posts/")
     suspend fun createPost(
         @Header("Authorization") token: String,
-        @Part("title") title: RequestBody,
-        @Part("content") content: RequestBody,
-        @Part("post_type") postType: RequestBody,
-        @Part image: MultipartBody.Part?
+        @Body request: PostCreateRequestDTO
     ): PostDTO
 
-    @Multipart
     @PATCH("posts/{id}/")
     suspend fun updatePost(
         @Header("Authorization") token: String,
         @Path("id") id: Int,
-        @Part("title") title: RequestBody,
-        @Part("content") content: RequestBody,
-        @Part("post_type") postType: RequestBody,
-        @Part image: MultipartBody.Part? // To remove image, a different mechanism might be needed
+        @Body request: PostUpdateRequestDTO
     ): PostDTO
 
     @DELETE("posts/{id}/")
     suspend fun deletePost(
         @Header("Authorization") token: String,
         @Path("id") id: Int
-    )
+    ): Unit
 
-    @POST("posts/{post_id}/like-toggle/")
-    suspend fun toggleLike(
+    @POST("posts/{id}/bookmark-toggle/")
+    suspend fun bookmarkToggle(
         @Header("Authorization") token: String,
-        @Path("post_id") postId: Int
-    ): LikeToggleResponseDTO
+        @Path("id") id: Int,
+    ): BookmarkResponseDTO
 
-    @POST("posts/{post_id}/bookmark-toggle/")
-    suspend fun toggleBookmark(
+    @POST("posts/{id}/like-toggle/")
+    suspend fun likeToggle(
         @Header("Authorization") token: String,
-        @Path("post_id") postId: Int
-    ): BookmarkToggleResponseDTO
+        @Path("id") id: Int,
+    ): LikeResponseDTO
 
-    // ========== Comments ==========
 
-    @GET("posts/{id}/comments/")
+    @GET("posts/{postId}/comments/")
     suspend fun getComments(
-        @Path("id") postId: Int
+        @Path("postId") postId: Int
     ): List<CommentDTO>
 
-    @POST("posts/{id}/comments/")
+    @POST("posts/{postId}/comments/")
     suspend fun createComment(
         @Header("Authorization") token: String,
-        @Path("id") postId: Int,
+        @Path("postId") postId: Int,
         @Body request: CommentRequestDTO
     ): CommentDTO
 
-    @PATCH("posts/{id}/comments/{commentId}/")
-    suspend fun updateComment(
-        @Header("Authorization") token: String,
-        @Path("id") postId: Int,
-        @Path("commentId") commentId: Int,
-        @Body request: CommentRequestDTO
-    ): CommentDTO
-
-    @DELETE("posts/{id}/comments/{commentId}/")
+    @DELETE("posts/{postId}/comments/{commentId}/")
     suspend fun deleteComment(
         @Header("Authorization") token: String,
-        @Path("id") postId: Int,
-        @Path("commentId") commentId: Int,
-    )
+        @Path("postId") postId: Int,
+        @Path("commentId") commentId: Int
+    ): Unit
 }
+
+
+
+//
+//    @POST("posts/{post_id}/like_toggle/")
+//    suspend fun toggleLike(
+//        @Header("Authorization") token: String,
+//        @Path("post_id") postId: Int
+//    ): LikeResponseDTO
+

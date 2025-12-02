@@ -86,7 +86,7 @@ fun PathEntity.toUserPath(): Path {
         coord = coords, // ✅ List<Coord>
         markers = markers, // ✅ List<MemoMarker>
         tags = emptyList(), // ✅ PathEntity에 tags 없으면 빈 리스트
-        bookmarksCount = 0, // ✅ 필수 필드 추가
+        bookmarkCount = 0, // ✅ 필수 필드 추가
         isBookmarked = false, // ✅ 필수 필드 추가
         likes = 0,
         distanceFromMe = 0f

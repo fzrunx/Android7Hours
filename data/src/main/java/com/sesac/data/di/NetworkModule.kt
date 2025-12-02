@@ -3,10 +3,11 @@ package com.sesac.data.di
 import com.sesac.data.BuildConfig
 import com.sesac.data.dto.BookmarkedObject
 import com.sesac.data.dto.BookmarkedPathDTO
-import com.sesac.data.dto.PostDTO
+import com.sesac.data.dto.BookmarkedPostDTO
 import com.sesac.data.repository.SessionRepositoryImpl
 import com.sesac.data.source.api.AuthApi
 import com.sesac.data.source.api.BookmarkApi
+import com.sesac.data.source.api.LikeApi
 import com.sesac.data.source.api.PathApi
 import com.sesac.data.source.api.PetsApi
 import com.sesac.data.source.api.PlaceApi
@@ -26,14 +27,12 @@ import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
 import java.net.CookieManager
 import javax.inject.Provider
-import java.util.concurrent.TimeUnit
 import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
 
-//    private const val BASE_URL = "http://192.168.0.73:8000/"
     private const val BASE_URL = BuildConfig.SERVER_URL
 
     @Provides
@@ -43,7 +42,7 @@ object NetworkModule {
             .add(
                 PolymorphicJsonAdapterFactory.of(BookmarkedObject::class.java, "content_type_name")
                     .withSubtype(BookmarkedPathDTO::class.java, "path")
-                    .withSubtype(PostDTO::class.java, "post")
+                    .withSubtype(BookmarkedPostDTO::class.java, "post")
             )
             .add(KotlinJsonAdapterFactory())
             .build()
@@ -140,6 +139,14 @@ object NetworkModule {
         retrofit: Retrofit
     ): PlaceApi =
         retrofit.create(PlaceApi::class.java)
+
+
+    @Provides
+    @Singleton
+    fun provideLikeApi(
+        retrofit: Retrofit
+    ): LikeApi =
+        retrofit.create(LikeApi::class.java)
 
 }
 

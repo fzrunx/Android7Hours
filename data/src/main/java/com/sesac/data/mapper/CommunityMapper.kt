@@ -7,7 +7,7 @@ fun CommunityDTO.toCommunity(
     userName: String,
     content: String?,
 ) = Community(
-    postId = this.id,
+    id = this.id,
     title = this.title,
     userName = userName,
     content = content ?: "",

@@ -1,8 +1,6 @@
 package com.sesac.domain.usecase.comment
 
-import javax.inject.Inject
-
-data class CommentUseCases @Inject constructor(
+data class CommentUseCase(
     val getCommentsUseCase: GetCommentsUseCase,
     val createCommentUseCase: CreateCommentUseCase,
     val updateCommentUseCase: UpdateCommentUseCase,

@@ -33,7 +33,7 @@ fun CommonCommentItem(comment: Comment) {
         verticalAlignment = Alignment.Top
     ) {
         // ⭐ 이미지가 비어있으면 기본 아이콘 표시
-        if (comment.authorImage.isEmpty()) {
+        if (comment.authorImage.isNullOrEmpty()) {
             Box(
                 modifier = Modifier
                     .size(32.dp)
@@ -60,9 +60,9 @@ fun CommonCommentItem(comment: Comment) {
         Spacer(modifier = Modifier.width(12.dp))
         Column {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(text = comment.author, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                Text(text = comment.authorNickName, fontWeight = FontWeight.Bold, fontSize = 14.sp)
                 Spacer(modifier = Modifier.width(8.dp))
-                Text(text = comment.timeAgo, fontSize = 12.sp, color = Color.Gray)
+                Text(text = comment.timeAgo ?: "방금 전", fontSize = 12.sp, color = Color.Gray)
             }
             Spacer(modifier = Modifier.height(4.dp))
             Text(text = comment.content, fontSize = 14.sp)

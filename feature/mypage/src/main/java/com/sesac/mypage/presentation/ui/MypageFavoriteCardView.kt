@@ -145,7 +145,7 @@ fun BookmarkedPathCard(
                     Spacer(modifier = Modifier.width(paddingSmall))
                     Text(
 //                        "★ ${path.rating}",
-                        path.bookmarksCount.toString(),
+                        path.bookmarkCount.toString(),
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Bold,
                         color = star

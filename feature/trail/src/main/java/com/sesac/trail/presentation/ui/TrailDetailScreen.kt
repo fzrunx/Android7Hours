@@ -1,6 +1,5 @@
 package com.sesac.trail.presentation.ui
 
-import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Arrangement.spacedBy
@@ -53,6 +52,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import coil3.compose.AsyncImage
+import com.sesac.common.component.CommonCommentSection
 import com.sesac.common.ui.theme.GrayTabText
 import com.sesac.common.ui.theme.PaddingSection
 import com.sesac.common.ui.theme.PrimaryPurpleLight
@@ -64,9 +64,8 @@ import com.sesac.common.ui.theme.paddingSmall
 import com.sesac.domain.model.Path
 import com.sesac.domain.result.AuthUiState
 import com.sesac.domain.result.ResponseUiState
-import com.sesac.trail.presentation.TrailViewModel
-import com.sesac.common.component.CommonCommentSection
 import com.sesac.trail.nav_graph.TrailNavigationRoute
+import com.sesac.trail.presentation.TrailViewModel
 import com.sesac.trail.presentation.component.TagFlow
 
 
@@ -217,7 +216,7 @@ fun TrailDetailScreen(
                         InfoCard(
                             icon = Icons.Filled.Favorite,
                             label = "좋아요",
-                            value = "${selected.bookmarksCount}개",
+                            value = "${selected.bookmarkCount}개",
                             modifier = Modifier.weight(1f)
                         )
                         InfoCard(

@@ -6,7 +6,7 @@ import com.sesac.data.mapper.CommentMapper.toDomain
 import com.sesac.data.source.api.PathApi
 import com.sesac.data.source.api.PostApi
 import com.sesac.domain.model.Comment
-import com.sesac.domain.model.CommentType
+import com.sesac.domain.type.CommentType
 import com.sesac.domain.repository.CommentRepository
 import com.sesac.domain.result.AuthResult
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -62,8 +62,10 @@ class CommentRepositoryImpl @Inject constructor(
         emit(AuthResult.Loading)
         val request = CommentRequestDTO(content = content)
         val response = when (type) {
-            CommentType.PATH -> pathApi.updateComment("Bearer $token", pathId = objectId, commentId = commentId, request = request)
-            CommentType.POST -> postApi.updateComment("Bearer $token", postId = objectId, commentId = commentId, request = request)
+            CommentType.PATH -> {
+                pathApi.updateComment("Bearer $token", pathId = objectId, commentId = commentId, request = request)
+            }
+//            CommentType.POST -> postApi.updateComment("Bearer $token", postId = objectId, commentId = commentId, request = request)
             else -> throw IllegalArgumentException("Unknown comment type: $type")
         }
         val domainModel = response.toDomain(context, objectId)

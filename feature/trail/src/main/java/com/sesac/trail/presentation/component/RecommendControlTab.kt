@@ -238,7 +238,7 @@ fun PathItem(
                         InfoChip(
                             icon = Icons.Outlined.FavoriteBorder,
                             // Django Serializer의 bookmark_count 필드와 매칭
-                            text = "${path.bookmarksCount} 즐겨찾기",
+                            text = "${path.bookmarkCount} 즐겨찾기",
                             style = MaterialTheme.typography.bodyMedium,
                             iconTint = Red500
                         )

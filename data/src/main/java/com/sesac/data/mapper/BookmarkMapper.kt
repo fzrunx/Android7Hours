@@ -5,38 +5,26 @@ import com.sesac.data.dto.BookmarkDTO
 import com.sesac.data.dto.BookmarkResponseDTO
 import com.sesac.data.dto.BookmarkedObject
 import com.sesac.data.dto.BookmarkedPathDTO
-import com.sesac.data.dto.PostDTO
+import com.sesac.data.dto.BookmarkedPostDTO
 import com.sesac.domain.model.Bookmark
 import com.sesac.domain.model.BookmarkResponse
 import com.sesac.domain.model.BookmarkedItem
 import com.sesac.domain.model.BookmarkedPath
-import java.time.Instant
-import kotlin.time.Clock
+import com.sesac.domain.model.Post
+import com.sesac.domain.type.PostType
+
+fun String?.toDomainPostType(): PostType {
+    return when (this?.lowercase()) {
+        "review" -> PostType.REVIEW
+        "info" -> PostType.INFO
+        else -> PostType.UNKNOWN
+    }
+}
 
 /**
  * Converts a [BookmarkDTO] to a [Bookmark] domain model.
  */
 fun BookmarkDTO.toDomain(): Bookmark {
-//    fun parseDate(dateString: String): Date {
-//        val formats = arrayOf(
-//            "yyyy-MM-dd'T'HH:mm:ss.SSSSSS'Z'",
-//            "yyyy-MM-dd'T'HH:mm:ss'Z'",
-//            "yyyy-MM-dd'T'HH:mm:ss.SSSSSSXXX", // ISO 8601 with timezone offset
-//            "yyyy-MM-dd'T'HH:mm:ssXXX"
-//        )
-//        for (format in formats) {
-//            try {
-//                val parser = SimpleDateFormat(format, Locale.US).apply {
-//                    timeZone = TimeZone.getTimeZone("UTC")
-//                }
-//                return parser.parse(dateString) ?: continue
-//            } catch (e: ParseException) {
-//                // Try next format
-//            }
-//        }
-//        // Return current date as a fallback if parsing fails
-//        return Date()
-//    }
     return Bookmark(
         id = this.id,
         createdAt = parseDate(this.createdAt),
@@ -50,7 +38,7 @@ fun BookmarkDTO.toDomain(): Bookmark {
 fun BookmarkedObject.toDomain(): BookmarkedItem {
     return when (this) {
         is BookmarkedPathDTO -> this.toDomain()
-        is PostDTO -> this.toPost() // Uses the existing mapper from PostMapper
+        is BookmarkedPostDTO -> this.toDomain() // Uses the existing mapper from PostMapper
     }
 }
 
@@ -69,16 +57,38 @@ fun BookmarkedPathDTO.toDomain(): BookmarkedPath {
         duration = this.duration,
         isPrivate = this.isPrivate,
         thumbnail = this.thumbnail,
-        bookmarksCount = this.bookmarksCount,
+        bookmarkCount = this.bookmarksCount,
         isBookmarked = this.isBookmarked
+    )
+}
+
+fun BookmarkedPostDTO.toPost(): Post {
+
+    return Post(
+        id = this.id,
+        userId = this.authUser,
+        authUserNickname = this.authUserNickname,
+        authUserProfileImageUrl = this.authUserProfileImageUrl,
+        postType = this.postType.toDomainPostType(),
+        title = this.title,
+        image = this.image,
+        viewCount = this.viewCount,
+        commentCount = this.commentCount,
+        likeCount = this.likeCount,
+        bookmarkCount = this.bookmarkCount,
+        isLiked = this.isLiked,
+        isBookmarked = this.isBookmarked,
+        createdAt = parseDate(this.createdAt),
+        updatedAt = parseDate(this.updatedAt),
+        content = "",
     )
 }
 
 fun BookmarkResponseDTO.toBookmarkResponse(): BookmarkResponse{
     return BookmarkResponse(
-        bookmarked = this.bookmarked,
-        bookmarksCount = this.bookmarksCount,
-        status = this.status
+        isBookmarked = this.bookmarked,
+        bookmarkCount = this.bookmarksCount,
+        status = this.status,
     )
 }
 

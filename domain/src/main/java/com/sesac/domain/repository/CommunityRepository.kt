@@ -1,6 +1,7 @@
 package com.sesac.domain.repository
 
 import com.sesac.domain.model.Community
+
 import kotlinx.coroutines.flow.Flow
 
 interface CommunityRepository {

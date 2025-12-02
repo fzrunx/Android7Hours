@@ -30,6 +30,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import com.sesac.common.component.LocalIsSearchOpen
+import com.sesac.common.ui.theme.paddingNone
 import com.sesac.common.R as cR
 
 
@@ -44,12 +45,13 @@ fun EntryPointScreen(
     appTopBarData: TopBarData,
     appBottomBarItem: List<BottomBarItem>,
     isSearchOpen: MutableState<Boolean>,
+    screensWithCustomTopBar: List<String>, // New parameter
     navHost: @Composable (PaddingValues) -> Unit,
 ) {
     // 2. 현재 화면의 Route(경로) 감지 -> Community 탭일 때 TopBar 숨기기
-    val isHideTopBar by remember(appTopBarData.title) {
+    val isHideTopBar by remember(appTopBarData.title, screensWithCustomTopBar) {
         derivedStateOf {
-            appTopBarData.title == "커뮤니티" || appTopBarData.title == "Community"
+            screensWithCustomTopBar.contains(appTopBarData.title)
         }
     }
     val isHideBottomBar by remember(isRecording) {
@@ -73,6 +75,7 @@ fun EntryPointScreen(
             modifier = Modifier.fillMaxSize(),
 
             // 5. TopBar 조건부 렌더링
+
             topBar = {
                 if (!isHideTopBar && !isRecording) {
                     CenterAlignedTopAppBar(
@@ -182,7 +185,12 @@ fun EntryPointScreen(
                 }
             },
         ) { paddingValues ->
-            navHost(paddingValues)
+            navHost(
+                PaddingValues(
+                    top = if (isHideTopBar) paddingNone else paddingValues.calculateTopPadding(),
+                    bottom = paddingValues.calculateBottomPadding()
+                )
+            )
         }
     }
 }

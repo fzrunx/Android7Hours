@@ -172,8 +172,8 @@ fun CommentItem(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text(comment.author, fontWeight = FontWeight.Bold)
-                    Text(comment.timeAgo, style = MaterialTheme.typography.bodySmall, color = Gray500)
+                    Text(comment.authorNickName, fontWeight = FontWeight.Bold)
+                    Text(comment.timeAgo ?: "방금 전", style = MaterialTheme.typography.bodySmall, color = Gray500)
                 }
 
                 Spacer(modifier = Modifier.height(4.dp))

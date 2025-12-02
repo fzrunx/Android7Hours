@@ -30,7 +30,7 @@ fun CommonCommentSheetContent(
     onAddComment: () -> Unit,
 ) {
     val postComments by remember(post, comments) {
-        derivedStateOf { comments.filter { it.postId == post.id.toInt() } }
+        derivedStateOf { comments.filter { it.objectId == post.id.toInt() } }
     }
 
     Column(

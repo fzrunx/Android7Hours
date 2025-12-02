@@ -1,7 +1,7 @@
 package com.sesac.domain.repository
 
 import com.sesac.domain.model.Comment
-import com.sesac.domain.model.CommentType
+import com.sesac.domain.type.CommentType
 import com.sesac.domain.result.AuthResult
 import kotlinx.coroutines.flow.Flow
 

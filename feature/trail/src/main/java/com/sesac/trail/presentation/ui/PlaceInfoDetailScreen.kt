@@ -67,7 +67,7 @@ import com.sesac.common.ui.theme.Purple600
 import com.sesac.common.ui.theme.Red500
 import com.sesac.common.ui.theme.White
 import com.sesac.common.ui.theme.paddingLarge
-import com.sesac.domain.model.CommentType
+import com.sesac.domain.type.CommentType
 import com.sesac.domain.model.Place
 import com.sesac.domain.model.PlaceCategory
 import com.sesac.trail.presentation.TrailViewModel

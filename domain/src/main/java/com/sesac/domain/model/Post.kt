@@ -1,40 +1,64 @@
 package com.sesac.domain.model
 
+import com.sesac.domain.type.PostType
 import java.util.Date
 
-/**
- * Represents a Post in the domain layer, used by the UI.
- */
+// 상세 페이지 출력용(게시글 목록 출력용 + content, comments)
 data class Post(
-    override val id: Int,
-    val authUser: String,
-//    val postType: String, // "review" or "info"
+    // PostBaseItem의 모든 속성 구현
+    val id: Int,
+    val userId: Int,
+    val authUserNickname: String? = null,
+    val authUserProfileImageUrl: String?,
+    val postType: PostType,
     val title: String,
-    val content: String,
-    val imageUrl: String?,
+    val image: String?,
+    val viewCount: Int,
+    val commentCount: Int,
+    val likeCount: Int,
+    val bookmarkCount: Int,
+    val isLiked: Boolean,
+    val isBookmarked: Boolean,
     val createdAt: Date,
     val updatedAt: Date,
-    val commentsCount: Int,
-    var likesCount: Int,
-    var bookmarksCount: Int,
-    var isLiked: Boolean,
-    var isBookmarked: Boolean,
-) : BookmarkedItem {
+    val content: String,
+    var comments: List<Comment>? = null,
+) {
     companion object {
         val EMPTY = Post(
             id = -1,
-            authUser = "",
-//            postType = "",
+            userId = -1,
+            authUserNickname = "",
+            authUserProfileImageUrl = null,
+            postType = PostType.UNKNOWN,
             title = "",
-            content = "",
-            imageUrl = "",
-            createdAt = Date(),
-            updatedAt = Date(),
-            commentsCount = 0,
-            likesCount = 0,
-            bookmarksCount = 0,
+            image = null,
+            createdAt = Date(0L),
+            updatedAt = Date(0L),
+            viewCount = 0,
+            commentCount = 0,
+            likeCount = 0,
+            bookmarkCount = 0,
             isLiked = false,
             isBookmarked = false,
+            content = "",
+            comments = null,
         )
     }
 }
+
+data class BookmarkedPost(
+    override val id: Int,
+    val userId: Int,
+    val authUserNickname: String,
+    val authUserProfileImageUrl: String?,
+    val postType: PostType,
+    val title: String,
+    val image: String?,
+    val viewCount: Int,
+    val commentCount: Int,
+    val likeCount: Int,
+    val bookmarkCount: Int,
+    val isLiked: Boolean,
+    val isBookmarked: Boolean
+) : BookmarkedItem

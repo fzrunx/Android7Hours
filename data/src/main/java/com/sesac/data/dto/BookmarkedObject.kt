@@ -7,4 +7,6 @@ import com.squareup.moshi.JsonClass
  */
 sealed interface BookmarkedObject {
     val id: Int // Common identifier for bookmarked items
+    val type: String // Moshi 식별자
+
 }

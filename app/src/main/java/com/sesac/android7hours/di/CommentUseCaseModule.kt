@@ -1,7 +1,7 @@
 package com.sesac.android7hours.di
 
 import com.sesac.domain.repository.CommentRepository
-import com.sesac.domain.usecase.comment.CommentUseCases
+import com.sesac.domain.usecase.comment.CommentUseCase
 import com.sesac.domain.usecase.comment.CreateCommentUseCase
 import com.sesac.domain.usecase.comment.DeleteCommentUseCase
 import com.sesac.domain.usecase.comment.GetCommentsUseCase
@@ -18,8 +18,8 @@ object CommentUseCaseModule {
 
     @Provides
     @ActivityRetainedScoped
-    fun provideCommentUseCases(repository: CommentRepository): CommentUseCases {
-        return CommentUseCases(
+    fun provideCommentUseCase(repository: CommentRepository): CommentUseCase {
+        return CommentUseCase(
             getCommentsUseCase = GetCommentsUseCase(repository),
             createCommentUseCase = CreateCommentUseCase(repository),
             updateCommentUseCase = UpdateCommentUseCase(repository),

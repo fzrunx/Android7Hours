@@ -4,6 +4,7 @@ import android.util.Log
 import com.naver.maps.geometry.LatLng
 import com.sesac.data.mapper.toBookmarkResponse
 import com.sesac.data.dao.PathDao
+import com.sesac.data.mapper.toDomain
 import com.sesac.data.mapper.toMyRecord
 import com.sesac.data.mapper.toPathCreateRequestDTO
 import com.sesac.data.mapper.toPathEntity
@@ -16,6 +17,7 @@ import com.sesac.data.type.DraftStatus
 import com.sesac.data.util.PolylineEncoder
 import com.sesac.domain.model.BookmarkResponse
 import com.sesac.domain.model.Coord
+import com.sesac.domain.model.Like
 import com.sesac.domain.model.MyRecord
 import com.sesac.domain.model.Path
 import com.sesac.domain.repository.PathRepository
@@ -124,6 +126,15 @@ class PathRepositoryImpl @Inject constructor(
         emit(AuthResult.Success(result))
     }.catch {
         Log.d("TAG-PathRepository", "Toggle Bookmark error : $it")
+        emit(AuthResult.NetworkError(it))
+    }
+
+    override suspend fun toggleLike(token: String, id: Int): Flow<AuthResult<Like>>  = flow {
+        emit(AuthResult.Loading)
+        val result = pathApi.likeToggle("Bearer $token", id).toDomain()
+        emit(AuthResult.Success(result))
+    }.catch {
+        Log.d("TAG-TrailRepository", "Toggle Like error : $it")
         emit(AuthResult.NetworkError(it))
     }
 

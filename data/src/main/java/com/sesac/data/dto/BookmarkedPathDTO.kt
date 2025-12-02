@@ -23,4 +23,7 @@ data class BookmarkedPathDTO(
     val bookmarksCount: Int,
     @Json(name = "is_bookmarked")
     val isBookmarked: Boolean,
-) : BookmarkedObject
+) : BookmarkedObject {
+    // Moshi 식별자. JSON 응답의 type 필드와 일치
+    override val type: String = "PATH"
+}

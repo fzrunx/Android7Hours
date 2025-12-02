@@ -23,4 +23,19 @@ class BookmarkRepositoryImpl @Inject constructor(
             emit(AuthResult.NetworkError(e))
         }
     }
+
+    override suspend fun toggleBookmark(objectId: Int, type: String): Flow<AuthResult<Int>> = flow {
+        emit(AuthResult.Loading)
+        try{
+            val response = when (type.uppercase()) {
+                "POST" -> bookmarkApi.togglePostBookmark(objectId)
+                "PATH" -> bookmarkApi.togglePathBookmark(objectId)
+                else -> throw IllegalArgumentException("유효하지 않은 북마크 타입: $type")
+            }
+            emit(AuthResult.Success(response.bookmarkCount))
+        } catch (e: Exception) {
+            Log.d("TAG-BookmarkRepositoryImpl", "toggleBookmark error : $e")
+            emit(AuthResult.NetworkError(e))
+        }
+    }
 }
