@@ -13,7 +13,7 @@ data class Path(
     val isPrivate: Boolean = false,
     val thumbnail: String? = null,
     val coord: List<Coord>? = null,
-    val bookmarksCount: Int,
+    val bookmarkCount: Int,
     val isBookmarked: Boolean,
     val likes: Int = 0,
     val distanceFromMe: Float = 0f, // React의 distance_from_me
@@ -31,7 +31,7 @@ data class Path(
             isPrivate = false,
             thumbnail = "",
             coord = null,
-            bookmarksCount = 0,
+            bookmarkCount = 0,
             isBookmarked = false,
             likes = 0,
             distanceFromMe = 0f,
@@ -55,7 +55,7 @@ data class Path(
         duration = this.duration,
         isPrivate = this.isPrivate,
         thumbnail = this.thumbnail,
-        bookmarksCount = this.bookmarksCount,
+        bookmarkCount = this.bookmarkCount,
         isBookmarked = true,
     )
 }
@@ -75,7 +75,7 @@ data class BookmarkedPath(
     val duration: Int?,
     val isPrivate: Boolean,
     val thumbnail: String?,
-    var bookmarksCount: Int,
+    var bookmarkCount: Int,
     var isBookmarked: Boolean,
 ) : BookmarkedItem
 

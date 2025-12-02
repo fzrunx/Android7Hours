@@ -27,6 +27,7 @@ fun Auth.toAuthDTO() = AuthDTO(
     nickname = this.nickname,
     password = this.password,
     passwordVerification = this.passwordVerification,
+    invitationCode = this.invitationCode,
 )
 
 fun AuthDTO.toUser() = User(
@@ -35,6 +36,8 @@ fun AuthDTO.toUser() = User(
     nickname = this.nickname,
     fullName = this.fullName,
     email = this.email,
+    profileImageUrl = this.profileImage,
+    isPet = this.isPet,
 )
 
 fun List<AuthDTO>.toUserList() = this.map {

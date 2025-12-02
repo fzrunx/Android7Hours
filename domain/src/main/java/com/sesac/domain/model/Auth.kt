@@ -8,6 +8,7 @@ data class Auth(
     val nickname: String,
     val password: String,
     val passwordVerification: String,
+    val invitationCode: String? = null,
 )
 
 data class User(
@@ -16,6 +17,8 @@ data class User(
     val nickname: String?,
     val fullName: String,
     val email: String,
+    val profileImageUrl: String? = null,
+    val isPet: Boolean? = null,
 )
 
 data class JoinFormState(
@@ -28,6 +31,7 @@ data class JoinFormState(
     val name: String = "",
     val nickname: String = "",
     val phone: String = "",
+    val invitationCode: String = "", // NEW FIELD
     val agreeAll: Boolean = false,
     val agreeAge: Boolean = false,
     val agreeTerms: Boolean = false,
@@ -41,6 +45,7 @@ data class JoinFormState(
         nickname = this.nickname,
         password = this.password,
         passwordVerification = this.passwordConfirm,
+        invitationCode = this.invitationCode.ifEmpty { null }
     )
 }
 

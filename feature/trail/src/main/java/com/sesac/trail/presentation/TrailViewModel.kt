@@ -26,7 +26,7 @@ import androidx.compose.runtime.setValue
 import com.sesac.domain.model.BookmarkType
 import com.sesac.domain.model.BookmarkedPath
 import com.sesac.domain.model.Comment
-import com.sesac.domain.model.Post
+import com.sesac.domain.model.PostDetail
 import com.sesac.domain.result.ResponseUiState
 import com.sesac.domain.usecase.bookmark.BookmarkUseCase
 import kotlinx.coroutines.flow.StateFlow
@@ -183,14 +183,14 @@ class TrailViewModel @Inject constructor(
 
     fun getUserBookmarkedPaths(token: String?) {
         viewModelScope.launch {
-            _bookmarkedPaths.value = ResponseUiState.Loading
-            if (token == null) {
-                _bookmarkedPaths.value = ResponseUiState.Error("로그인이 필요합니다.")
-                return@launch
-            }
+                    _bookmarkedPaths.value = ResponseUiState.Loading
+                    if (token == null) {
+                        _bookmarkedPaths.value = ResponseUiState.Error("로그인이 필요합니다.")
+                        return@launch
+                    }
 
-            bookmarkUseCase.getMyBookmarksUseCase(token)
-                .catch { e ->
+                    bookmarkUseCase.getMyBookmarksUseCase(token)
+                        .catch { e ->
                     _bookmarkedPaths.value = ResponseUiState.Error(e.message ?: "알 수 없는 오류가 발생했습니다.")
                 }
                 .collectLatest { bookmarksResult ->
@@ -221,7 +221,7 @@ class TrailViewModel @Inject constructor(
                     if (bookmarkResponse is AuthResult.Success) {
                         // Refresh the list on success
                         getUserBookmarkedPaths(token)
-                        _selectedPath.value = _selectedPath.value?.copy(bookmarksCount = bookmarkResponse.resultData.bookmarksCount)
+                        _selectedPath.value = _selectedPath.value?.copy(bookmarkCount = bookmarkResponse.resultData.bookmarkCount)
                     } else if (bookmarkResponse is AuthResult.NetworkError) {
                         Log.e("MypageViewModel", "Toggle bookmark failed: ${bookmarkResponse.exception}")
                     }
@@ -371,7 +371,7 @@ class TrailViewModel @Inject constructor(
     val comments: StateFlow<List<Comment>> get() = _comments.asStateFlow()
 
     // 선택된 게시물
-    var selectedPostForComments by mutableStateOf<Post?>(null)
+    var selectedPostForComments by mutableStateOf<PostDetail?>(null)
         private set
 
     // 댓글 시트 열림 여부
@@ -383,7 +383,7 @@ class TrailViewModel @Inject constructor(
 
     fun handleOpenComments(path: Path) {
         // Create a synthetic Post object from the UserPath
-        selectedPostForComments = Post.EMPTY
+        selectedPostForComments = PostDetail.EMPTY
         isCommentsOpen = true
     }
 
@@ -410,7 +410,7 @@ class TrailViewModel @Inject constructor(
 
         // We don't need to update a list of posts here, as we only have one "post"
         // But we could update the comment count on the selectedPostForComments
-        selectedPostForComments = selectedPostForComments?.copy(commentsCount = selectedPostForComments!!.commentsCount + 1)
+        selectedPostForComments = selectedPostForComments?.copy(commentCount = selectedPostForComments!!.commentCount + 1)
 
 
         newCommentContent = ""

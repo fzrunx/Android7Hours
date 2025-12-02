@@ -20,8 +20,8 @@ data class PathDTO(
     val isPrivate: Boolean,
     val thumbnail: String?,
     val coords: List<CoordDTO>,
-    @Json(name = "bookmarks_count")
-    val bookmarksCount: Int,
+    @Json(name = "bookmark_count")
+    val bookmarkCount: Int,
     @Json(name = "is_bookmarked")
     val isBookmarked: Boolean,
 )

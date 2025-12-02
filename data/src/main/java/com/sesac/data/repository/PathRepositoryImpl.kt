@@ -3,6 +3,7 @@ package com.sesac.data.repository
 import android.util.Log
 import com.sesac.data.mapper.toBookmarkResponse
 import com.sesac.data.dao.PathDao
+import com.sesac.data.mapper.toLikeResponse
 import com.sesac.data.mapper.toPathCreateRequestDTO
 import com.sesac.data.mapper.toPathEntity
 import com.sesac.data.mapper.toPathUpdateRequestDTO
@@ -13,6 +14,7 @@ import com.sesac.data.source.api.PathApi
 import com.sesac.data.source.local.datasource.MockTrail
 import com.sesac.domain.model.BookmarkResponse
 import com.sesac.domain.model.Coord
+import com.sesac.domain.model.LikeResponse
 import com.sesac.domain.model.MyRecord
 import com.sesac.domain.model.Path
 import com.sesac.domain.repository.PathRepository
@@ -91,6 +93,14 @@ class PathRepositoryImpl @Inject constructor(
         emit(AuthResult.NetworkError(it))
     }
 
+    override suspend fun toggleLike(token: String, id: Int): Flow<AuthResult<LikeResponse>>  = flow {
+        emit(AuthResult.Loading)
+        val result = pathApi.likeToggle("Bearer $token", id).toLikeResponse()
+        emit(AuthResult.Success(result))
+    }.catch {
+        Log.d("TAG-TrailRepository", "Toggle Like error : $it")
+        emit(AuthResult.NetworkError(it))
+    }
 
     override suspend fun getAllMyRecord(): Flow<List<MyRecord?>> = flow {
         emit(MockTrail.myRecord)

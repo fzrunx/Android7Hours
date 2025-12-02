@@ -18,12 +18,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.sesac.domain.model.Comment
-import com.sesac.domain.model.Post
+import com.sesac.domain.model.PostListItem
 
 @Composable
 fun CommonCommentSheetContent(
     modifier: Modifier = Modifier,
-    post: Post,
+    post: PostListItem,
     comments: List<Comment>,
     newCommentContent: String,
     onNewCommentChange: (String) -> Unit,

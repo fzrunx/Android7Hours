@@ -3,7 +3,7 @@ package com.sesac.domain.model
 import java.util.Date
 
 data class Community(
-    val postId: Int,
+    val id: Int,
     var title: String = "",
     val userName: String,
     val isActive: Boolean = false,

@@ -2,12 +2,14 @@ package com.sesac.data.di
 
 import com.sesac.data.dto.BookmarkedObject
 import com.sesac.data.dto.BookmarkedPathDTO
+import com.sesac.data.dto.BookmarkedPostDTO
 import com.sesac.data.dto.PostDTO
 import com.sesac.data.source.api.AuthApi
 import com.sesac.data.source.api.BookmarkApi
 import com.sesac.data.source.api.PathApi
 import com.sesac.data.source.api.PetsApi
 import com.sesac.data.source.api.PostApi
+import com.sesac.data.source.api.LikeApi
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.adapters.PolymorphicJsonAdapterFactory
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
@@ -38,7 +40,7 @@ object NetworkModule {
             .add(
                 PolymorphicJsonAdapterFactory.of(BookmarkedObject::class.java, "content_type_name")
                     .withSubtype(BookmarkedPathDTO::class.java, "path")
-                    .withSubtype(PostDTO::class.java, "post")
+                    .withSubtype(BookmarkedPostDTO::class.java, "post")
             )
             .add(KotlinJsonAdapterFactory())
             .build()
@@ -118,6 +120,14 @@ object NetworkModule {
         retrofit: Retrofit
     ): BookmarkApi =
         retrofit.create(BookmarkApi::class.java)
+
+    @Provides
+    @Singleton
+    fun provideLikeApi(
+        retrofit: Retrofit
+    ): LikeApi =
+        retrofit.create(LikeApi::class.java)
+
 }
 
 //@Module

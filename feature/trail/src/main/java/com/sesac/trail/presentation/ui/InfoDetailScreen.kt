@@ -15,7 +15,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import com.sesac.common.ui.theme.*
 import com.sesac.domain.model.Comment
-import com.sesac.domain.model.Post
+import com.sesac.domain.model.PostListItem
 import com.sesac.domain.model.Path
 import com.sesac.trail.presentation.TrailViewModel
 import kotlinx.coroutines.launch
@@ -35,7 +35,7 @@ fun InfoDetailScreen(
     selectedDetailPath: Path?,
     onStartFollowing: (Path) -> Unit,
     viewModel: TrailViewModel? = null,
-    postForPreview: Post? = null,
+    postForPreview: PostListItem? = null,
     commentsForPreview: List<Comment>? = null,
     newCommentContentPreview: String = ""
 ) {

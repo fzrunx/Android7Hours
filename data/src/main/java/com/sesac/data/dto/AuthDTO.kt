@@ -15,12 +15,29 @@ data class AuthDTO(
     val password: String? = null,
     @Json(name = "password_verification")
     val passwordVerification: String? = null,
+    @Json(name = "profile_image")
+    val profileImage: String? = null,
+    @Json(name = "invitation_code") // NEW FIELD
+    val invitationCode: String? = null,
+    @Json(name = "is_pet")
+    val isPet: Boolean? = null,
 )
 
 @JsonClass(generateAdapter = true)
 data class TokenDTO(
     val refresh: String,
     val access: String,
+)
+
+@JsonClass(generateAdapter = true)
+data class TokenRefreshRequestDTO(
+    val refresh: String
+)
+
+@JsonClass(generateAdapter = true)
+data class TokenRefreshResponseDTO(
+    val access: String,
+    val refresh: String?,
 )
 
 @JsonClass(generateAdapter = true)

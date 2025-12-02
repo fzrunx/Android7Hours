@@ -63,14 +63,17 @@ fun AppNavHost(
             onStartFollowing = onStartFollowing,
             commonMapLifecycle = commonMapLifecycle,
             )
-        communityRoute(viewModel = communityViewModel,)
         trailNestedNavGraph(
             uiState = uiState,
             trailViewModel = trailViewModel,
             navController = navController,
             onStartFollowing = onStartFollowing,
         )
-        communityRoute(viewModel = communityViewModel)
+        communityRoute(
+            uiState = uiState,
+            nav2LoginScreen = nav2LoginScreen,
+            viewModel = communityViewModel)
+
         monitorRoute(
             navController = navController,
             commonMapLifecycle = commonMapLifecycle,

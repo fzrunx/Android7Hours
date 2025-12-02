@@ -3,10 +3,12 @@ package com.sesac.data.di
 import com.sesac.data.repository.AuthRepositoryImpl
 
 import com.sesac.data.repository.BookmarkRepositoryImpl
+import com.sesac.data.repository.CommentRepositoryImpl
 
 import com.sesac.data.repository.CommunityRepositoryImpl
 
 import com.sesac.data.repository.HomeRepositoryImpl
+import com.sesac.data.repository.LikeRepositoryImpl
 
 import com.sesac.data.repository.MonitorRepositoryImpl
 
@@ -17,14 +19,17 @@ import com.sesac.data.repository.PetRepositoryImpl
 import com.sesac.data.repository.SessionRepositoryImpl
 
 import com.sesac.data.repository.PathRepositoryImpl
+import com.sesac.data.repository.PostRepositoryImpl
 
 import com.sesac.domain.repository.AuthRepository
 
 import com.sesac.domain.repository.BookmarkRepository
+import com.sesac.domain.repository.CommentRepository
 
 import com.sesac.domain.repository.CommunityRepository
 
 import com.sesac.domain.repository.HomeRepository
+import com.sesac.domain.repository.LikeRepository
 
 import com.sesac.domain.repository.MonitorRepository
 
@@ -35,6 +40,7 @@ import com.sesac.domain.repository.PetRepository
 import com.sesac.domain.repository.SessionRepository
 
 import com.sesac.domain.repository.PathRepository
+import com.sesac.domain.repository.PostRepository
 
 import dagger.Binds
 
@@ -96,6 +102,24 @@ abstract class RepositoryModule {
         bookmarkRepositoryImpl: BookmarkRepositoryImpl
     ): BookmarkRepository
 
+    @Binds
+    @ActivityRetainedScoped
+    abstract fun bindLikeRepository(
+        likeRepositoryImpl: LikeRepositoryImpl
+    ): LikeRepository
+
+
+    @Binds
+    @ActivityRetainedScoped
+    abstract fun bindCommentRepository(
+        commentRepositoryImpl: CommentRepositoryImpl
+    ): CommentRepository
+
+    @Binds
+    @ActivityRetainedScoped
+    abstract fun bindPostRepository(
+        postRepositoryImpl: PostRepositoryImpl
+    ): PostRepository
 }
 
 @Module

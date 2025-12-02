@@ -1,5 +1,5 @@
 [versions]
-agp = "8.13.0"
+agp = "8.13.1"
 coreSplashscreen = "1.0.1"
 datastorePreferences = "1.1.7"
 kotlin = "2.2.21"
@@ -45,6 +45,7 @@ kotlinxSerializationConverter = "1.0.0"
 datastoreCore = "1.2.0"
 datastorePreferencesCore = "1.2.0"
 kakaoSdk = "2.20.1"
+roomKtx = "2.8.4"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -98,6 +99,7 @@ moshi-kotlin = { group = "com.squareup.moshi", name = "moshi-kotlin", version.re
 androidx-datastore-core = { group = "androidx.datastore", name = "datastore-core", version.ref = "datastoreCore" }
 androidx-datastore-preferences-core = { group = "androidx.datastore", name = "datastore-preferences-core", version.ref = "datastorePreferencesCore" }
 kakao-sdk-user = { module = "com.kakao.sdk:v2-user", version.ref = "kakaoSdk" }
+androidx-room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = "roomKtx" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

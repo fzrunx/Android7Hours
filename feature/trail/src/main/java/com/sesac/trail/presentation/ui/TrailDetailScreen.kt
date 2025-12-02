@@ -183,7 +183,7 @@ fun TrailDetailScreen(
                         InfoCard(
                             icon = Icons.Filled.Favorite,
                             label = "좋아요",
-                            value = "${selected.bookmarksCount}개",
+                            value = "${selected.bookmarkCount}개",
                             modifier = Modifier.weight(1f)
                         )
                         InfoCard(

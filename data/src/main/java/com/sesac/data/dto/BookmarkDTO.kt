@@ -18,8 +18,9 @@ data class BookmarkDTO(
 
 @JsonClass(generateAdapter = true)
 data class BookmarkResponseDTO(
-    val bookmarked: Boolean,
-    @Json(name = "bookmarks_count")
-    val bookmarksCount: Int,
+    @Json(name = "is_bookmarked")
+    val isBookmarked: Boolean,
+    @Json(name = "bookmark_count")
+    val bookmarkCount: Int,
     val status: String,
 )

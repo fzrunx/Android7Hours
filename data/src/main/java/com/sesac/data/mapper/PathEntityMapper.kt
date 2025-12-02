@@ -41,6 +41,6 @@ fun PathEntity.toUserPath() = Path(
     uploader = "",
     coord = listOf(Coord()), // 필요하면 좌표 JSON으로 저장
 //    authUserId = this.authUserId,
-    bookmarksCount = this.bookmarksCount,
+    bookmarkCount = this.bookmarksCount,
     isBookmarked = this.isBookmarked,
 )
