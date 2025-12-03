@@ -80,15 +80,6 @@ fun <T> CommonListContainer(
     }
 }
 
-/*
-<T> ListContainerView(
-    title: String,
-    itemList: List<T>,
-    emptyStateMessage: String,
-    emptyStateSubMessage: String,
-    itemContent: @Composable (T) -> Unit
- */
-
 @Preview
 @Composable
 fun ListContainerViewPreview() {

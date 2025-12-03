@@ -23,7 +23,18 @@ data class User(
     val email: String,
     val profileImageUrl: String? = null,
     val isPet: Boolean? = null,
-)
+) {
+    companion object {
+        val EMPTY = User(
+            username = "",
+            nickname = "",
+            fullName = "",
+            email = "",
+            profileImageUrl = "",
+            isPet = false,
+        )
+    }
+}
 
 data class JoinFormState(
     val email: String = "",

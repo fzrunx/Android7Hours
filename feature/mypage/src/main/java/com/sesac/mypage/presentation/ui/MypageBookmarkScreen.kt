@@ -14,7 +14,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -37,42 +36,36 @@ fun MypageBookmarkScreen(
     onNavigateToPathDetail: (PathParceler) -> Unit = {},
 ) {
     val filterOptions = listOf("산책로", "커뮤니티")
-    val coroutineScope = rememberCoroutineScope()
     val activeFilter by viewModel.activeFilter.collectAsStateWithLifecycle()
     val bookmarkedPaths by viewModel.bookmarkedPaths.collectAsStateWithLifecycle()
-    val favoritePosts by viewModel.favoritePosts.collectAsStateWithLifecycle()
+    val bookmarkedPosts by viewModel.bookmarkedPosts.collectAsStateWithLifecycle()
     val selectedPath by viewModel.selectedPath.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val isLoadingPath = remember(selectedPath) { selectedPath is ResponseUiState.Loading }
 
     LaunchedEffect(uiStatus) {
-        viewModel.getUserBookmarkedPaths(uiStatus.token)
-        viewModel.getFavoriteCommunityPost()
+        if (uiStatus.isLoggedIn) {
+            viewModel.getMyBookmarks(uiStatus.token)
+        }
     }
 
-    // selectedPath 상태 변화를 감지하는 LaunchedEffect 추가
     LaunchedEffect(selectedPath) {
         when (val state = selectedPath) {
             is ResponseUiState.Success -> {
-                // 성공 시 화면 이동 후 상태 초기화
-                val pathParceler = state.result.toPathParceler() // Path를 Parcelable 객체로 변환
+                val pathParceler = state.result.toPathParceler()
                 onNavigateToPathDetail(pathParceler)
                 viewModel.resetSelectedPathState()
             }
             is ResponseUiState.Error -> {
-                // 에러 발생 시 사용자에게 알림 후 상태 초기화
                 Toast.makeText(context, "산책로 정보를 불러오는 데 실패했습니다: ${state.message}", Toast.LENGTH_SHORT).show()
                 viewModel.resetSelectedPathState()
             }
-            else -> {
-                // Idle, Loading 상태에서는 아무것도 하지 않음
-            }
+            else -> {}
         }
     }
 
     Column(
-        modifier = Modifier
-            .fillMaxSize()
+        modifier = Modifier.fillMaxSize()
     ) {
         CommonFilterTabs(
             filterOptions = filterOptions,
@@ -90,19 +83,11 @@ fun MypageBookmarkScreen(
                 CircularProgressIndicator()
             }
         } else {
-            when (val state = bookmarkedPaths) {
-                is ResponseUiState.Loading -> {
-                    Column(
-                        modifier = Modifier.fillMaxSize(),
-                        verticalArrangement = Arrangement.Center,
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        CircularProgressIndicator()
-                    }
-                }
-                is ResponseUiState.Success -> {
-                    when (activeFilter) {
-                        filterOptions[0] -> {
+            when (activeFilter) {
+                filterOptions[0] -> {
+                    when (val state = bookmarkedPaths) {
+                        is ResponseUiState.Loading -> CircularProgressIndicator()
+                        is ResponseUiState.Success -> {
                             CommonListContainer(
                                 title = "즐겨찾는 산책로",
                                 itemList = state.result,
@@ -112,44 +97,63 @@ fun MypageBookmarkScreen(
                                     BookmarkedPathCard(
                                         uiState = uiStatus,
                                         path = path,
-                                        onPathClick = {
-                                            viewModel.getPathInfo(path.id)
-                                        },
+                                        onPathClick = { viewModel.getPathInfo(path.id) },
                                         onRemoveClick = viewModel::toggleBookmark,
                                     )
                                 }
                             )
                         }
-                        filterOptions[1] -> {
+                        is ResponseUiState.Error -> Text(text = state.message)
+                        else -> {}
+                    }
+                }
+                filterOptions[1] -> {
+                    when (val state = bookmarkedPosts) {
+                        is ResponseUiState.Loading -> CircularProgressIndicator()
+                        is ResponseUiState.Success -> {
                             CommonListContainer(
                                 title = "즐겨찾는 게시글",
-                                itemList = favoritePosts,
+                                itemList = state.result,
                                 emptyStateMessage = "즐겨찾는 게시글이 없습니다",
                                 emptyStateSubMessage = "커뮤니티에서 ♥를 눌러 추가해보세요",
-                                itemContent = { post ->
-                                    FavoriteCommunityPostCard(
-                                        post = post,
-                                        onPostClick = { onNavigateToPost(post.id) },
-                                        onRemoveClick = viewModel::deleteFavoriteCommunityPost
+                                itemContent = { bookmarkedPost ->
+                                    BookmarkedPostCard(
+                                        uiState = uiStatus,
+                                        bookmarkedPost = bookmarkedPost,
+                                        onPostClick = {},
+                                        onRemoveClick = viewModel::toggleBookmark
                                     )
                                 }
                             )
                         }
+                        is ResponseUiState.Error -> Text(text = state.message)
+                        else -> {}
                     }
-                }
-                is ResponseUiState.Error -> {
-                    Column(
-                        modifier = Modifier.fillMaxSize(),
-                        verticalArrangement = Arrangement.Center,
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Text(text = state.message)
-                    }
-                }
-                is ResponseUiState.Idle -> {
-                    // Do nothing or show a placeholder
                 }
             }
         }
     }
 }
+
+// BookmarkedPost를 Post로 변환하는 임시 확장 함수
+// 이상적으로는 data layer의 mapper에 위치해야 함
+//private fun BookmarkedPost.toPost(): com.sesac.domain.model.Post {
+//    return com.sesac.domain.model.Post(
+//        id = this.id,
+//        userId = this.userId,
+//        authUserNickname = this.authUserNickname,
+//        authUserProfileImageUrl = this.authUserProfileImageUrl,
+//        postType = this.postType,
+//        title = this.title,
+//        image = this.image,
+//        viewCount = this.viewCount,
+//        commentCount = this.commentCount,
+//        likeCount = this.likeCount,
+//        bookmarkCount = this.bookmarkCount,
+//        isLiked = this.isLiked,
+//        isBookmarked = this.isBookmarked,
+//        createdAt = java.util.Date(), // Mapper에서 실제 Date로 변환 필요
+//        updatedAt = java.util.Date(), // Mapper에서 실제 Date로 변환 필요
+//        content = "" // BookmarkedPost에는 content가 없으므로 빈 문자열로 처리
+//    )
+//}

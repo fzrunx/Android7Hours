@@ -21,5 +21,12 @@ data class AuthUiState(
     val token: String? = null,
     val user: User? = null,
 ) {
+    companion object {
+        val EMPTY = AuthUiState(
+            isLoggedIn = true,
+            token = "",
+            user = User.EMPTY
+        )
+    }
     fun reset() = AuthUiState()
 }

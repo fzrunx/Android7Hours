@@ -54,6 +54,7 @@ data class BookmarkedPost(
     val authUserProfileImageUrl: String?,
     val postType: PostType,
     val title: String,
+    val content: String,
     val image: String?,
     val viewCount: Int,
     val commentCount: Int,
@@ -61,4 +62,23 @@ data class BookmarkedPost(
     val bookmarkCount: Int,
     val isLiked: Boolean,
     val isBookmarked: Boolean
-) : BookmarkedItem
+) : BookmarkedItem {
+    companion object {
+        val EMPTY = BookmarkedPost(
+            id = -1,
+            userId = -1,
+            authUserNickname = "",
+            authUserProfileImageUrl = "",
+            postType = PostType.UNKNOWN,
+            title = "",
+            content = "",
+            image = "",
+            viewCount = 0,
+            commentCount = 0,
+            likeCount = 0,
+            bookmarkCount = 0,
+            isLiked = false,
+            isBookmarked = false,
+        )
+    }
+}

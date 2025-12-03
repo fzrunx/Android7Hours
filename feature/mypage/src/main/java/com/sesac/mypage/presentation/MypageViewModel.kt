@@ -3,11 +3,10 @@ package com.sesac.mypage.presentation
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.sesac.domain.type.BookmarkType
+import com.sesac.domain.model.BookmarkedItem
 import com.sesac.domain.model.BookmarkedPath
+import com.sesac.domain.model.BookmarkedPost
 import com.sesac.domain.model.Breed
-import com.sesac.domain.model.FavoriteCommunityPost
-import com.sesac.domain.model.FavoriteWalkPath
 import com.sesac.domain.model.InvitationCode
 import com.sesac.domain.model.MypageSchedule
 import com.sesac.domain.model.Path
@@ -17,9 +16,8 @@ import com.sesac.domain.model.User
 import com.sesac.domain.result.AuthResult
 import com.sesac.domain.result.AuthUiState
 import com.sesac.domain.result.ResponseUiState
-import com.sesac.domain.usecase.auth.AuthUseCase
+import com.sesac.domain.type.BookmarkType
 import com.sesac.domain.usecase.bookmark.BookmarkUseCase
-import com.sesac.domain.usecase.mypage.MypageUseCase
 import com.sesac.domain.usecase.path.PathUseCase
 import com.sesac.domain.usecase.pet.PetUseCase
 import com.sesac.domain.usecase.post.PostUseCase
@@ -46,8 +44,6 @@ class MypageViewModel @Inject constructor(
     private val petUseCase: PetUseCase,
     private val pathUseCase: PathUseCase,
     private val postUseCase: PostUseCase,
-
-    private val mypageUseCase: MypageUseCase,
 ) : ViewModel() {
     val tabLabels = listOf("산책로", "커뮤니티")
     private val _activeFilter = MutableStateFlow<String>(tabLabels[0])
@@ -75,27 +71,21 @@ class MypageViewModel @Inject constructor(
     // AddPetScreen
     private val _breeds = MutableStateFlow<List<Breed>>(emptyList())
     val breeds = _breeds.asStateFlow()
-    private val _bookmarkedPaths =
-        MutableStateFlow<ResponseUiState<List<BookmarkedPath>>>(ResponseUiState.Idle)
+    private val _bookmarkedPaths = MutableStateFlow<ResponseUiState<List<BookmarkedPath>>>(ResponseUiState.Idle)
     val bookmarkedPaths = _bookmarkedPaths.asStateFlow()
     private val _selectedPath = MutableStateFlow<ResponseUiState<Path>>(ResponseUiState.Idle)
     val selectedPath = _selectedPath.asStateFlow()
 
     // MypageFavoriteScreen
-    // TODO 삭제
-    private val _favoritePosts = MutableStateFlow<List<FavoriteCommunityPost>>(emptyList())
-    val favoritePosts get() = _favoritePosts.asStateFlow()
-
-    private val _bookmarkedPost = MutableStateFlow<ResponseUiState<List<Post>>>(ResponseUiState.Idle)
-    val bookmarkedPost = _bookmarkedPost.asStateFlow()
+    private val _bookmarkedPosts = MutableStateFlow<ResponseUiState<List<BookmarkedPost>>>(ResponseUiState.Idle)
+    val bookmarkedPosts = _bookmarkedPosts.asStateFlow()
 
     // MypageManageScreen
     private val _schedules = MutableStateFlow<List<MypageSchedule>>(emptyList())
     val schedules get() = _schedules.asStateFlow()
 
     // Invite Code
-    private val _invitationCode =
-        MutableStateFlow<ResponseUiState<InvitationCode>>(ResponseUiState.Idle)
+    private val _invitationCode = MutableStateFlow<ResponseUiState<InvitationCode>>(ResponseUiState.Idle)
     val invitationCode get() = _invitationCode.asStateFlow()
 
     fun onFilterChange(filter: String) {
@@ -274,37 +264,39 @@ class MypageViewModel @Inject constructor(
         _deletePetState.value = ResponseUiState.Idle
     }
 
-    fun getUserBookmarkedPaths(token: String?) {
+    fun getMyBookmarks(token: String?) {
         viewModelScope.launch {
             _bookmarkedPaths.value = ResponseUiState.Loading
+            _bookmarkedPosts.value = ResponseUiState.Loading
             if (token == null) {
-                _bookmarkedPaths.value = ResponseUiState.Error("로그인이 필요합니다.")
+                val error = "로그인이 필요합니다."
+                _bookmarkedPaths.value = ResponseUiState.Error(error)
+                _bookmarkedPosts.value = ResponseUiState.Error(error)
                 return@launch
             }
 
             bookmarkUseCase.getMyBookmarksUseCase(token)
                 .catch { e ->
-                    _bookmarkedPaths.value =
-                        ResponseUiState.Error(e.message ?: "알 수 없는 오류가 발생했습니다.")
+                    val errorMsg = e.message ?: "알 수 없는 오류가 발생했습니다."
+                    _bookmarkedPaths.value = ResponseUiState.Error(errorMsg)
+                    _bookmarkedPosts.value = ResponseUiState.Error(errorMsg)
                 }
                 .collectLatest { bookmarksResult ->
                     when (bookmarksResult) {
                         is AuthResult.Success -> {
-                            val pathList =
-                                bookmarksResult.resultData.mapNotNull { it.bookmarkedItem as? BookmarkedPath }
-                            _bookmarkedPaths.value =
-                                ResponseUiState.Success("북마크를 불러왔습니다.", pathList)
+                            val allItems = bookmarksResult.resultData.map { it.bookmarkedItem }
+                            val pathList = allItems.filterIsInstance<BookmarkedPath>()
+                            val postList = allItems.filterIsInstance<BookmarkedPost>()
+                            _bookmarkedPaths.value = ResponseUiState.Success("산책로 북마크를 불러왔습니다.", pathList)
+                            _bookmarkedPosts.value = ResponseUiState.Success("게시글 북마크를 불러왔습니다.", postList)
                         }
 
                         is AuthResult.NetworkError -> {
-                            _bookmarkedPaths.value = ResponseUiState.Error(
-                                bookmarksResult.exception.message ?: "unknown"
-                            )
+                            val errorMsg = bookmarksResult.exception.message ?: "unknown"
+                            _bookmarkedPaths.value = ResponseUiState.Error(errorMsg)
+                            _bookmarkedPosts.value = ResponseUiState.Error(errorMsg)
                         }
-
-                        else -> {
-                            // Other AuthResult states are not handled here.
-                        }
+                        else -> {}
                     }
                 }
         }
@@ -346,17 +338,17 @@ class MypageViewModel @Inject constructor(
         }
     }
 
-    fun toggleBookmark(token: String?, id: Int) {
+    fun toggleBookmark(token: String?, id: Int, type: BookmarkType) {
         viewModelScope.launch {
             if (token == null) {
                 Log.e("MypageViewModel", "Toggle bookmark failed: token is null")
                 return@launch
             }
-            bookmarkUseCase.toggleBookmarkUseCase(token, id, BookmarkType.PATH)
+            bookmarkUseCase.toggleBookmarkUseCase(token, id, type)
                 .collectLatest { bookmarkResponse ->
                     if (bookmarkResponse is AuthResult.Success) {
                         // Refresh the list on success
-                        getUserBookmarkedPaths(token)
+                        getMyBookmarks(token)
                     } else if (bookmarkResponse is AuthResult.NetworkError) {
                         Log.e(
                             "MypageViewModel",
@@ -367,71 +359,45 @@ class MypageViewModel @Inject constructor(
         }
     }
 
-    // TODO
-    fun getFavoriteCommunityPost() {
-        viewModelScope.launch {
-            mypageUseCase.getFavoriteCommunityPostsUseCase()
-                .collectLatest { _favoritePosts.value = it }
-        }
-    }
-
-    fun deleteFavoriteCommunityPost(favoriteCommunityPost: FavoriteCommunityPost) {
-        viewModelScope.launch {
-            mypageUseCase.deleteFavoriteCommunityPostUseCase(favoriteCommunityPost.id)
-                .collectLatest { success ->
-                    if (success) {
-                        getFavoriteCommunityPost()
-                    }
-                }
-        }
-    }
-    // TODO
-
     fun getSchedules(date: LocalDate) {
         viewModelScope.launch {
-            mypageUseCase.getSchedulesUseCase(date)
-                .catch { e -> /* Handle error */ }
-                .collectLatest { _schedules.value = it }
+//            mypageUseCase.getSchedulesUseCase(date)
+//                .catch { e -> /* Handle error */ }
+//                .collectLatest { _schedules.value = it }
         }
     }
 
     fun addSchedule(schedule: MypageSchedule) {
         viewModelScope.launch {
-            mypageUseCase.addScheduleUseCase(schedule).collectLatest { success ->
-                if (success) {
-                    getSchedules(schedule.date) // Reload schedules for the date
-                }
-            }
+//            mypageUseCase.addScheduleUseCase(schedule).collectLatest { success ->
+//                if (success) {
+//                    getSchedules(schedule.date) // Reload schedules for the date
+//                }
+//            }
         }
     }
 
     fun deleteSchedule(schedule: MypageSchedule) {
         viewModelScope.launch {
-            mypageUseCase.deleteScheduleUseCase(schedule.id).collectLatest { success ->
-                if (success) {
-                    getSchedules(schedule.date) // Reload schedules for the date
-                }
-            }
+//            mypageUseCase.deleteScheduleUseCase(schedule.id).collectLatest { success ->
+//                if (success) {
+//                    getSchedules(schedule.date) // Reload schedules for the date
+//                }
+//            }
         }
     }
 
     fun updatePermission(key: String, isEnabled: Boolean) {
         viewModelScope.launch {
-            mypageUseCase.updatePermissionStatusUseCase(key, isEnabled).collectLatest {
-                // Can optionally reload permissions if the state is mutable
-            }
+//            mypageUseCase.updatePermissionStatusUseCase(key, isEnabled).collectLatest {
+//                // Can optionally reload permissions if the state is mutable
+//            }
         }
     }
 
     fun logout() {
         viewModelScope.launch {
             sessionUseCase.clearSession()
-        }
-    }
-
-    fun signOut(user: User) {
-        viewModelScope.launch {
-            userUseCase.deleteUserUseCase(user.id).collectLatest { }
         }
     }
 

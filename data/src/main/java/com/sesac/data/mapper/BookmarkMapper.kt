@@ -75,6 +75,7 @@ fun BookmarkedPostDTO.toDomain(): BookmarkedPost = BookmarkedPost(
         else -> PostType.UNKNOWN
     },
     title = this.title,
+    content = this.content,
     image = this.image,
     viewCount = this.viewCount,
     commentCount = this.commentCount,

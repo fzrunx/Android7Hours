@@ -16,7 +16,7 @@ object MockHome {
             add(
                 BannerData(
                 1,
-                "drawable_banner_image",
+                "https://image.msbg.io/?p=mocoblob.blob.core.windows.net%2Ftalkarticle%2F1681624290917Evum6Ha6Yq975QC",
                 "반려견과 함께하는 특별한 시간",
                 "7Hours와 함께 산책을 시작하세요"
                 )
