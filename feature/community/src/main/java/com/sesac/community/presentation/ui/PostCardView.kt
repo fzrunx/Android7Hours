@@ -1,11 +1,17 @@
 package com.sesac.community.presentation.ui
 
+import android.content.Context
+import android.util.Log
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -13,96 +19,156 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Chat
+import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.Share
-import androidx.compose.material.icons.outlined.ChatBubbleOutline
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.outlined.BookmarkBorder
 import androidx.compose.material.icons.outlined.FavoriteBorder
-import androidx.compose.material.icons.outlined.Visibility
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
+import com.sesac.common.ui.theme.Android7HoursTheme
 import com.sesac.common.ui.theme.TextSecondary
-import com.sesac.common.ui.theme.cardImageHeight
-import com.sesac.common.ui.theme.iconSizeMedium
+import com.sesac.common.ui.theme.Typography
 import com.sesac.common.ui.theme.paddingLarge
 import com.sesac.common.ui.theme.paddingMedium
 import com.sesac.common.ui.theme.paddingSmall
+import com.sesac.common.utils.getTimeAgo
+import com.sesac.common.utils.parseDate
 import com.sesac.domain.model.Post
-import com.sesac.domain.type.toKoreanString
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
+// Constants for Read More feature
+private const val MINIMIZED_MAX_LINES = 2
 
 @Composable
 fun PostCardView(
     post: Post,
     isMyPost: Boolean,
     onLikeToggle: (postId: Int) -> Unit,
-    onEdit: (postId: Int) -> Unit,
+    onBookmarkToggle: (postId: Int) -> Unit,
+    onEdit: (post: Post) -> Unit,
     onDelete: (postId: Int) -> Unit,
     onCommentClick: (postId: Int) -> Unit
 ) {
-    Surface(
-        color = MaterialTheme.colorScheme.surface,
+    val context = LocalContext.current
+    Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(top = paddingSmall)
+            .padding(vertical = paddingSmall),
+        shape = MaterialTheme.shapes.medium,
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
-        Column(modifier = Modifier.padding(paddingLarge)) {
+        Column(modifier = Modifier.padding(vertical = paddingMedium)) {
             // --- 1. Header ---
             PostHeader(
-                author = post.authUserNickname ?: "",
-                authorImage = post.image ?: "",
-                timeAgo = post.createdAt.toString(),
+                author = post.authUserNickname ?: "사용자",
+                authorImage = post.authUserProfileImageUrl,
+                timeAgo = post.createdAt.getTimeAgo(context),
                 isMyPost = isMyPost,
-                onEdit = { onEdit(post.id) },
+                onEdit = { onEdit(post) },
                 onDelete = { onDelete(post.id) }
             )
             Spacer(modifier = Modifier.height(paddingMedium))
 
-            // --- 2. Title ---
-            Text(
-                text = post.title,
-                color = TextSecondary,
-                fontSize = 14.sp
-            )
+            // --- 2. Title and Content ---
+            Column(modifier = Modifier.padding(horizontal = paddingLarge)) {
+                Text(
+                    text = post.title,
+                    style = Typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
+                Spacer(modifier = Modifier.height(paddingSmall))
+                ExpandableText(text = post.content)
+            }
             Spacer(modifier = Modifier.height(paddingMedium))
 
             // --- 3. Image ---
             post.image?.let { imageUrl ->
-                AsyncImage(
-                    model = imageUrl,
-                    contentDescription = "Post image",
+                var showHeart by remember { mutableStateOf(false) }
+                val coroutineScope = rememberCoroutineScope()
+
+                Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(cardImageHeight)
-                        .clip(MaterialTheme.shapes.medium),
-                    contentScale = ContentScale.Crop
-                )
-                Spacer(modifier = Modifier.height(paddingMedium))
+                        .height(300.dp)
+                        .pointerInput(Unit) {
+                            detectTapGestures(
+                                onDoubleTap = {
+                                    if (!post.isLiked) onLikeToggle(post.id)
+                                    showHeart = true
+                                    coroutineScope.launch {
+                                        delay(800)
+                                        showHeart = false
+                                    }
+                                }
+                            )
+                        },
+                    contentAlignment = Alignment.Center
+                ) {
+                    AsyncImage(
+                        model = imageUrl,
+                        contentDescription = "Post image",
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop
+                    )
+                    androidx.compose.animation.AnimatedVisibility(
+                        visible = showHeart,
+                        enter = scaleIn(initialScale = 0.5f),
+                        exit = scaleOut()
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Favorite,
+                            contentDescription = "Like Heart",
+                            tint = Color.White.copy(alpha = 0.8f),
+                            modifier = Modifier.size(100.dp)
+                        )
+                    }
+                }
             }
+            Spacer(modifier = Modifier.height(paddingMedium))
 
-            // --- 4. Category ---
-            CategoryBadge(category = post.postType.toKoreanString())
+            // --- 4. Actions ---
+            PostActions(
+                isLiked = post.isLiked,
+                isBookmarked = post.isBookmarked,
+                onLikeToggle = { onLikeToggle(post.id) },
+                onCommentClick = { onCommentClick(post.id) },
+                onBookmarkToggle = { onBookmarkToggle(post.id) }
+            )
             Spacer(modifier = Modifier.height(paddingSmall))
 
-            // --- 5. Actions ---
-            PostActions(
+            // --- 5. Status (Likes, Comments, Views) ---
+            PostStatus(
                 likes = post.likeCount,
                 comments = post.commentCount,
-                views = post.viewCount,
-                isLiked = post.isLiked,
-                onLikeToggle = { onLikeToggle(post.id) },
-                onCommentClick = { onCommentClick(post.id) }
+                views = post.viewCount
             )
         }
     }
@@ -111,17 +177,20 @@ fun PostCardView(
 @Composable
 fun PostHeader(
     author: String,
-    authorImage: String,
+    authorImage: String?,
     timeAgo: String,
     isMyPost: Boolean,
     onEdit: () -> Unit,
     onDelete: () -> Unit
 ) {
+    var menuExpanded by remember { mutableStateOf(false) }
+
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = paddingLarge),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // 1. 작성자 프로필 이미지
         AsyncImage(
             model = authorImage,
             contentDescription = "Author image",
@@ -130,135 +199,139 @@ fun PostHeader(
                 .clip(CircleShape),
             contentScale = ContentScale.Crop
         )
-
-        Spacer(modifier = Modifier.width(paddingSmall))
-
-        // 2. 작성자 닉네임과 작성 시간
+        Spacer(modifier = Modifier.width(paddingMedium))
         Column(modifier = Modifier.weight(1f)) {
-            Text(text = author, style = MaterialTheme.typography.titleMedium)
-            Text(text = timeAgo, style = MaterialTheme.typography.bodySmall, color = TextSecondary)
+            Text(text = author, style = Typography.titleSmall, fontWeight = FontWeight.Bold)
+            Text(text = timeAgo, style = Typography.bodySmall, color = TextSecondary)
         }
-
-        // 3. 내 게시물일 경우 수정/삭제 메뉴
         if (isMyPost) {
-            Row {
-                Text("수정", modifier = Modifier.clickable(onClick = onEdit).padding(paddingSmall))
-                Spacer(modifier = Modifier.width(paddingSmall))
-                Text("삭제", modifier = Modifier.clickable(onClick = onDelete).padding(paddingSmall))
+            Box {
+                IconButton(onClick = { menuExpanded = true }) {
+                    Icon(Icons.Default.MoreVert, contentDescription = "More options")
+                }
+                DropdownMenu(
+                    expanded = menuExpanded,
+                    onDismissRequest = { menuExpanded = false }
+                ) {
+                    DropdownMenuItem(text = { Text("수정") }, onClick = {
+                        onEdit()
+                        menuExpanded = false
+                    })
+                    DropdownMenuItem(text = { Text("삭제") }, onClick = {
+                        onDelete()
+                        menuExpanded = false
+                    })
+                }
             }
         }
     }
 }
 
 @Composable
-fun CategoryBadge(category: String) {
-    Surface(
-        color = MaterialTheme.colorScheme.primaryContainer,
-        shape = CircleShape
-    ) {
+fun ExpandableText(text: String) {
+    var isExpanded by remember { mutableStateOf(false) }
+    val canExpand = text.lines().size > MINIMIZED_MAX_LINES || text.length > 100 
+
+    Column(modifier = Modifier.clickable(enabled = canExpand) { isExpanded = !isExpanded }) {
         Text(
-            text = category,
-            style = MaterialTheme.typography.labelSmall,
-            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+            text = text,
+            style = Typography.bodyMedium,
+            maxLines = if (isExpanded || !canExpand) Int.MAX_VALUE else MINIMIZED_MAX_LINES,
+            overflow = TextOverflow.Ellipsis
         )
+        if (canExpand && !isExpanded) {
+            Text(
+                text = "더보기",
+                style = Typography.bodyMedium,
+                color = TextSecondary,
+                modifier = Modifier.padding(top = 4.dp)
+            )
+        }
     }
 }
 
 @Composable
 fun PostActions(
-    likes: Int,
-    comments: Int,
-    views: Int,
     isLiked: Boolean,
+    isBookmarked: Boolean,
     onLikeToggle: () -> Unit,
-    onCommentClick: () -> Unit
+    onCommentClick: () -> Unit,
+    onBookmarkToggle: () -> Unit
 ) {
     Row(
-        modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.Start
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = paddingSmall),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        // 좋아요 버튼 - 패딩으로 터치 영역 확보
-        Row(
-            modifier = Modifier
-                .clickable(
-                    interactionSource = remember { MutableInteractionSource() },
-                    indication = null
-                ) { onLikeToggle() }
-                .padding(horizontal = 8.dp, vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
+        // Like, Comment, Share (Left-aligned)
+        IconButton(onClick = onLikeToggle) {
             Icon(
                 imageVector = if (isLiked) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
                 contentDescription = "Like",
-                tint = if (isLiked) MaterialTheme.colorScheme.primary else TextSecondary,
-                modifier = Modifier.size(iconSizeMedium)
-            )
-            Spacer(modifier = Modifier.width(4.dp))
-            Text(
-                text = likes.toString(),
-                color = if (isLiked) MaterialTheme.colorScheme.primary else TextSecondary,
-                style = MaterialTheme.typography.bodyMedium
+                tint = if (isLiked) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
-
-        Spacer(modifier = Modifier.width(16.dp))
-
-        // 댓글 버튼 - 패딩으로 터치 영역 확보
-        Row(
-            modifier = Modifier
-                .clickable(
-                    interactionSource = remember { MutableInteractionSource() },
-                    indication = null
-                ) { onCommentClick() }
-                .padding(horizontal = 8.dp, vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
+        IconButton(onClick = onCommentClick) {
             Icon(
-                imageVector = Icons.Outlined.ChatBubbleOutline,
+                imageVector = Icons.AutoMirrored.Filled.Chat,
                 contentDescription = "Comment",
-                tint = TextSecondary,
-                modifier = Modifier.size(iconSizeMedium)
-            )
-            Spacer(modifier = Modifier.width(4.dp))
-            Text(
-                text = comments.toString(),
-                color = TextSecondary,
-                style = MaterialTheme.typography.bodyMedium
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
-
-        Spacer(modifier = Modifier.width(16.dp))
-
-        // 조회수 (클릭 불가)
-        Row(
-            modifier = Modifier.padding(horizontal = 8.dp, vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                imageVector = Icons.Outlined.Visibility,
-                contentDescription = "Views",
-                tint = TextSecondary,
-                modifier = Modifier.size(iconSizeMedium)
-            )
-            Spacer(modifier = Modifier.width(4.dp))
-            Text(
-                text = views.toString(),
-                color = TextSecondary,
-                style = MaterialTheme.typography.bodyMedium
-            )
-        }
-
+        // Spacer to push bookmark to the end
         Spacer(modifier = Modifier.weight(1f))
 
-        // 공유
-        IconButton(onClick = { /* TODO: 공유 */ }) {
+        // Bookmark (Right-aligned)
+        IconButton(onClick = onBookmarkToggle) {
             Icon(
-                imageVector = Icons.Default.Share,
-                contentDescription = "Share",
-                tint = TextSecondary,
-                modifier = Modifier.size(iconSizeMedium)
+                imageVector = if (isBookmarked) Icons.Filled.Bookmark else Icons.Outlined.BookmarkBorder,
+                contentDescription = "Bookmark",
+                tint = if (isBookmarked) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
+    }
+}
+
+@Composable
+fun PostStatus(likes: Int, comments: Int, views: Int) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = paddingLarge),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(paddingMedium)
+    ) {
+        Text(
+            text = "좋아요 ${likes}개",
+            style = Typography.bodyMedium,
+            fontWeight = FontWeight.Bold
+        )
+        Text(
+            text = "댓글 ${comments}개",
+            style = Typography.bodyMedium,
+            fontWeight = FontWeight.Normal
+        )
+        Text(
+            text = "조회수 ${views}회",
+            style = Typography.bodyMedium,
+            color = TextSecondary
+        )
+    }
+}
+
+@Preview
+@Composable
+fun PostCardViewPreview() {
+    Android7HoursTheme {
+        PostCardView(
+            Post.EMPTY,
+            isMyPost = true,
+            onEdit = {},
+            onDelete = {},
+            onLikeToggle = {},
+            onCommentClick = {},
+            onBookmarkToggle = {},
+        )
     }
 }

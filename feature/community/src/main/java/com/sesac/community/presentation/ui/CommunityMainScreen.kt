@@ -2,13 +2,21 @@ package com.sesac.community.presentation.ui
 
 import android.annotation.SuppressLint
 import android.widget.Toast
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
@@ -19,9 +27,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -34,21 +41,23 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
 import com.sesac.common.component.CommonFilterTabs
-import com.sesac.common.component.CommonSearchBarContent
-import com.sesac.common.model.UiEvent
 import com.sesac.common.ui.theme.Gray400
 import com.sesac.common.ui.theme.Primary
+import com.sesac.common.ui.theme.White
 import com.sesac.community.component.CommunityCommentSheetContent
 import com.sesac.community.presentation.CommunityViewModel
 import com.sesac.domain.model.Post
@@ -69,7 +78,6 @@ fun CommunityMainScreen(
     val context = LocalContext.current
     val token = uiState.token
     val lifecycleOwner = LocalLifecycleOwner.current
-//    val snackbarHostState = remember { SnackbarHostState() }
 
     // StateFlows
     val isCommentsOpen by viewModel.isCommentsOpen.collectAsStateWithLifecycle()
@@ -95,120 +103,91 @@ fun CommunityMainScreen(
 
     // 검색 상태
     var isSearchOpen by remember { mutableStateOf(false) }
-
-    LaunchedEffect(lifecycleOwner) {
-        lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
-            viewModel.closeComments()
-        }
-    }
-
-    LaunchedEffect(uiState) {
-        viewModel.getPostList(uiState.token)
-    }
-
-    // 게시글 생성 결과 처리
-    LaunchedEffect(createPostState) {
-        when (val result = createPostState) {
-            is ResponseUiState.Success -> {
-                Toast.makeText(context, result.message, Toast.LENGTH_SHORT).show()
-                viewModel.getPostList(token)  // 👈 token 전달
-            }
-            is ResponseUiState.Error -> {
-                Toast.makeText(context, result.message, Toast.LENGTH_SHORT).show()
-            }
-            else -> {}
-        }
-    }
-
-    // 게시글 수정 결과 처리
-    LaunchedEffect(updatePostState) {
-        when (val result = updatePostState) {
-            is ResponseUiState.Success -> {
-                Toast.makeText(context, result.message, Toast.LENGTH_SHORT).show()
-                viewModel.getPostList(token)  // 👈 token 전달
-                viewModel.editingPost.value = null
-            }
-            is ResponseUiState.Error -> {
-                Toast.makeText(context, result.message, Toast.LENGTH_SHORT).show()
-            }
-            else -> {}
-        }
-    }
-
-    // 게시글 삭제 결과 처리
-    LaunchedEffect(deletePostState) {
-        when (val result = deletePostState) {
-            is ResponseUiState.Success -> {
-                Toast.makeText(context, result.message, Toast.LENGTH_SHORT).show()
-                viewModel.getPostList(token)  // 👈 token 전달
-            }
-            is ResponseUiState.Error -> {
-                Toast.makeText(context, result.message, Toast.LENGTH_SHORT).show()
-            }
-            else -> {}
-        }
-    }
-
-    // 게시글 상세 로드 후 처리 (수정용)
-    LaunchedEffect(postDetail) {
-        if (postDetail is ResponseUiState.Success && editingPost != null) {
-            // 수정 모드에서만 editingPost 설정
-            viewModel.editingPost.value = (postDetail as ResponseUiState.Success<Post>).result
-        }
-    }
-
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
+    val focusRequester = remember { FocusRequester() }
+    val focusManager = LocalFocusManager.current
 
-    // -------------------- UI --------------------
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         floatingActionButton = {
             FloatingActionButton(
                 onClick = { viewModel.isCreateDialogOpen.value = true },
                 containerColor = Primary,
-                contentColor = Color.White
+                contentColor = White
             ) {
                 Icon(Icons.Default.Add, contentDescription = "새 게시글 작성")
             }
         },
         topBar = {
             Column {
-                if (isSearchOpen) {
-                    TopAppBar(
-                        title = {
-                            CommonSearchBarContent(
-                                isSearchOpen = true,
-                                query = searchQuery,
-                                onQueryChange = { viewModel.onSearchQueryChange(it) }
+                AnimatedContent(
+                    targetState = isSearchOpen,
+                    transitionSpec = {
+                        fadeIn() togetherWith fadeOut()
+                    },
+                    label = "TopBar Animation"
+                ) { searchActive ->
+                    if (searchActive) {
+                        TopAppBar(
+                            title = {
+                                OutlinedTextField(
+                                    value = searchQuery,
+                                    onValueChange = { viewModel.onSearchQueryChange(it) },
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .focusRequester(focusRequester),
+                                    placeholder = { Text("검색...") },
+                                    singleLine = true,
+                                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                                    keyboardActions = KeyboardActions(onSearch = {
+                                        focusManager.clearFocus()
+                                    }),
+                                    trailingIcon = {
+                                        if (searchQuery.isNotEmpty()) {
+                                            IconButton(onClick = { viewModel.onSearchQueryChange("") }) {
+                                                Icon(Icons.Default.Close, contentDescription = "검색어 지우기")
+                                            }
+                                        }
+                                    }
+                                )
+                            },
+                            navigationIcon = {
+                                IconButton(onClick = {
+                                    isSearchOpen = false
+                                    viewModel.onSearchQueryChange("")
+                                }) {
+                                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "검색 닫기")
+                                }
+                            },
+                            colors = TopAppBarDefaults.topAppBarColors(
+                                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                                scrolledContainerColor = MaterialTheme.colorScheme.primaryContainer,
+//                                navigationIconContentColor = Color.Unspecified,
+//                                titleContentColor = Color.Unspecified,
+//                                actionIconContentColor = Color.Unspecified
                             )
-                        },
-                        navigationIcon = {
-                            IconButton(onClick = { isSearchOpen = false }) {
-                                Icon(Icons.Filled.Close, contentDescription = "검색 닫기")
-                            }
-                        },
-                        scrollBehavior = scrollBehavior,
-                        colors = TopAppBarDefaults.topAppBarColors(
-                            containerColor = MaterialTheme.colorScheme.primaryContainer,
-                            scrolledContainerColor = MaterialTheme.colorScheme.primaryContainer
                         )
-                    )
-                } else {
-                    CenterAlignedTopAppBar(
-                        title = { Text("커뮤니티", fontWeight = FontWeight.Bold) },
-                        actions = {
-                            IconButton(onClick = { isSearchOpen = true }) {
-                                Icon(Icons.Filled.Search, contentDescription = "검색 열기")
-                            }
-                        },
-                        scrollBehavior = scrollBehavior,
-                        colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                            containerColor = MaterialTheme.colorScheme.primaryContainer,
-                            scrolledContainerColor = MaterialTheme.colorScheme.primaryContainer
+                        LaunchedEffect(Unit) {
+                            focusRequester.requestFocus()
+                        }
+                    } else {
+                        CenterAlignedTopAppBar(
+                            title = { Text("커뮤니티", fontWeight = FontWeight.Bold) },
+                            actions = {
+                                IconButton(onClick = { isSearchOpen = true }) {
+                                    Icon(Icons.Default.Search, contentDescription = "검색 열기")
+                                }
+                            },
+                            colors = TopAppBarDefaults.topAppBarColors(
+                                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                                scrolledContainerColor = MaterialTheme.colorScheme.primaryContainer,
+//                                navigationIconContentColor = Color.Unspecified,
+//                                titleContentColor = Color.Unspecified,
+//                                actionIconContentColor = Color.Unspecified
+                            )
                         )
-                    )
+                    }
                 }
-
                 CommonFilterTabs(
                     filterOptions = listOf("전체", "인기글", "산책후기", "정보공유"),
                     selectedFilter = activeFilter,
@@ -218,20 +197,69 @@ fun CommunityMainScreen(
         }
     ) { paddingValues ->
 
+        LaunchedEffect(lifecycleOwner) {
+            lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.closeComments()
+            }
+        }
+
+        LaunchedEffect(uiState) {
+            viewModel.getPostList(uiState.token)
+        }
+
+        // region LaunchedEffect for CRUD
+        LaunchedEffect(createPostState) {
+            when (val result = createPostState) {
+                is ResponseUiState.Success -> {
+                    Toast.makeText(context, result.message, Toast.LENGTH_SHORT).show()
+                    viewModel.getPostList(token)
+                }
+                is ResponseUiState.Error -> Toast.makeText(context, result.message, Toast.LENGTH_SHORT).show()
+                else -> {}
+            }
+        }
+
+        // 게시글 수정 결과 처리
+        LaunchedEffect(updatePostState) {
+            when (val result = updatePostState) {
+                is ResponseUiState.Success -> {
+                    Toast.makeText(context, result.message, Toast.LENGTH_SHORT).show()
+                    viewModel.getPostList(token)
+                    viewModel.editingPost.value = null
+                }
+                is ResponseUiState.Error -> Toast.makeText(context, result.message, Toast.LENGTH_SHORT).show()
+                else -> {}
+            }
+        }
+
+        // 게시글 삭제 결과 처리
+        LaunchedEffect(deletePostState) {
+            when (val result = deletePostState) {
+                is ResponseUiState.Success -> {
+                    Toast.makeText(context, result.message, Toast.LENGTH_SHORT).show()
+                    viewModel.getPostList(token)
+                }
+                is ResponseUiState.Error -> Toast.makeText(context, result.message, Toast.LENGTH_SHORT).show()
+                else -> {}
+            }
+        }
+
+        // 게시글 상세 로드 후 처리 (수정용)
+        LaunchedEffect(postDetail) {
+            if (postDetail is ResponseUiState.Success && editingPost != null) {
+                viewModel.editingPost.value = (postDetail as ResponseUiState.Success<Post>).result
+            }
+        }
+        // endregion
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
             if (filteredPosts.isEmpty()) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        stringResource(cR.string.community_placeholder_post_empty),
-                        color = Gray400
-                    )
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text(stringResource(cR.string.community_placeholder_post_empty), color = Gray400)
                 }
             } else {
                 LazyColumn(modifier = Modifier.fillMaxSize()) {
@@ -239,23 +267,13 @@ fun CommunityMainScreen(
                         PostCardView(
                             post = post,
                             isMyPost = post.userId == uiState.user?.id,
-                            onLikeToggle = { postId ->
-                                viewModel.toggleLike(token, postId)
-                            },
-                            onEdit = { postId ->
-                                viewModel.getPostDetail(token, postId, isForEdit = true)
-                            },
-                            onDelete = { postId ->
-                                token?.let {
-                                    viewModel.deletePost(it, postId)
-                                }
-                            },
-                            onCommentClick = { postId ->
-                                // 해당 게시글의 정보를 찾아서 댓글창 열기
-                                val post = filteredPosts.find { it.id == postId }
-                                post?.let {
-                                    viewModel.openComments(post)
-                                }
+                            onLikeToggle = { viewModel.toggleLike(token, post.id) },
+                            onBookmarkToggle = { viewModel.toggleBookmark(token, post.id) },
+                            onEdit = { viewModel.onStartEditing(post) },
+                            onDelete = { token?.let { viewModel.deletePost(it, post.id) } },
+                            onCommentClick = {
+                                val targetPost = filteredPosts.find { it.id == post.id }
+                                targetPost?.let { viewModel.openComments(it) }
                             }
                         )
                     }
@@ -263,30 +281,18 @@ fun CommunityMainScreen(
             }
         }
 
-        // 게시글 작성 다이얼로그
         if (isCreateDialogOpen) {
             PostEditorDialogView(
                 categories = postEditorCategories,
                 onDismiss = { viewModel.isCreateDialogOpen.value = false },
-                onSave = { title: String, content: String, postType: PostType ->
+                onSave = { title, content, postType ->
                     val newPost = Post(
-                        id = -1,
-                        title = title,
-                        content = content,
-                        image = null,
-                        postType = postType,
-                        userId = uiState.user?.id ?: -1,
-                        authUserNickname = uiState.user?.nickname ?: "",
-                        authUserProfileImageUrl = null,
-                        likeCount = 0,
-                        commentCount = 0,
-                        bookmarkCount = 0,
-                        viewCount = 0,
-                        isLiked = false,
-                        isBookmarked = false,
-                        comments = null,
-                        createdAt = Date(),
-                        updatedAt = Date()
+                        id = -1, title = title, content = content, image = null,
+                        postType = postType, userId = uiState.user?.id ?: -1,
+                        authUserNickname = uiState.user?.nickname ?: "", authUserProfileImageUrl = null,
+                        likeCount = 0, commentCount = 0, bookmarkCount = 0, viewCount = 0,
+                        isLiked = false, isBookmarked = false, comments = null,
+                        createdAt = Date(), updatedAt = Date()
                     )
                     viewModel.createPost(token, newPost)
                     viewModel.isCreateDialogOpen.value = false
@@ -294,30 +300,23 @@ fun CommunityMainScreen(
             )
         }
 
-        // 게시글 수정 다이얼로그
         if (isEditDialogOpen && editingPost != null) {
             PostEditorDialogView(
                 categories = postEditorCategories,
                 initialPost = editingPost,
                 onDismiss = { viewModel.editingPost.value = null },
-                onSave = { title: String, content: String, postType: PostType ->
+                onSave = { title, content, postType ->
                     editingPost?.let { post ->
                         val updatedPost = post.copy(
-                            title = title,
-                            content = content,
-                            postType = postType,
-                            updatedAt = Date()
+                            title = title, content = content, postType = postType, updatedAt = Date()
                         )
-                        token?.let {
-                            viewModel.updatePost(it, post.id, updatedPost)
-                        }
+                        token?.let { viewModel.updatePost(it, post.id, updatedPost) }
                     }
                 }
             )
         }
     }
 
-    // -------------------- 댓글 BottomSheet --------------------
     if (selectedPost != null && isCommentsOpen) {
         ModalBottomSheet(
             onDismissRequest = { viewModel.closeComments() },

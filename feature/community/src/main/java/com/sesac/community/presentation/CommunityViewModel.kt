@@ -4,15 +4,14 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.sesac.common.model.UiEvent
-import com.sesac.domain.type.BookmarkType
-import com.sesac.domain.model.BookmarkedPost
 import com.sesac.domain.model.Comment
-import com.sesac.domain.type.CommentType
-import com.sesac.domain.type.LikeType
 import com.sesac.domain.model.Post
-import com.sesac.domain.type.PostType
 import com.sesac.domain.result.AuthResult
 import com.sesac.domain.result.ResponseUiState
+import com.sesac.domain.type.BookmarkType
+import com.sesac.domain.type.CommentType
+import com.sesac.domain.type.LikeType
+import com.sesac.domain.type.PostType
 import com.sesac.domain.usecase.bookmark.BookmarkUseCase
 import com.sesac.domain.usecase.comment.CommentUseCase
 import com.sesac.domain.usecase.like.LikeUseCase
@@ -86,6 +85,7 @@ class CommunityViewModel @Inject constructor(
 
     fun onSearchQueryChange(query: String) { _searchQuery.value = query }
     fun onFilterChange(filter: String) { _activeFilter.value = filter }
+    fun onStartEditing(post: Post) { editingPost.value = post }
 
     // -------------------- 댓글 --------------------
     private val _isCommentsOpen = MutableStateFlow(false)
@@ -157,7 +157,7 @@ class CommunityViewModel @Inject constructor(
         }
     }
 
-    fun getPostDetail(token: String?, id: Int, isForEdit: Boolean = false) {
+    fun getPostDetail(token: String?, id: Int) {
         viewModelScope.launch {
             if (token.isNullOrEmpty()) {
                 _invalidToken.send(UiEvent.ToastEvent("유저 정보가 없습니다."))
@@ -172,11 +172,7 @@ class CommunityViewModel @Inject constructor(
                         is AuthResult.Success -> {
                             val detail = result.resultData
                             _post.value = ResponseUiState.Success("조회 성공", detail)
-
-                            // 수정 모드가 아닐 때만 댓글창 열기
-                            if (!isForEdit) {
-                                editingPost.value = detail
-                            }
+                            editingPost.value = detail
                         }
                         is AuthResult.NetworkError -> {
                             _post.value = ResponseUiState.Error(result.exception.message ?: "네트워크 오류")
@@ -205,7 +201,11 @@ class CommunityViewModel @Inject constructor(
                     when (result) {
                         is AuthResult.Success -> {
                             _createPostState.value = ResponseUiState.Success("생성 성공", result.resultData)
-                            val newPostDetail = result.resultData.copy(authUserNickname = user?.nickname, authUserProfileImageUrl = user?.profileImageUrl)
+                            val newPostDetail = result.resultData.copy(
+                                userId = user?.id ?: -1, // 👈 FIX: Set current user's ID
+                                authUserNickname = user?.nickname,
+                                authUserProfileImageUrl = user?.profileImageUrl
+                            )
 
                             (_postList.value as? ResponseUiState.Success)?.let { currentList ->
                                 _postList.value = ResponseUiState.Success(currentList.message, listOf(newPostDetail) + currentList.result)

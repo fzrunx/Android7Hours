@@ -25,7 +25,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.sesac.common.ui.theme.Android7HoursTheme
 import com.sesac.common.ui.theme.White
 import com.sesac.domain.model.Post
 import com.sesac.domain.type.PostType
@@ -113,4 +115,17 @@ fun PostEditorDialogView(
             }
         }
     )
+}
+
+@Preview
+@Composable
+fun PostEditorDialogViewPreview() {
+    Android7HoursTheme {
+        PostEditorDialogView(
+            categories = listOf(PostType.REVIEW, PostType.INFO),
+            initialPost = Post.EMPTY,
+            onDismiss = {},
+            onSave = { title, content, postType -> },
+        )
+    }
 }

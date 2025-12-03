@@ -15,9 +15,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import com.sesac.common.R
+import com.sesac.common.ui.theme.Android7HoursTheme
 import com.sesac.common.ui.theme.Gray400
 import com.sesac.common.ui.theme.Gray500
 import com.sesac.common.ui.theme.paddingLarge
@@ -71,8 +73,8 @@ fun CommonCommentSection(
                             CommentItem(
                                 comment = comment,
                                 isAuthor = comment.authorId == currentUserId,
-                                onUpdate = { updatedContent -> onUpdateComment(comment.id.toInt(), updatedContent) },
-                                onDelete = { onDeleteComment(comment.id.toInt()) }
+                                onUpdate = { updatedContent -> onUpdateComment(comment.id, updatedContent) },
+                                onDelete = { onDeleteComment(comment.id) }
                             )
                         }
                     }
@@ -232,5 +234,24 @@ fun CommentItem(
                 }
             }
         }
+    }
+}
+/*
+comment: Comment,
+    isAuthor: Boolean,
+    onUpdate: (String) -> Unit,
+    onDelete: () -> Unit
+ */
+
+@Preview
+@Composable
+fun CommentItemPreivew() {
+    Android7HoursTheme {
+        CommentItem(
+            comment = Comment.EMPTY,
+            isAuthor = true,
+            onUpdate = { String -> },
+            onDelete = {},
+        )
     }
 }

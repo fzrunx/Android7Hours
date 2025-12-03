@@ -26,18 +26,26 @@ fun parseDate(
     }
 
     val formats = arrayOf(
+        "EEE MMM dd HH:mm:ss zzz yyyy", // New format for Date.toString()
         "yyyy-MM-dd HH:mm:ss",          // Common format (added for robustness)
         "yyyy-MM-dd'T'HH:mm:ss.SSSXXX", // ISO 8601 with timezone offset and 3 fractional seconds
         "yyyy-MM-dd'T'HH:mm:ssXXX",     // ISO 8601 with timezone offset (no fractional seconds)
         "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", // ISO 8601 with Z and 3 fractional seconds
         "yyyy-MM-dd'T'HH:mm:ss'Z'",     // ISO 8601 with Z (no fractional seconds)
-        "yyyy-MM-dd"                    // Date only format (added for robustness)
+        "yyyy-MM-dd",                    // Date only format (added for robustness)
+        "EEE MMM dd HH:mm:ss 'GMT'Z yyyy",
+        "EEE MMM dd HH:mm:ss 'GMT'XXX yyyy",
     )
     for (format in formats) {
         try {
-            val parser = SimpleDateFormat(format, locale).apply {
-                this.timeZone = timeZone // Correctly set the timezone
+            val parser = if (format.startsWith("EEE")) {
+                SimpleDateFormat(format, Locale.ENGLISH)
+            } else {
+                SimpleDateFormat(format, locale)
+            }.apply {
+                this.timeZone = timeZone
             }
+
             return parser.parse(processedDateString) ?: continue
         } catch (e: ParseException) {
             Log.d("TAG-ParseDate", "parse-date error with format '$format': $e")

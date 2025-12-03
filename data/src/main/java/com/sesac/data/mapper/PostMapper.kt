@@ -1,5 +1,6 @@
 package com.sesac.data.mapper
 
+import com.sesac.common.utils.parseDate
 import com.sesac.data.dto.post.request.PostCreateRequestDTO
 import com.sesac.data.dto.post.request.PostUpdateRequestDTO
 import com.sesac.data.dto.post.response.PostDTO
@@ -72,9 +73,11 @@ fun PostDTO.toPost(): Post = Post(
     bookmarkCount = this.bookmarkCount,
     isLiked = this.isLiked,
     isBookmarked = this.isBookmarked,
-    createdAt = this.createdAt.toDateOrEpoch(),
+//    createdAt = this.createdAt.toDateOrEpoch(),
+    createdAt = parseDate(this.createdAt),
     content = this.content,
-    updatedAt = this.updatedAt.toDateOrEpoch(),
+//    updatedAt = this.updatedAt.toDateOrEpoch(),
+    updatedAt = parseDate(this.updatedAt),
     comments = this.comments?.toDomain(this.id)
 )
 
