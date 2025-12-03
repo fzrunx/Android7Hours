@@ -1,9 +1,11 @@
 package com.sesac.domain.repository
 
+import com.sesac.domain.model.Diary
 import com.sesac.domain.model.FavoriteCommunityPost
 import com.sesac.domain.model.FavoriteWalkPath
 import com.sesac.domain.model.MypageSchedule
 import com.sesac.domain.model.MypageStat
+import com.sesac.domain.model.Path
 import kotlinx.coroutines.flow.Flow
 import org.threeten.bp.LocalDate
 
@@ -19,4 +21,10 @@ interface MypageRepository {
     fun deleteSchedule(scheduleId: Long): Flow<Boolean>
 //    fun getMypagePermissions(): Flow<List<MypagePermission>>
     fun updatePermissionStatus(key: String, isEnabled: Boolean): Flow<Boolean>
+    fun updateSchedule(schedule: MypageSchedule): Flow<Boolean>
+    suspend fun generateDiary(path: Path): Diary
+    // ✅ Diary Room 관련 추가
+    suspend fun saveDiaryToLocal(scheduleId: Long, pathId: Int, diary: String)
+    suspend fun getDiaryFromLocal(scheduleId: Long): String?
+    suspend fun syncDiaryToServer(scheduleId: Long): Boolean
 }

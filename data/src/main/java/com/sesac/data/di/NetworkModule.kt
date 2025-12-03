@@ -7,6 +7,7 @@ import com.sesac.data.dto.PostDTO
 import com.sesac.data.repository.SessionRepositoryImpl
 import com.sesac.data.source.api.AuthApi
 import com.sesac.data.source.api.BookmarkApi
+import com.sesac.data.source.api.DiaryApi
 import com.sesac.data.source.api.PathApi
 import com.sesac.data.source.api.PetsApi
 import com.sesac.data.source.api.PlaceApi
@@ -35,6 +36,7 @@ object NetworkModule {
 
 //    private const val BASE_URL = "http://192.168.0.73:8000/"
     private const val BASE_URL = BuildConfig.SERVER_URL
+    private const val DIARY_BASE_URL = BuildConfig.DIARY_SERVER_URL // fastapi 전용
 
     @Provides
     @Singleton
@@ -83,10 +85,14 @@ object NetworkModule {
             .addInterceptor(csrfTokenInterceptor)
             .addInterceptor(loggingInterceptor)
             .authenticator(tokenAuthenticator)
+            .connectTimeout(30, TimeUnit.SECONDS)  // 연결 최대 대기 시간
+            .readTimeout(60, TimeUnit.SECONDS)     // 읽기 최대 대기 시간
+            .writeTimeout(60, TimeUnit.SECONDS)    // 쓰기 최대 대기 시간
             .build()
     }
 
     @Provides
+    @DefaultRetrofit
     @Singleton
     fun provideRetrofit(
         okHttpClient: OkHttpClient,
@@ -101,21 +107,21 @@ object NetworkModule {
     @Provides
     @Singleton
     fun provideAuthApi(
-        retrofit: Retrofit
+        @DefaultRetrofit retrofit: Retrofit
     ): AuthApi =
         retrofit.create(AuthApi::class.java)
 
     @Provides
     @Singleton
     fun providePetsApi(
-        retrofit: Retrofit
+        @DefaultRetrofit retrofit: Retrofit
     ): PetsApi =
         retrofit.create(PetsApi::class.java)
 
     @Provides
     @Singleton
     fun provideTrailApi(
-        retrofit: Retrofit
+        @DefaultRetrofit retrofit: Retrofit
     ): PathApi {
         return retrofit.create(PathApi::class.java)
     }
@@ -123,23 +129,42 @@ object NetworkModule {
     @Provides
     @Singleton
     fun providePostApi(
-        retrofit: Retrofit
+        @DefaultRetrofit retrofit: Retrofit
     ): PostApi =
         retrofit.create(PostApi::class.java)
 
     @Provides
     @Singleton
     fun provideBookmarkApi(
-        retrofit: Retrofit
+        @DefaultRetrofit retrofit: Retrofit
     ): BookmarkApi =
         retrofit.create(BookmarkApi::class.java)
 
     @Provides
     @Singleton
     fun providePlaceApi(
-        retrofit: Retrofit
+        @DefaultRetrofit retrofit: Retrofit
     ): PlaceApi =
         retrofit.create(PlaceApi::class.java)
+
+    // 👉 FastAPI Diary 전용 Retrofit 추가
+    @Provides
+    @DiaryRetrofit
+    @Singleton
+    fun provideDiaryRetrofit(
+        okHttpClient: OkHttpClient,
+        moshi: Moshi
+    ): Retrofit =
+        Retrofit.Builder()
+            .baseUrl(DIARY_BASE_URL)
+            .client(okHttpClient)
+            .addConverterFactory(MoshiConverterFactory.create(moshi))
+            .build()
+
+    @Provides
+    @Singleton
+    fun provideDiaryApi(@DiaryRetrofit diaryRetrofit: Retrofit): DiaryApi =
+        diaryRetrofit.create(DiaryApi::class.java)
 
 }
 

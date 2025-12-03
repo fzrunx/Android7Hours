@@ -56,7 +56,10 @@ data class MypageSchedule(
     val id: Long,
     val date: LocalDate,
     val title: String,
-    val memo: String
+    val memo: String,
+    val isPath: Boolean = false,
+    val pathId: Int? = null,
+    val isCompleted: Boolean = false
 )
 
 /**

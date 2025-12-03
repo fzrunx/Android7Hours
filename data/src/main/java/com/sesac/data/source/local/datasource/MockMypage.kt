@@ -1,5 +1,6 @@
 package com.sesac.data.source.local.datasource
 
+import com.sesac.domain.usecase.mypage.MypageUseCase
 import com.sesac.domain.model.FavoriteCommunityPost
 import com.sesac.domain.model.FavoriteWalkPath
 import com.sesac.domain.model.MypageSchedule
