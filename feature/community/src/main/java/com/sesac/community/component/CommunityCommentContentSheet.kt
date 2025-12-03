@@ -17,6 +17,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Send
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -35,6 +36,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
+import com.sesac.common.component.CommonCommentItem
 import com.sesac.common.ui.theme.Android7HoursTheme
 import com.sesac.domain.model.Comment
 
@@ -83,7 +85,8 @@ fun CommunityCommentSheetContent(
                 }
             } else {
                 items(sortedComments, key = { it.id }) { comment ->
-                    CommentItemView(comment)
+//                    CommentItemView(comment)
+                    CommonCommentItem(comment)
                 }
             }
         }
@@ -114,59 +117,12 @@ fun CommunityCommentSheetContent(
                 enabled = newCommentContent.isNotBlank()
             ) {
                 Icon(
-                    Icons.Default.Send,
+                    Icons.AutoMirrored.Filled.Send,
                     contentDescription = "댓글 작성",
                     tint = if (newCommentContent.isNotBlank())
                         MaterialTheme.colorScheme.primary else Color.Gray
                 )
             }
-        }
-    }
-}
-
-@Composable
-private fun CommentItemView(
-    comment: Comment,
-    modifier: Modifier = Modifier
-) {
-    Row(
-        modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        // 프로필 이미지
-        AsyncImage(
-            model = comment.authorImage,
-            contentDescription = "프로필 이미지",
-            modifier = Modifier
-                .size(40.dp)
-                .clip(CircleShape),
-            contentScale = ContentScale.Crop
-        )
-
-        // 댓글 내용
-        Column(modifier = Modifier.weight(1f)) {
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = comment.authorNickName,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 14.sp
-                )
-                Log.d("TAG-CommunityCommentContentSheet", "comment : $comment")
-                Text(
-                    text = comment.timeAgo ?: "방금 전",
-                    fontSize = 12.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = comment.content,
-                fontSize = 14.sp,
-                color = MaterialTheme.colorScheme.onSurface
-            )
         }
     }
 }

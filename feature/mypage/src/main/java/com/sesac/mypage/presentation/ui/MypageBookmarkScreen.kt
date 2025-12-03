@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.sesac.common.component.CommonFilterTabs
+import com.sesac.common.component.CommonListContainer
 import com.sesac.common.model.PathParceler
 import com.sesac.common.model.toPathParceler
 import com.sesac.domain.result.AuthUiState
@@ -102,9 +103,8 @@ fun MypageBookmarkScreen(
                 is ResponseUiState.Success -> {
                     when (activeFilter) {
                         filterOptions[0] -> {
-                            ListContainerView(
+                            CommonListContainer(
                                 title = "즐겨찾는 산책로",
-                                viewModel = viewModel,
                                 itemList = state.result,
                                 emptyStateMessage = "즐겨찾는 산책로가 없습니다",
                                 emptyStateSubMessage = "산책로 페이지에서 ⭐를 눌러 추가해보세요",
@@ -121,9 +121,8 @@ fun MypageBookmarkScreen(
                             )
                         }
                         filterOptions[1] -> {
-                            ListContainerView(
+                            CommonListContainer(
                                 title = "즐겨찾는 게시글",
-                                viewModel = viewModel,
                                 itemList = favoritePosts,
                                 emptyStateMessage = "즐겨찾는 게시글이 없습니다",
                                 emptyStateSubMessage = "커뮤니티에서 ♥를 눌러 추가해보세요",

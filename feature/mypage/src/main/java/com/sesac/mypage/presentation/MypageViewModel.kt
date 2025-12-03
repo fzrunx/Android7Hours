@@ -12,6 +12,7 @@ import com.sesac.domain.model.InvitationCode
 import com.sesac.domain.model.MypageSchedule
 import com.sesac.domain.model.Path
 import com.sesac.domain.model.Pet
+import com.sesac.domain.model.Post
 import com.sesac.domain.model.User
 import com.sesac.domain.result.AuthResult
 import com.sesac.domain.result.AuthUiState
@@ -21,6 +22,7 @@ import com.sesac.domain.usecase.bookmark.BookmarkUseCase
 import com.sesac.domain.usecase.mypage.MypageUseCase
 import com.sesac.domain.usecase.path.PathUseCase
 import com.sesac.domain.usecase.pet.PetUseCase
+import com.sesac.domain.usecase.post.PostUseCase
 import com.sesac.domain.usecase.session.SessionUseCase
 import com.sesac.domain.usecase.user.UserUseCase
 import com.sesac.mypage.model.MyPathStats
@@ -38,12 +40,12 @@ import javax.inject.Inject
 
 @HiltViewModel
 class MypageViewModel @Inject constructor(
-    private val authUseCase: AuthUseCase,
     private val userUseCase: UserUseCase,
     private val sessionUseCase: SessionUseCase,
     private val bookmarkUseCase: BookmarkUseCase,
     private val petUseCase: PetUseCase,
     private val pathUseCase: PathUseCase,
+    private val postUseCase: PostUseCase,
 
     private val mypageUseCase: MypageUseCase,
 ) : ViewModel() {
@@ -80,10 +82,12 @@ class MypageViewModel @Inject constructor(
     val selectedPath = _selectedPath.asStateFlow()
 
     // MypageFavoriteScreen
-    private val _favoriteWalkPaths = MutableStateFlow<List<FavoriteWalkPath>>(emptyList())
-    val favoriteWalkPaths get() = _favoriteWalkPaths.asStateFlow()
+    // TODO 삭제
     private val _favoritePosts = MutableStateFlow<List<FavoriteCommunityPost>>(emptyList())
     val favoritePosts get() = _favoritePosts.asStateFlow()
+
+    private val _bookmarkedPost = MutableStateFlow<ResponseUiState<List<Post>>>(ResponseUiState.Idle)
+    val bookmarkedPost = _bookmarkedPost.asStateFlow()
 
     // MypageManageScreen
     private val _schedules = MutableStateFlow<List<MypageSchedule>>(emptyList())
@@ -363,6 +367,7 @@ class MypageViewModel @Inject constructor(
         }
     }
 
+    // TODO
     fun getFavoriteCommunityPost() {
         viewModelScope.launch {
             mypageUseCase.getFavoriteCommunityPostsUseCase()
@@ -380,6 +385,7 @@ class MypageViewModel @Inject constructor(
                 }
         }
     }
+    // TODO
 
     fun getSchedules(date: LocalDate) {
         viewModelScope.launch {

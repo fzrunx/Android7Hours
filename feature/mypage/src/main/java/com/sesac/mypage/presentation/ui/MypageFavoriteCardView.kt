@@ -171,7 +171,6 @@ fun BookmarkedPathCard(
 @Composable
 fun FavoriteCommunityPostCard(
     post: FavoriteCommunityPost,
-//    viewModel: MypageViewModel,
     onPostClick: () -> Unit,
     onRemoveClick: (post: FavoriteCommunityPost) -> Unit
 ) {

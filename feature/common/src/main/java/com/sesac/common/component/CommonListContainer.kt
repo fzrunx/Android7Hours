@@ -1,4 +1,4 @@
-package com.sesac.mypage.presentation.ui
+package com.sesac.common.component
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -15,20 +15,20 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.sesac.common.component.CommonEmptyState
+import com.sesac.common.ui.theme.Android7HoursTheme
 import com.sesac.common.ui.theme.TextPrimary
 import com.sesac.common.ui.theme.paddingLarge
 import com.sesac.common.ui.theme.paddingMedium
 import com.sesac.common.ui.theme.paddingSmall
 import com.sesac.common.ui.theme.primaryContainer
-import com.sesac.mypage.presentation.MypageViewModel
+import com.sesac.domain.model.Post
 
 @Composable
-fun <T> ListContainerView(
+fun <T> CommonListContainer(
     title: String,
-    viewModel: MypageViewModel,
     itemList: List<T>,
     emptyStateMessage: String,
     emptyStateSubMessage: String,
@@ -77,5 +77,29 @@ fun <T> ListContainerView(
             }
         }
 
+    }
+}
+
+/*
+<T> ListContainerView(
+    title: String,
+    itemList: List<T>,
+    emptyStateMessage: String,
+    emptyStateSubMessage: String,
+    itemContent: @Composable (T) -> Unit
+ */
+
+@Preview
+@Composable
+fun ListContainerViewPreview() {
+    Android7HoursTheme {
+        CommonListContainer(
+            title = "리스트트",
+//            itemList = listOf(Post.EMPTY),
+            itemList = emptyList<Post>(),
+            emptyStateMessage = "빈화면",
+            emptyStateSubMessage = "빈빈화면",
+            itemContent = {},
+        )
     }
 }

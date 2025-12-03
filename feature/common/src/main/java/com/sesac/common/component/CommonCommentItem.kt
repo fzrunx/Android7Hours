@@ -21,9 +21,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.rememberAsyncImagePainter
+import com.sesac.common.ui.theme.Android7HoursTheme
 import com.sesac.domain.model.Comment
 
 @Composable
@@ -67,5 +69,13 @@ fun CommonCommentItem(comment: Comment) {
             Spacer(modifier = Modifier.height(4.dp))
             Text(text = comment.content, fontSize = 14.sp)
         }
+    }
+}
+
+@Preview
+@Composable
+fun CommonCommentItemPreview() {
+    Android7HoursTheme {
+        CommonCommentItem(Comment.EMPTY)
     }
 }

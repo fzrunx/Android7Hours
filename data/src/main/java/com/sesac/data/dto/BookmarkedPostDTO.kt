@@ -12,7 +12,7 @@ import com.squareup.moshi.JsonClass
 data class BookmarkedPostDTO(
     override val id: Int,
     @Json(name = "auth_id")
-    val authUser: Int,
+    val authUserId: Int,
     @Json(name = "auth_name")
     val authUserNickname: String,
     @Json(name = "auth_profile_image")

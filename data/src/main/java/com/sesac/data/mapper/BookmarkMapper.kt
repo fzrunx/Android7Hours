@@ -10,6 +10,7 @@ import com.sesac.domain.model.Bookmark
 import com.sesac.domain.model.BookmarkResponse
 import com.sesac.domain.model.BookmarkedItem
 import com.sesac.domain.model.BookmarkedPath
+import com.sesac.domain.model.BookmarkedPost
 import com.sesac.domain.model.Post
 import com.sesac.domain.type.PostType
 
@@ -38,7 +39,7 @@ fun BookmarkDTO.toDomain(): Bookmark {
 fun BookmarkedObject.toDomain(): BookmarkedItem {
     return when (this) {
         is BookmarkedPathDTO -> this.toDomain()
-        is BookmarkedPostDTO -> this.toDomain() // Uses the existing mapper from PostMapper
+        is BookmarkedPostDTO -> this.toDomain() // FIX: Call toPost() to prevent recursion
     }
 }
 
@@ -62,11 +63,32 @@ fun BookmarkedPathDTO.toDomain(): BookmarkedPath {
     )
 }
 
+fun BookmarkedPostDTO.toDomain(): BookmarkedPost = BookmarkedPost(
+    id = this.id,
+    userId = this.authUserId,
+    authUserNickname = this.authUserNickname,
+    authUserProfileImageUrl = this.authUserProfileImageUrl,
+    postType = when  {
+        this.postType == "review" -> PostType.REVIEW
+        this.postType == "info" -> PostType.INFO
+        this.postType == "unknown" -> PostType.UNKNOWN
+        else -> PostType.UNKNOWN
+    },
+    title = this.title,
+    image = this.image,
+    viewCount = this.viewCount,
+    commentCount = this.commentCount,
+    likeCount = this.likeCount,
+    bookmarkCount = this.bookmarkCount,
+    isLiked = this.isLiked,
+    isBookmarked = this.isBookmarked,
+)
+
 fun BookmarkedPostDTO.toPost(): Post {
 
     return Post(
         id = this.id,
-        userId = this.authUser,
+        userId = this.authUserId,
         authUserNickname = this.authUserNickname,
         authUserProfileImageUrl = this.authUserProfileImageUrl,
         postType = this.postType.toDomainPostType(),
