@@ -49,6 +49,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -155,7 +156,7 @@ private fun ScheduleContent(
     onDeleteClick: (MypageSchedule) -> Unit,
     viewModel: MypageViewModel
 ) {
-    // ✅ diaryMap 상태 추가
+    // diaryMap 상태 관찰
     val diaryMap by viewModel.diaryMap.collectAsStateWithLifecycle()
 
     LazyColumn(
@@ -183,19 +184,30 @@ private fun ScheduleContent(
 
         if (schedules.isNotEmpty()) {
             items(schedules, key = { it.id }) { schedule ->
-                ScheduleItemCard(
-                    schedule = schedule,
-                    onDeleteClick = { onDeleteClick(schedule) }
-                )
-                Spacer(Modifier.height(paddingSmall))
-                // 산책로 일정완료 하면 다이어리 보여주기
+
+                // ✅ 완료된 산책로 일정이면 ScheduleItemCard 렌더링하지 않음
+                if (!(schedule.isPath && schedule.isCompleted)) {
+                    ScheduleItemCard(
+                        schedule = schedule,
+                        onDeleteClick = { onDeleteClick(schedule) }
+                    )
+                    Spacer(Modifier.height(paddingSmall))
+                }
+
+                // ✅ 산책로 일정 완료하면 다이어리 보여주기
                 if (schedule.isPath && schedule.isCompleted) {
                     val diary = diaryMap[schedule.id]
 
-                    // ✅ 구분선 추가
+                    // Room에서 메모리에 없으면 불러오기
+                    LaunchedEffect(schedule.id) {
+                        if (diary.isNullOrEmpty()) {
+                            viewModel.loadDiaryFromLocal(schedule.id)
+                        }
+                    }
+
                     Spacer(Modifier.height(paddingMedium))
 
-                    // ✅ 다이어리 섹션 헤더
+                    // 다이어리 섹션 헤더
                     Text(
                         text = "🐕 오늘의 산책로 일기",
                         style = MaterialTheme.typography.titleMedium,
@@ -204,21 +216,21 @@ private fun ScheduleContent(
                         modifier = Modifier.padding(vertical = paddingSmall)
                     )
 
-                    if (diary != null) {
+                    if (!diary.isNullOrEmpty()) {
                         DiaryItemCard(
-                            pathName = schedule.title,  // ✅ 산책로 제목 전달
+                            pathName = schedule.title,
                             diaryText = diary
                         )
                     } else {
-                        // 다이어리 로딩 중
                         DiaryLoadingCard()
                     }
-                        Spacer(Modifier.height(paddingSmall))
-                    }
+
+                    Spacer(Modifier.height(paddingSmall))
                 }
             }
         }
     }
+}
 
 
 @OptIn(ExperimentalMaterial3Api::class)

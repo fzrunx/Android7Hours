@@ -28,6 +28,7 @@ import com.sesac.mypage.model.MyPathStats
 import com.sesac.mypage.utils.getMyPathStatsUtils
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collectLatest
@@ -94,7 +95,7 @@ class MypageViewModel @Inject constructor(
     // 다이어리 상태 - Map으로 여러 일정의 다이어리 관리
     private var currentScheduleId: Long? = null
     private val _diaryMap = MutableStateFlow<Map<Long, String>>(emptyMap())
-    val diaryMap get() = _diaryMap.asStateFlow()
+    val diaryMap: StateFlow<Map<Long, String>> = _diaryMap.asStateFlow()
 
     // Invite Code
     private val _invitationCode =
@@ -388,20 +389,18 @@ class MypageViewModel @Inject constructor(
         }
     }
 
+    // 일정 로드 시 다이어리 함께 로드
     fun getSchedules(date: LocalDate) {
         viewModelScope.launch {
             mypageUseCase.getSchedulesUseCase(date)
-                .catch { e ->
-                    Log.e("MypageViewModel", "일정 로드 실패", e)
-                }
+                .catch { e -> Log.e("MypageViewModel", "일정 로드 실패", e) }
                 .collectLatest { scheduleList ->
                     _schedules.value = scheduleList
 
-                    // ✅ 완료된 산책로 일정의 다이어리 로드
+                    // 완료된 산책로 일정의 다이어리 로드
                     scheduleList
                         .filter { it.isPath && it.isCompleted }
                         .forEach { schedule ->
-                            // ✅ 이미 메모리에 있는지 확인
                             if (!_diaryMap.value.containsKey(schedule.id)) {
                                 loadDiaryFromLocal(schedule.id)
                             }
@@ -409,14 +408,13 @@ class MypageViewModel @Inject constructor(
                 }
         }
     }
-    private fun loadDiaryFromLocal(scheduleId: Long) {
+
+    // Room에서 다이어리 불러와 메모리에 저장
+    fun loadDiaryFromLocal(scheduleId: Long) {
         viewModelScope.launch {
             try {
                 Log.d("MypageViewModel", "다이어리 로드 시도: scheduleId=$scheduleId")
-
-                // ✅ Room에서 다이어리 조회
                 val diary = mypageUseCase.getDiaryFromLocalUseCase(scheduleId)
-
                 if (diary != null) {
                     _diaryMap.value = _diaryMap.value + (scheduleId to diary)
                     Log.d("MypageViewModel", "다이어리 로드 성공: scheduleId=$scheduleId, diary=$diary")
@@ -425,6 +423,37 @@ class MypageViewModel @Inject constructor(
                 }
             } catch (e: Exception) {
                 Log.e("MypageViewModel", "다이어리 로드 실패: scheduleId=$scheduleId", e)
+            }
+        }
+    }
+
+    // 산책로 일정 완료 후 다이어리 생성 및 저장
+    private fun loadPathAndGenerateDiary(scheduleId: Long, pathId: Int) {
+        viewModelScope.launch {
+            try {
+                pathUseCase.getPathById(pathId).collectLatest { result ->
+                    if (result is AuthResult.Success) {
+                        val path = result.resultData
+                        generateAndSaveDiary(scheduleId, pathId, path)
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e("MypageViewModel", "Path 로드 실패", e)
+            }
+        }
+    }
+
+    private fun generateAndSaveDiary(scheduleId: Long, pathId: Int, path: Path) {
+        viewModelScope.launch {
+            try {
+                val diary = diaryUseCase(path)
+                mypageUseCase.saveDiaryToLocalUseCase(scheduleId, pathId, diary.diary)
+                // ✅ Room뿐만 아니라 메모리에도 저장 -> Compose 재컴포즈
+                _diaryMap.value = _diaryMap.value + (scheduleId to diary.diary)
+                Log.d("MypageViewModel", "다이어리 저장 완료: scheduleId=$scheduleId")
+            } catch (e: Exception) {
+                Log.e("MypageViewModel", "다이어리 생성/저장 실패", e)
+                _diaryMap.value = _diaryMap.value + (scheduleId to "다이어리 생성 실패")
             }
         }
     }
@@ -461,56 +490,6 @@ class MypageViewModel @Inject constructor(
                     // ✅ 다이어리 생성 및 저장
                     loadPathAndGenerateDiary(schedule.id, schedule.pathId!!)
                 }
-            }
-        }
-    }
-
-    private fun loadPathAndGenerateDiary(scheduleId: Long, pathId: Int) {
-        viewModelScope.launch {
-            try {
-                Log.d("MypageViewModel", "Path 로드 시작: pathId=$pathId")
-
-                pathUseCase.getPathById(pathId).collectLatest { result ->
-                    when (result) {
-                        is AuthResult.Success -> {
-                            val path = result.resultData
-                            Log.d("MypageViewModel", "Path 로드 성공: $path")
-
-                            generateAndSaveDiary(scheduleId, pathId, path)
-                        }
-                        is AuthResult.NetworkError -> {
-                            Log.e("MypageViewModel", "Path 로드 실패: ${result.exception.message}")
-                        }
-                        else -> {}
-                    }
-                }
-            } catch (e: Exception) {
-                Log.e("MypageViewModel", "Path 로드 중 오류", e)
-            }
-        }
-    }
-
-
-    private fun generateAndSaveDiary(scheduleId: Long, pathId: Int, path: Path) {
-        viewModelScope.launch {
-            try {
-                Log.d("MypageViewModel", "다이어리 생성 시작")
-
-                // ✅ FastAPI로 다이어리 생성
-                val diary = diaryUseCase(path)
-
-                Log.d("MypageViewModel", "다이어리 생성 성공: ${diary.diary}")
-
-                // ✅ Room에 저장
-                mypageUseCase.saveDiaryToLocalUseCase(scheduleId, pathId, diary.diary)
-
-                // ✅ 메모리에도 저장 (화면 표시용)
-                _diaryMap.value = _diaryMap.value + (scheduleId to diary.diary)
-
-                Log.d("MypageViewModel", "다이어리 저장 완료: scheduleId=$scheduleId")
-            } catch (e: Exception) {
-                Log.e("MypageViewModel", "다이어리 생성/저장 실패", e)
-                _diaryMap.value = _diaryMap.value + (scheduleId to "다이어리 생성 실패: ${e.message}")
             }
         }
     }
