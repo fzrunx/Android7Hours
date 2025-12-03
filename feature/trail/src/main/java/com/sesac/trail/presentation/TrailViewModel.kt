@@ -8,20 +8,24 @@ import com.naver.maps.map.NaverMap
 import com.naver.maps.map.overlay.Marker
 import com.naver.maps.map.overlay.PolylineOverlay
 import com.sesac.common.model.UiEvent
-import com.sesac.domain.type.BookmarkType
 import com.sesac.domain.model.BookmarkedPath
 import com.sesac.domain.model.Comment
-import com.sesac.domain.type.CommentType
 import com.sesac.domain.model.Coord
+import com.sesac.domain.model.MypageSchedule
 import com.sesac.domain.model.Path
 import com.sesac.domain.model.Place
 import com.sesac.domain.model.User
 import com.sesac.domain.result.AuthResult
 import com.sesac.domain.result.LocationFlowResult
 import com.sesac.domain.result.ResponseUiState
+import com.sesac.domain.type.BookmarkType
+import com.sesac.domain.type.CommentType
 import com.sesac.domain.usecase.bookmark.BookmarkUseCase
 import com.sesac.domain.usecase.comment.CommentUseCase
 import com.sesac.domain.usecase.location.LocationUseCase
+import com.sesac.domain.usecase.mypage.AddScheduleUseCase
+import com.sesac.domain.usecase.mypage.DiaryUseCase
+import com.sesac.domain.usecase.mypage.MypageUseCase
 import com.sesac.domain.usecase.path.PathUseCase
 import com.sesac.domain.usecase.place.PlaceUseCase
 import com.sesac.domain.usecase.session.SessionUseCase
@@ -37,14 +41,8 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
-import javax.inject.Inject
-import android.location.Location
-import com.sesac.domain.model.User
-import com.sesac.domain.model.MypageSchedule
-import com.sesac.domain.usecase.mypage.AddScheduleUseCase
-import com.sesac.domain.usecase.mypage.DiaryUseCase
-import com.sesac.domain.usecase.mypage.MypageUseCase
 import org.threeten.bp.LocalDate
+import javax.inject.Inject
 
 @HiltViewModel
 class TrailViewModel @Inject constructor(

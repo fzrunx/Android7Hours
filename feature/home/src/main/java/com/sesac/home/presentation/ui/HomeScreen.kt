@@ -129,14 +129,6 @@ fun HomeScreen(
                 }
             }
 
-//            item { CommonLazyRow(
-//                title = "여행지 추천",
-//                items = travelDestinationList,
-//            ) { item -> ContentCardView(item, {}, Modifier.width(cardWidth)) } }
-//            item { CommonLazyRow(
-//                title = "애견 카페",
-//                items = dogCafeList,
-//            ) { item -> ContentCardView(item, {}, Modifier.width(cardWidth)) } }
             item {
                 if (communityList.isNotEmpty()) {
                     CommunityCard(

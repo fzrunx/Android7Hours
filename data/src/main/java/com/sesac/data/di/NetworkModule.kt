@@ -27,6 +27,7 @@ import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
 import java.net.CookieManager
+import java.util.concurrent.TimeUnit
 import javax.inject.Provider
 import javax.inject.Singleton
 
@@ -84,9 +85,9 @@ object NetworkModule {
             .addInterceptor(csrfTokenInterceptor)
             .addInterceptor(loggingInterceptor)
             .authenticator(tokenAuthenticator)
-            .connectTimeout(30, TimeUnit.SECONDS)  // 연결 최대 대기 시간
-            .readTimeout(60, TimeUnit.SECONDS)     // 읽기 최대 대기 시간
-            .writeTimeout(60, TimeUnit.SECONDS)    // 쓰기 최대 대기 시간
+            .connectTimeout(5, TimeUnit.MINUTES)  // 연결 최대 대기 시간
+            .readTimeout(5, TimeUnit.MINUTES)     // 읽기 최대 대기 시간
+            .writeTimeout(5, TimeUnit.MINUTES)    // 쓰기 최대 대기 시간
             .build()
     }
 
@@ -150,7 +151,7 @@ object NetworkModule {
     @Provides
     @Singleton
     fun provideLikeApi(
-        retrofit: Retrofit
+        @DefaultRetrofit retrofit: Retrofit
     ): LikeApi =
         retrofit.create(LikeApi::class.java)
 
