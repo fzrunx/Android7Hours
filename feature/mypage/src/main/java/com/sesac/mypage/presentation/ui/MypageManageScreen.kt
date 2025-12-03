@@ -40,11 +40,16 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDatePickerState
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Divider
+import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -104,7 +109,8 @@ fun MypageManageScreen(viewModel: MypageViewModel = hiltViewModel()) {
             schedules = schedules,
             onDateSelected = { newDate -> selectedDate = newDate },
             onAddClick = { isAddDialogOpen = true },
-            onDeleteClick = { schedule -> viewModel.deleteSchedule(schedule) }
+            onDeleteClick = { schedule -> viewModel.deleteSchedule(schedule) },
+            viewModel = viewModel
         )
     }
 
@@ -123,7 +129,10 @@ fun MypageManageScreen(viewModel: MypageViewModel = hiltViewModel()) {
                             id = System.currentTimeMillis(),
                             date = selectedDate,
                             title = scheduleTitle,
-                            memo = scheduleMemo
+                            memo = scheduleMemo,
+                            isPath = false,        // ✅ 추가
+                            pathId = null,         // ✅ 추가
+                            isCompleted = false    // ✅ 추가
                         )
                     )
                     scheduleTitle = ""
@@ -144,8 +153,12 @@ private fun ScheduleContent(
     schedules: List<MypageSchedule>,
     onDateSelected: (LocalDate) -> Unit,
     onAddClick: () -> Unit,
-    onDeleteClick: (MypageSchedule) -> Unit
+    onDeleteClick: (MypageSchedule) -> Unit,
+    viewModel: MypageViewModel
 ) {
+    // diaryMap 상태 관찰
+    val diaryMap by viewModel.diaryMap.collectAsStateWithLifecycle()
+
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
@@ -171,15 +184,54 @@ private fun ScheduleContent(
 
         if (schedules.isNotEmpty()) {
             items(schedules, key = { it.id }) { schedule ->
-                ScheduleItemCard(
-                    schedule = schedule,
-                    onDeleteClick = { onDeleteClick(schedule) }
-                )
-                Spacer(Modifier.height(paddingSmall))
+
+                // ✅ 완료된 산책로 일정이면 ScheduleItemCard 렌더링하지 않음
+                if (!(schedule.isPath && schedule.isCompleted)) {
+                    ScheduleItemCard(
+                        schedule = schedule,
+                        onDeleteClick = { onDeleteClick(schedule) }
+                    )
+                    Spacer(Modifier.height(paddingSmall))
+                }
+
+                // ✅ 산책로 일정 완료하면 다이어리 보여주기
+                if (schedule.isPath && schedule.isCompleted) {
+                    val diary = diaryMap[schedule.id]
+
+                    // Room에서 메모리에 없으면 불러오기
+                    LaunchedEffect(schedule.id) {
+                        if (diary.isNullOrEmpty()) {
+                            viewModel.loadDiaryFromLocal(schedule.id)
+                        }
+                    }
+
+                    Spacer(Modifier.height(paddingMedium))
+
+                    // 다이어리 섹션 헤더
+                    Text(
+                        text = "🐕 오늘의 산책로 일기",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = PrimaryPurple,
+                        modifier = Modifier.padding(vertical = paddingSmall)
+                    )
+
+                    if (!diary.isNullOrEmpty()) {
+                        DiaryItemCard(
+                            pathName = schedule.title,
+                            diaryText = diary
+                        )
+                    } else {
+                        DiaryLoadingCard()
+                    }
+
+                    Spacer(Modifier.height(paddingSmall))
+                }
             }
         }
     }
 }
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -403,6 +455,84 @@ private fun AddScheduleDialog(
     )
 }
 
+@Composable
+fun DiaryItemCard(pathName: String, diaryText: String) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(paddingMedium),
+        colors = CardDefaults.cardColors(
+            containerColor = Color(0xFFF0F4FF) // 연한 보라색 배경
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Column(modifier = Modifier.padding(paddingMedium)) {
+            // ✅ 산책로 제목
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.padding(bottom = paddingSmall)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Add, // 아이콘 추가 필요
+                    contentDescription = "산책로",
+                    tint = PrimaryPurple,
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(Modifier.width(paddingSmall))
+                Text(
+                    text = pathName,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = PrimaryPurple
+                )
+            }
+
+            // ✅ 구분선
+            Divider(
+                color = MaterialTheme.colorScheme.outlineVariant,
+                thickness = 1.dp,
+                modifier = Modifier.padding(vertical = paddingSmall)
+            )
+
+            // ✅ 다이어리 내용
+            Text(
+                text = diaryText,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurface,
+                lineHeight = 24.sp
+            )
+        }
+    }
+}
+
+// ✅ 로딩 카드 추가
+@Composable
+fun DiaryLoadingCard() {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(paddingMedium),
+        colors = CardDefaults.cardColors(
+            containerColor = Color(0xFFF0F4FF)
+        )
+    ) {
+        Column(
+            modifier = Modifier
+                .padding(paddingMedium)
+                .fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            CircularProgressIndicator(
+                modifier = Modifier.size(24.dp),
+                color = PrimaryPurple
+            )
+            Spacer(Modifier.height(paddingSmall))
+            Text(
+                text = "일기를 불러오는 중...",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+}
 @SuppressLint("RememberReturnType")
 @Preview(showBackground = true)
 @Composable
