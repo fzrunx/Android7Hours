@@ -2,6 +2,7 @@ package com.sesac.data.di
 
 import android.content.Context
 import androidx.room.Room
+import com.sesac.data.dao.DiaryDao
 import com.sesac.data.dao.PathDao
 import com.sesac.data.source.local.datasource.AppDatabase
 import dagger.Module
@@ -26,5 +27,10 @@ object DatabaseModule {
     @Provides
     fun providePathDao(db: AppDatabase): PathDao {
         return db.pathDao()
+    }
+
+    @Provides
+    fun provideDiaryDao(db: AppDatabase): DiaryDao {
+        return db.diaryDao()
     }
 }

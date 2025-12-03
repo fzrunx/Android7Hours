@@ -76,6 +76,9 @@ dependencies {
     // --- Lifecycle & ViewModel Compose ---
     implementation(libs.androidx.lifecycle.viewmodel.compose)
 
+    // --- ThreetenABP (for LocalDate) ---
+    implementation(libs.threetenabp)
+
     // --- Test ---
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

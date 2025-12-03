@@ -8,20 +8,24 @@ import com.naver.maps.map.NaverMap
 import com.naver.maps.map.overlay.Marker
 import com.naver.maps.map.overlay.PolylineOverlay
 import com.sesac.common.model.UiEvent
-import com.sesac.domain.type.BookmarkType
 import com.sesac.domain.model.BookmarkedPath
 import com.sesac.domain.model.Comment
-import com.sesac.domain.type.CommentType
 import com.sesac.domain.model.Coord
+import com.sesac.domain.model.MypageSchedule
 import com.sesac.domain.model.Path
 import com.sesac.domain.model.Place
 import com.sesac.domain.model.User
 import com.sesac.domain.result.AuthResult
 import com.sesac.domain.result.LocationFlowResult
 import com.sesac.domain.result.ResponseUiState
+import com.sesac.domain.type.BookmarkType
+import com.sesac.domain.type.CommentType
 import com.sesac.domain.usecase.bookmark.BookmarkUseCase
 import com.sesac.domain.usecase.comment.CommentUseCase
 import com.sesac.domain.usecase.location.LocationUseCase
+import com.sesac.domain.usecase.mypage.AddScheduleUseCase
+import com.sesac.domain.usecase.mypage.DiaryUseCase
+import com.sesac.domain.usecase.mypage.MypageUseCase
 import com.sesac.domain.usecase.path.PathUseCase
 import com.sesac.domain.usecase.place.PlaceUseCase
 import com.sesac.domain.usecase.session.SessionUseCase
@@ -37,6 +41,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
+import org.threeten.bp.LocalDate
 import javax.inject.Inject
 
 @HiltViewModel
@@ -46,7 +51,10 @@ class TrailViewModel @Inject constructor(
     private val locationUseCase: LocationUseCase,
     private val bookmarkUseCase: BookmarkUseCase,
     private val commentUseCase: CommentUseCase,
-    private val placeUseCases: PlaceUseCase
+    private val placeUseCases: PlaceUseCase,
+    private val addScheduleUseCase: AddScheduleUseCase,
+    private val mypageUseCase: MypageUseCase,
+    private val diaryUseCase: DiaryUseCase,
 ) : ViewModel() {
     private val _invalidToken = Channel<UiEvent>()
     val invalidToken = _invalidToken.receiveAsFlow()
@@ -291,6 +299,12 @@ class TrailViewModel @Inject constructor(
     // =================================================================
     // 📌 5. 선택된 경로 관리
     // =================================================================
+
+
+    // 🔥 다이어리 상태 - Map으로 여러 일정의 다이어리 관리
+    private val _diaryMap = MutableStateFlow<Map<Long, String>>(emptyMap())
+    val diaryMap get() = _diaryMap.asStateFlow()
+
 
     fun updateSelectedPath(path: Path?) {
         viewModelScope.launch {
@@ -598,11 +612,7 @@ class TrailViewModel @Inject constructor(
                 // 1️⃣ RoomDB에 저장
                 val savedPathWithId = saveDraft(path)
                 if (savedPathWithId == null) {
-                    Log.e(
-                        "TrailViewModel",
-                        "Failed to save draft to RoomDB or retrieve generated ID."
-                    )
-//                    _invalidToken.send(UiEvent.ToastEvent("경로 저장 실패"))
+                    Log.e("TrailViewModel", "Failed to save draft to RoomDB")
                     _createState.value = ResponseUiState.Error("경로 저장 실패")
                     return@launch
                 }
@@ -623,13 +633,38 @@ class TrailViewModel @Inject constructor(
                             // RoomDB 삭제
                             val deleted = deleteDraft(savedPathWithId)
                             if (deleted) {
-//                                _invalidToken.send(UiEvent.ToastEvent("경로가 서버로 업로드되었습니다"))
-                                Log.d("TAG-TrailViewModel", "savedPathWithid : $savedPathWithId")
-                                Log.d("TAG-TrailViewModel", "result : ${result.resultData}")
                                 getMyPaths()
                                 loadDrafts()
-                                _createState.value =
-                                    ResponseUiState.Success("경로가 서버로 업로드되었습니다.", savedPathWithId)
+                                _createState.value = ResponseUiState.Success(
+                                    "경로가 서버로 업로드되었습니다.",
+                                    savedPathWithId
+                                )
+
+                                // ✅ 3️⃣ MypageSchedule 생성 및 저장 (isCompleted = false)
+                                val scheduleId = savedPathWithId.id.toLong()
+                                val newSchedule = MypageSchedule(
+                                    id = scheduleId,
+                                    date = LocalDate.now(),
+                                    title = savedPathWithId.pathName,
+                                    memo = "",
+                                    isPath = true,
+                                    pathId = savedPathWithId.id,
+                                    isCompleted = false  // ✅ 처음엔 false
+                                )
+
+                                addScheduleUseCase(newSchedule).collectLatest { success ->
+                                    if (success) {
+                                        Log.d("TrailViewModel", "✅ Schedule 추가 성공: scheduleId=$scheduleId")
+
+                                        // ✅ 4️⃣ 다이어리 생성
+                                        generateAndSaveDiary(scheduleId, savedPathWithId)
+
+                                        // ✅ 5️⃣ Schedule을 isCompleted = true로 업데이트
+                                        completeSchedule(scheduleId)
+                                    } else {
+                                        Log.e("TrailViewModel", "❌ Schedule 추가 실패")
+                                    }
+                                }
                             }
                         }
 
@@ -647,23 +682,37 @@ class TrailViewModel @Inject constructor(
                                 // RoomDB 삭제
                                 val deleted = deleteDraft(savedPathWithId)
                                 if (deleted) {
-//                                    _invalidToken.send(UiEvent.ToastEvent("경로가 서버로 업로드되었습니다"))
                                     getMyPaths()
                                     loadDrafts()
-                                    _createState.value =
-                                        ResponseUiState.Success("경로가 서버로 업로드되었습니다.", savedPathWithId)
-                                } else {
-//                                    _invalidToken.send(UiEvent.ToastEvent("서버 업로드 완료, RoomDB 삭제 실패"))
                                     _createState.value = ResponseUiState.Success(
-                                        "서버 업로드 완료, RoomDB 삭제 실패",
+                                        "경로가 서버로 업로드되었습니다.",
                                         savedPathWithId
                                     )
+
+                                    // ✅ Schedule 생성 및 완료 처리
+                                    val scheduleId = savedPathWithId.id.toLong()
+                                    val newSchedule = MypageSchedule(
+                                        id = scheduleId,
+                                        date = LocalDate.now(),
+                                        title = savedPathWithId.pathName,
+                                        memo = "",
+                                        isPath = true,
+                                        pathId = savedPathWithId.id,
+                                        isCompleted = false
+                                    )
+
+                                    addScheduleUseCase(newSchedule).collectLatest { success ->
+                                        if (success) {
+                                            Log.d("TrailViewModel", "✅ Schedule 추가 성공")
+                                            generateAndSaveDiary(scheduleId, savedPathWithId)
+                                            completeSchedule(scheduleId)
+                                        }
+                                    }
                                 }
                             } else {
                                 // 진짜 네트워크 에러
                                 Log.e("TrailViewModel", "❌ 실제 업로드 실패: $errorMsg")
-//                                _invalidToken.send(UiEvent.ToastEvent("서버 업로드 실패: $errorMsg"))
-                                _createState.value = ResponseUiState.Error("서버 업로드 실패 $errorMsg")
+                                _createState.value = ResponseUiState.Error("서버 업로드 실패: $errorMsg")
                             }
                         }
 
@@ -678,6 +727,94 @@ class TrailViewModel @Inject constructor(
                 )
                 _invalidToken.send(UiEvent.ToastEvent("오류 발생: ${e.message}"))
                 _createState.value = ResponseUiState.Error("오류 발생: ${e.message}")
+            }
+        }
+    }
+
+    // ✅ 다이어리 생성/저장
+    private fun generateAndSaveDiary(scheduleId: Long, path: Path) {
+        viewModelScope.launch {
+            try {
+                Log.d("TrailViewModel", "✅ [다이어리 생성 시작] scheduleId=$scheduleId, pathId=${path.id}")
+
+                val diary = diaryUseCase(path)
+
+                Log.d("TrailViewModel", "✅ [다이어리 생성 성공] ${diary.diary.take(50)}...")
+
+                mypageUseCase.saveDiaryToLocalUseCase(scheduleId, path.id, diary.diary)
+
+                _diaryMap.value = _diaryMap.value + (scheduleId to diary.diary)
+
+                Log.d("TrailViewModel", "✅ [다이어리 저장 완료] scheduleId=$scheduleId")
+            } catch (e: Exception) {
+                Log.e("TrailViewModel", "❌ [다이어리 생성 실패]", e)
+                _diaryMap.value = _diaryMap.value + (scheduleId to "다이어리 생성 실패: ${e.message}")
+            }
+        }
+    }
+
+    // ✅ Schedule 완료 처리 (MypageUseCase 사용)
+    private fun completeSchedule(scheduleId: Long) {
+        viewModelScope.launch {
+            try {
+                Log.d("TrailViewModel", "✅ [Schedule 완료 처리 시작] scheduleId=$scheduleId")
+
+                // ✅ 방법 1: MypageUseCase를 통해 일정 조회 후 업데이트
+                mypageUseCase.getSchedulesUseCase(LocalDate.now()).collectLatest { schedules ->
+                    val schedule = schedules.find { it.id == scheduleId }
+
+                    if (schedule != null) {
+                        Log.d("TrailViewModel", "✅ Schedule 찾음: ${schedule.title}")
+
+                        val completedSchedule = schedule.copy(isCompleted = true)
+
+                        mypageUseCase.updateScheduleUseCase(completedSchedule).collectLatest { success ->
+                            if (success) {
+                                Log.d("TrailViewModel", "✅ [Schedule 완료 업데이트 성공] scheduleId=$scheduleId")
+                            } else {
+                                Log.e("TrailViewModel", "❌ [Schedule 완료 업데이트 실패]")
+                            }
+                        }
+                    } else {
+                        Log.e("TrailViewModel", "❌ [Schedule을 찾을 수 없음] scheduleId=$scheduleId")
+
+                        // ✅ 방법 2: 찾을 수 없으면 새로 생성 (fallback)
+                        Log.d("TrailViewModel", "⚠️ Schedule 재생성 시도")
+                        val newSchedule = MypageSchedule(
+                            id = scheduleId,
+                            date = LocalDate.now(),
+                            title = _selectedPath.value?.pathName ?: "산책로",
+                            memo = "",
+                            isPath = true,
+                            pathId = scheduleId.toInt(),
+                            isCompleted = true  // 바로 완료 상태로
+                        )
+
+                        mypageUseCase.addScheduleUseCase(newSchedule).collectLatest { success ->
+                            if (success) {
+                                Log.d("TrailViewModel", "✅ Schedule 재생성 성공")
+                            }
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e("TrailViewModel", "❌ [Schedule 완료 처리 실패]", e)
+            }
+        }
+    }
+
+    fun saveDiaryForPath(scheduleId: Long, path: Path) {
+        viewModelScope.launch {
+            try {
+                // 1️⃣ 다이어리 생성
+                val diary = mypageUseCase.diaryUseCase(path)
+
+                // 2️⃣ RoomDB 저장
+                mypageUseCase.saveDiaryToLocalUseCase(scheduleId, path.id, diary.diary)
+
+                Log.d("TrailViewModel", "✅ 다이어리 저장 완료: scheduleId=$scheduleId, pathId=${path.id}")
+            } catch (e: Exception) {
+                Log.e("TrailViewModel", "❌ 다이어리 저장 실패: ${e.message}", e)
             }
         }
     }
