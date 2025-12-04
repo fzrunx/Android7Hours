@@ -5,7 +5,6 @@ import com.naver.maps.geometry.LatLng
 import com.sesac.data.mapper.toBookmarkResponse
 import com.sesac.data.dao.PathDao
 import com.sesac.data.mapper.toDomain
-import com.sesac.data.mapper.toMyRecord
 import com.sesac.data.mapper.toPathCreateRequestDTO
 import com.sesac.data.mapper.toPathEntity
 import com.sesac.data.mapper.toPathUpdateRequestDTO
@@ -13,19 +12,16 @@ import com.sesac.data.mapper.toPath
 import com.sesac.data.mapper.toPathList
 import com.sesac.data.mapper.toUserPath
 import com.sesac.data.source.api.PathApi
-import com.sesac.data.type.DraftStatus
 import com.sesac.data.util.PolylineEncoder
 import com.sesac.domain.model.BookmarkResponse
 import com.sesac.domain.model.Coord
 import com.sesac.domain.model.Like
-import com.sesac.domain.model.MyRecord
 import com.sesac.domain.model.Path
 import com.sesac.domain.repository.PathRepository
 import com.sesac.domain.result.AuthResult
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
 class PathRepositoryImpl @Inject constructor(
@@ -138,15 +134,6 @@ class PathRepositoryImpl @Inject constructor(
         emit(AuthResult.NetworkError(it))
     }
 
-    override suspend fun getAllMyRecord(): Flow<List<MyRecord>> =
-        pathDao.getDraftsByStatusFlow(DraftStatus.RECORD).map { list ->
-            list.map { it.toMyRecord() }
-        }
-
-    override suspend fun addMyRecord(newRecord: MyRecord): Flow<Boolean> = flow {
-        pathDao.insertDraft(newRecord.toPathEntity())
-        emit(true)
-    }
     // ⭐ Local(Room)
     override suspend fun saveDraft(draft: Path): Flow<Path> = flow {
         val entity = draft.toPathEntity()

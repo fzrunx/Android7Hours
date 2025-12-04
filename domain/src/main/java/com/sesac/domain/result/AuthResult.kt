@@ -1,7 +1,5 @@
 package com.sesac.domain.result
 
-import com.sesac.domain.model.MyRecord
-
 sealed class AuthResult<out T> {
     data object NoConstructor : AuthResult<Nothing>()
     data object Loading : AuthResult<Nothing>()

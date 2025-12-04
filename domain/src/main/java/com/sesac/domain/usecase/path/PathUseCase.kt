@@ -1,7 +1,6 @@
 package com.sesac.domain.usecase.path
 
 data class PathUseCase(
-    val getAllMyRecordUseCase: GetAllMyRecordUseCase,
     val getPathById: GetPathById,
     val createPathUseCase: CreatePathUseCase,
     val updatePathUseCase: UpdatePathUseCase,

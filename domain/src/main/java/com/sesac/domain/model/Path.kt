@@ -1,7 +1,5 @@
 package com.sesac.domain.model
 
-import java.util.Date
-
 data class RecommendedPath(
     val id: Int,
     val name: String,
@@ -91,15 +89,3 @@ data class BookmarkedPath(
     var bookmarkCount: Int,
     var isBookmarked: Boolean,
 ) : BookmarkedItem
-
-
-data class MyRecord(
-    val id: Int,
-    val name: String,
-    val date: Date = Date(System.currentTimeMillis()),
-    val distance: Float = 0f,
-    val time: Int = 0,
-    val steps: Int = 0,
-    val calories: Int = 0,
-    val color: Any? = null,
-)

@@ -5,7 +5,6 @@ import com.sesac.domain.usecase.path.CreatePathUseCase
 import com.sesac.domain.usecase.path.DeleteDraftUseCase
 import com.sesac.domain.usecase.path.DeletePathUseCase
 import com.sesac.domain.usecase.path.GetAllDraftsUseCase
-import com.sesac.domain.usecase.path.GetAllMyRecordUseCase
 import com.sesac.domain.usecase.path.GetAllRecommendedPathsUseCase
 import com.sesac.domain.usecase.path.GetMyPaths
 import com.sesac.domain.usecase.path.GetPathById
@@ -25,7 +24,6 @@ object PathUseCaseModule {
     @ActivityRetainedScoped
     fun providePathUseCase(repository: PathRepository): PathUseCase {
         return PathUseCase(
-            getAllMyRecordUseCase = GetAllMyRecordUseCase(repository),
             getPathById = GetPathById(repository),
             createPathUseCase = CreatePathUseCase(repository),
             updatePathUseCase = UpdatePathUseCase(repository),

@@ -3,7 +3,6 @@ package com.sesac.domain.repository
 import com.sesac.domain.model.BookmarkResponse
 import com.sesac.domain.model.Coord
 import com.sesac.domain.model.Like
-import com.sesac.domain.model.MyRecord
 import com.sesac.domain.model.Path
 import com.sesac.domain.result.AuthResult
 import kotlinx.coroutines.flow.Flow
@@ -18,9 +17,6 @@ interface PathRepository {
     suspend fun toggleBookmark(token: String, id: Int): Flow<AuthResult<BookmarkResponse>>
     suspend fun toggleLike(token: String, id: Int): Flow<AuthResult<Like>>
 
-    // MyRecord 관련
-    suspend fun getAllMyRecord(): Flow<List<MyRecord>>
-    suspend fun addMyRecord(newRecord: MyRecord): Flow<Boolean>
     // Room DB (Local) 관련 추가
     suspend fun saveDraft(draft: Path): Flow<Path>            // 작성중인 Path 저장
     suspend fun getAllDrafts(): Flow<List<Path>>                 // 저장된 Draft 불러오기
