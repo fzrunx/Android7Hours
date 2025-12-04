@@ -91,9 +91,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
 data class ValidationState(
-    val isNameInvalid: Boolean = false,
-    val isDistanceInvalid: Boolean = false,
-    val isTimeInvalid: Boolean = false
+    val isNameInvalid: Boolean = false
 )
 
 // --- 메인 Composable ---
@@ -184,10 +182,10 @@ fun TrailCreateScreen(
     var distanceString by remember { mutableStateOf(selectedPath?.distance?.takeIf { it > 0f }?.toString() ?: "") }
     var timeString by remember { mutableStateOf(selectedPath?.duration?.takeIf { it > 0 }?.toString() ?: "") }
 
-    LaunchedEffect(selectedPath) {
+    /*LaunchedEffect(selectedPath) {
         distanceString = selectedPath?.distance?.takeIf { it > 0f }?.toString() ?: ""
         timeString = selectedPath?.duration?.takeIf { it > 0 }?.toString() ?: ""
-    }
+    }*/
 
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
@@ -220,16 +218,12 @@ fun TrailCreateScreen(
         scope.launch {
             selectedPath?.let { selected ->
                 val isNameInvalid = selected.pathName.isBlank()
-                val isDistanceInvalid = selected.distance <= 0f
-                val isTimeInvalid = selected.duration <= 0
 
                 validationState = ValidationState(
-                    isNameInvalid = isNameInvalid,
-                    isDistanceInvalid = isDistanceInvalid,
-                    isTimeInvalid = isTimeInvalid
+                    isNameInvalid = isNameInvalid
                 )
 
-                if (isNameInvalid || isDistanceInvalid || isTimeInvalid) {
+                if (isNameInvalid) {
                     Toast.makeText(context, "필수 항목을 모두 입력해주세요", Toast.LENGTH_SHORT).show()
                     return@launch
                 }
@@ -237,7 +231,6 @@ fun TrailCreateScreen(
                 if (selected.id != -1) {
                     // 기존 경로 수정 -> ViewModel에 위임
                     viewModel.updatePath()
-//                    viewModel.resetUpdateState()
                 } else {
                     // 신규 경로: Draft 생성 → RoomDB 저장
                     val newDraft = viewModel.createDraftPath(selected)
@@ -295,12 +288,12 @@ fun TrailCreateScreen(
                 isError = validationState.isNameInvalid
             )
 
-            DifficultySelector(
-                selectedLevel = pathContent.level ?: "초급",
-                onLevelSelect = { newDifficulty -> viewModel.updateSelectedPath(pathContent.copy(level = newDifficulty)) }
-            )
+//            DifficultySelector(
+//                selectedLevel = pathContent.level ?: "초급",
+//                onLevelSelect = { newDifficulty -> viewModel.updateSelectedPath(pathContent.copy(level = newDifficulty)) }
+//            )
 
-            DistanceTimeInputs(
+            /*DistanceTimeInputs(
                 distance = distanceString,
                 onDistanceChange = { newString ->
                     if (newString.matches(Regex("^\\d*\\.?\\d*\$"))) {
@@ -317,7 +310,7 @@ fun TrailCreateScreen(
                     }
                 },
                 isTimeError = validationState.isTimeInvalid
-            )
+            )*/
 
             FormTextField(
                 label = "산책로 소개",
