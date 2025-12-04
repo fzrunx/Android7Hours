@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -46,10 +47,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
+import coil3.compose.AsyncImage
+import coil3.request.ImageRequest
+import coil3.request.crossfade
+import coil3.size.Scale
 import com.sesac.common.R
 import com.sesac.common.ui.theme.Android7HoursTheme
 import com.sesac.common.ui.theme.ColorBlue
@@ -66,6 +73,7 @@ import com.sesac.common.ui.theme.paddingLarge
 import com.sesac.common.ui.theme.paddingMedium
 import com.sesac.common.ui.theme.paddingMicro
 import com.sesac.common.ui.theme.paddingSmall
+import com.sesac.common.utils.fixImageUrl
 import com.sesac.domain.model.Path
 import com.sesac.domain.model.User
 
@@ -131,6 +139,7 @@ fun PathItem(
         elevation = CardDefaults.cardElevation(defaultElevation = elevationSmall),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
+        val context = LocalContext.current
         Column(modifier = Modifier.fillMaxWidth()) {
             // 1. 썸네일 영역
             Box(
@@ -140,11 +149,15 @@ fun PathItem(
                     .background(PrimaryGreenLight),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(
-                    imageVector = Icons.Outlined.Map,
-                    contentDescription = "Path Thumbnail",
-                    modifier = Modifier.size(iconSizeLarge),
-                    tint = PrimaryGreenDark
+                AsyncImage(
+                    model = ImageRequest.Builder(context)
+                        .data(fixImageUrl(fixImageUrl(path.thumbnail)))
+                        .crossfade(true)
+                        .scale(Scale.FILL)
+                        .build(),
+                    contentDescription = path.pathName,
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop,
                 )
             }
 

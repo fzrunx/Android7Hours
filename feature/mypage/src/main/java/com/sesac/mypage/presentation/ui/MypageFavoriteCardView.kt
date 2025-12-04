@@ -63,6 +63,7 @@ import com.sesac.common.ui.theme.primaryContainer
 import com.sesac.common.ui.theme.shapeCard
 import com.sesac.common.ui.theme.shapeImage
 import com.sesac.common.ui.theme.star
+import com.sesac.common.utils.fixImageUrl
 import com.sesac.domain.model.BookmarkedPath
 import com.sesac.domain.model.BookmarkedPost
 import com.sesac.domain.model.FavoriteCommunityPost
@@ -94,7 +95,7 @@ fun BookmarkedPathCard(
                 contentAlignment = Alignment.TopEnd
             ) {
                 AsyncImage(
-                    model = path.thumbnail,
+                    model = fixImageUrl(path.thumbnail),
                     contentDescription = path.pathName,
                     modifier = Modifier
                         .fillMaxSize()

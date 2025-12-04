@@ -36,6 +36,7 @@ class PathRepositoryImpl @Inject constructor(
             lng = coord?.longitude,
             radius = radius
         ).map { it.toPath() }
+        Log.d("TAG-PathRepository", "Recommend Path : ${paths.map { it.thumbnail }}")
         emit(AuthResult.Success(paths))
     }.catch {
         Log.d("TAG-PathRepository", "Recommend Path error : $it")
@@ -45,6 +46,7 @@ class PathRepositoryImpl @Inject constructor(
     override suspend fun getPathById(id: Int): Flow<AuthResult<Path>> = flow {
         emit(AuthResult.Loading)
         val result = pathApi.getPathById(id).toPath()
+        Log.d("TAG-PathRepository", "GET Path : $result")
         emit(AuthResult.Success(result))
     }.catch {
         Log.d("TAG-PathRepository", "GET Path error : $it")

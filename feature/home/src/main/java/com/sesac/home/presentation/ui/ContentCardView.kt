@@ -28,6 +28,7 @@ import com.sesac.common.model.PathParceler
 import com.sesac.common.ui.theme.cardHeight
 import com.sesac.common.ui.theme.cardRound
 import com.sesac.common.ui.theme.paddingMedium
+import com.sesac.common.utils.fixImageUrl
 import com.sesac.domain.model.Path
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -42,7 +43,7 @@ fun ContentCardView(data: Path?, onClick: () -> Unit, modifier: Modifier = Modif
         Box(modifier = Modifier.fillMaxSize()) {
             AsyncImage(
                 model = ImageRequest.Builder(context)
-                    .data(data?.thumbnail)
+                    .data(fixImageUrl(data?.thumbnail))
                     .crossfade(true)
                     .scale(Scale.FILL)
                     .build(),

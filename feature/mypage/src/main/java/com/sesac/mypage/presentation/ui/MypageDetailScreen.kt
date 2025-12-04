@@ -68,17 +68,14 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import coil3.compose.AsyncImage
 import coil3.request.CachePolicy
 import coil3.request.ImageRequest
-import com.sesac.common.ui.theme.Android7HoursTheme
 import com.sesac.common.ui.theme.Background
 import com.sesac.common.ui.theme.Gray200
 import com.sesac.common.ui.theme.Gray300
@@ -93,6 +90,7 @@ import com.sesac.common.ui.theme.paddingLarge
 import com.sesac.common.ui.theme.paddingMedium
 import com.sesac.common.ui.theme.paddingSmall
 import com.sesac.common.utils.FileUtils
+import com.sesac.common.utils.fixImageUrl
 import com.sesac.domain.model.InvitationCode
 import com.sesac.domain.model.Pet
 import com.sesac.domain.result.AuthUiState
@@ -677,12 +675,3 @@ fun EmptyPetView() {
     }
 }
 
-fun fixImageUrl(url: String?): String? {
-    if (url.isNullOrEmpty()) return null
-
-    val serverIp = "192.168.0.73"
-
-    // 127.0.0.1 이나 localhost 를 에뮬레이터 전용 주소(10.0.2.2)로 교체
-    return url.replace("127.0.0.1", serverIp)
-        .replace("localhost", serverIp)
-}
