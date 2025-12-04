@@ -88,4 +88,21 @@ data class BookmarkedPath(
     val thumbnail: String?,
     var bookmarkCount: Int,
     var isBookmarked: Boolean,
-) : BookmarkedItem
+) : BookmarkedItem {
+    companion object {
+        val EMPTY = BookmarkedPath(
+            id = -1,
+            source = "",
+            uploader = "",
+            pathName = "",
+            pathComment = "",
+            level = 1,
+            distance = .0,
+            duration = 0,
+            isPrivate = false,
+            thumbnail = "",
+            bookmarkCount = 0,
+            isBookmarked = false
+        )
+    }
+}

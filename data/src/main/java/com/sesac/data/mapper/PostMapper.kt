@@ -1,5 +1,6 @@
 package com.sesac.data.mapper
 
+import com.sesac.common.utils.fixImageUrl
 import com.sesac.common.utils.parseDate
 import com.sesac.data.dto.post.request.PostCreateRequestDTO
 import com.sesac.data.dto.post.request.PostUpdateRequestDTO
@@ -66,7 +67,7 @@ fun PostDTO.toPost(): Post = Post(
         PostType.UNKNOWN
     },
     title = this.title,
-    image = this.image,
+    image = fixImageUrl(this.image),
     viewCount = this.viewCount,
     commentCount = this.commentCount,
     likeCount = this.likeCount,

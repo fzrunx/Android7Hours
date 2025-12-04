@@ -1,5 +1,6 @@
 package com.sesac.data.mapper
 
+import com.sesac.common.utils.fixImageUrl
 import com.sesac.data.dto.BreedDTO
 import com.sesac.data.dto.PetDTO
 import com.sesac.domain.model.Breed
@@ -24,7 +25,7 @@ fun PetDTO.toPet() = Pet(
     birthday = birthday,
     neutering = neutering,
     breed = breed,
-    image = image,
+    image = fixImageUrl(image),
     linkedUser = linkedUser,
     lastLocation = lastLocation?.toDomain()
 )

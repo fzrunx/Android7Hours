@@ -413,7 +413,7 @@ fun MypageDetailHeader(
                 AsyncImage(
                     model = ImageRequest.Builder(context)
                         // 1순위: 방금 갤러리 선택 사진 / 2순위: 서버 사진 / 3순위: 기본 사진
-                        .data(localImageUri ?: fixImageUrl(imageUrl) ?: cR.drawable.placeholder)
+                        .data(localImageUri ?: imageUrl ?: cR.drawable.placeholder)
                         // [중요] 캐시 끄기: 이미지가 갱신 안 되는 문제 해결
                         .memoryCachePolicy(CachePolicy.DISABLED)
                         .diskCachePolicy(CachePolicy.DISABLED)

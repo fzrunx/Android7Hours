@@ -43,7 +43,7 @@ fun ContentCardView(data: Path?, onClick: () -> Unit, modifier: Modifier = Modif
         Box(modifier = Modifier.fillMaxSize()) {
             AsyncImage(
                 model = ImageRequest.Builder(context)
-                    .data(fixImageUrl(data?.thumbnail))
+                    .data(data?.thumbnail)
                     .crossfade(true)
                     .scale(Scale.FILL)
                     .build(),

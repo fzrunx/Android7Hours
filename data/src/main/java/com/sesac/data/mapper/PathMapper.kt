@@ -1,6 +1,7 @@
 package com.sesac.data.mapper
 
 import com.naver.maps.geometry.LatLng
+import com.sesac.common.utils.fixImageUrl
 import com.sesac.data.dto.PathDTO
 import com.sesac.data.dto.CoordRequestDTO
 import com.sesac.data.dto.PathCreateRequestDTO
@@ -24,7 +25,7 @@ fun PathDTO.toPath() = Path(
     distance = this.distance.toFloat(),
     duration = this.duration ?: 0,
     isPrivate = this.isPrivate,
-    thumbnail = this.thumbnail,
+    thumbnail = fixImageUrl(this.thumbnail),
     coord = this.coords.toCoordList(),
     distanceFromMe = this.distanceFromMe,
     bookmarkCount = this.bookmarksCount,

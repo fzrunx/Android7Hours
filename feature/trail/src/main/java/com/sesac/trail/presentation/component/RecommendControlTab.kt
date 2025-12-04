@@ -74,6 +74,7 @@ import com.sesac.common.ui.theme.paddingMedium
 import com.sesac.common.ui.theme.paddingMicro
 import com.sesac.common.ui.theme.paddingSmall
 import com.sesac.common.utils.fixImageUrl
+import com.sesac.common.utils.samplePathUrl
 import com.sesac.domain.model.Path
 import com.sesac.domain.model.User
 
@@ -151,7 +152,7 @@ fun PathItem(
             ) {
                 AsyncImage(
                     model = ImageRequest.Builder(context)
-                        .data(fixImageUrl(fixImageUrl(path.thumbnail)))
+                        .data(path.thumbnail ?: samplePathUrl)
                         .crossfade(true)
                         .scale(Scale.FILL)
                         .build(),
@@ -310,7 +311,7 @@ private fun InfoChip(
 fun PathListContentPreview() {
     Android7HoursTheme {
         PathListContent(
-            paths = listOf(Path.EMPTY, Path.EMPTY),
+            paths = listOf(Path.EMPTY),
             currentUser = User(username = "tt", nickname = "nn", fullName = "name", email = ""),
             onPathClick = {},
             onDeleteClick = {},

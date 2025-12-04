@@ -65,6 +65,7 @@ import com.sesac.common.ui.theme.paddingLarge
 import com.sesac.common.ui.theme.paddingMicro
 import com.sesac.common.ui.theme.paddingSmall
 import com.sesac.common.utils.fixImageUrl
+import com.sesac.common.utils.samplePathUrl
 import com.sesac.domain.model.Path
 import com.sesac.domain.result.AuthUiState
 import com.sesac.domain.result.ResponseUiState
@@ -125,7 +126,7 @@ fun TrailDetailScreen(
                 pathName = selected.pathName,
                 isBookmarked = isBookmarked,
                 onBookmarkClick = handleBookmark,
-                imageUrl = fixImageUrl(selected.thumbnail) ?: "",
+                imageUrl = selected.thumbnail ?: samplePathUrl,
             )
 
             Column(
@@ -405,7 +406,7 @@ fun PathImageHeader(
 @Composable
 fun PathImageHeaderPreview(){
     Android7HoursTheme {
-        val url = "http://192.168.0.216:9000/paths/media/path_thumbnails/2/ff1b9952783e4ba2b35581ab6403d951.png"
+        val url = samplePathUrl
         PathImageHeader(
             pathName = "강남역 주변 산책로",
             isBookmarked = true,

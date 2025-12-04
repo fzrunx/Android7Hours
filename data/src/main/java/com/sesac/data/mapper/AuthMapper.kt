@@ -1,6 +1,7 @@
 package com.sesac.data.mapper
 
 import com.sesac.common.model.KakaoLoginRequest
+import com.sesac.common.utils.fixImageUrl
 import com.sesac.data.dto.AuthDTO
 import com.sesac.data.dto.KakaoLoginRequestDTO
 import com.sesac.data.dto.LoginRequestDTO
@@ -36,7 +37,7 @@ fun AuthDTO.toUser() = User(
     nickname = this.nickname,
     fullName = this.fullName,
     email = this.email,
-    profileImageUrl = this.profileImage,
+    profileImageUrl = fixImageUrl(this.profileImage),
     isPet = this.isPet,
 )
 

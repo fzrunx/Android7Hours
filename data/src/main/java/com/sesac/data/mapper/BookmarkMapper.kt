@@ -1,5 +1,6 @@
 package com.sesac.data.mapper
 
+import com.sesac.common.utils.fixImageUrl
 import com.sesac.common.utils.parseDate
 import com.sesac.data.dto.BookmarkDTO
 import com.sesac.data.dto.BookmarkResponseDTO
@@ -57,7 +58,7 @@ fun BookmarkedPathDTO.toDomain(): BookmarkedPath {
         distance = this.distance,
         duration = this.duration,
         isPrivate = this.isPrivate,
-        thumbnail = this.thumbnail,
+        thumbnail = fixImageUrl(this.thumbnail),
         bookmarkCount = this.bookmarksCount,
         isBookmarked = this.isBookmarked
     )
@@ -76,7 +77,7 @@ fun BookmarkedPostDTO.toDomain(): BookmarkedPost = BookmarkedPost(
     },
     title = this.title,
     content = this.content,
-    image = this.image,
+    image = fixImageUrl(this.image),
     viewCount = this.viewCount,
     commentCount = this.commentCount,
     likeCount = this.likeCount,
@@ -94,7 +95,7 @@ fun BookmarkedPostDTO.toPost(): Post {
         authUserProfileImageUrl = this.authUserProfileImageUrl,
         postType = this.postType.toDomainPostType(),
         title = this.title,
-        image = this.image,
+        image = fixImageUrl(this.image),
         viewCount = this.viewCount,
         commentCount = this.commentCount,
         likeCount = this.likeCount,
