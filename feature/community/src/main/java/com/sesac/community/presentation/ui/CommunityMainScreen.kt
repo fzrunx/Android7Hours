@@ -285,7 +285,7 @@ fun CommunityMainScreen(
             PostEditorDialogView(
                 categories = postEditorCategories,
                 onDismiss = { viewModel.isCreateDialogOpen.value = false },
-                onSave = { title, content, postType ->
+                onSave = { title, content, postType, imageUri ->
                     val newPost = Post(
                         id = -1, title = title, content = content, image = null,
                         postType = postType, userId = uiState.user?.id ?: -1,
@@ -294,7 +294,7 @@ fun CommunityMainScreen(
                         isLiked = false, isBookmarked = false, comments = null,
                         createdAt = Date(), updatedAt = Date()
                     )
-                    viewModel.createPost(token, newPost)
+                    viewModel.createPost(context, token, newPost, imageUri)
                     viewModel.isCreateDialogOpen.value = false
                 }
             )
@@ -305,12 +305,13 @@ fun CommunityMainScreen(
                 categories = postEditorCategories,
                 initialPost = editingPost,
                 onDismiss = { viewModel.editingPost.value = null },
-                onSave = { title, content, postType ->
+                onSave = { title, content, postType, imageUri ->
                     editingPost?.let { post ->
                         val updatedPost = post.copy(
-                            title = title, content = content, postType = postType, updatedAt = Date()
+                            title = title, content = content, postType = postType, updatedAt = Date(),
+                            image = if (imageUri == null) post.image else null
                         )
-                        token?.let { viewModel.updatePost(it, post.id, updatedPost) }
+                        token?.let { viewModel.updatePost(context, it, post.id, updatedPost, imageUri) }
                     }
                 }
             )

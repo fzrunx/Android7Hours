@@ -5,6 +5,7 @@ import com.sesac.domain.model.Like
 import com.sesac.domain.model.Post
 import com.sesac.domain.result.AuthResult
 import kotlinx.coroutines.flow.Flow
+import okhttp3.MultipartBody
 
 interface PostRepository {
     // 1. 공용 게시글 목록 조회
@@ -14,9 +15,9 @@ interface PostRepository {
     // 3. 게시글 상세 조회
     suspend fun getPostDetail(token: String, id: Int): Flow<AuthResult<Post>>
     // 4. 게시글 생성 (인증 필요)
-    suspend fun createPost(token: String, post: Post): Flow<AuthResult<Post>>
+    suspend fun createPost(token: String, post: Post, image: MultipartBody.Part?): Flow<AuthResult<Post>>
     // 5. 게시글 수정 (인증 필요)
-    suspend fun updatePost(token: String, id: Int, post: Post): Flow<AuthResult<Post>>
+    suspend fun updatePost(token: String, id: Int, post: Post, image: MultipartBody.Part?): Flow<AuthResult<Post>>
     // 6. 게시글 삭제 (인증 필요)
     suspend fun deletePost(token: String, id: Int): Flow<AuthResult<Unit>>
     // 7. 북마크 토글 (Use Case 요구사항에 따라 PostRepository에 포함)

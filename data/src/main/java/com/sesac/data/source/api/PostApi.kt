@@ -4,15 +4,17 @@ import com.sesac.data.dto.BookmarkResponseDTO
 import com.sesac.data.dto.CommentDTO
 import com.sesac.data.dto.CommentRequestDTO
 import com.sesac.data.dto.LikeResponseDTO
-import com.sesac.data.dto.post.request.PostCreateRequestDTO
-import com.sesac.data.dto.post.request.PostUpdateRequestDTO
 import com.sesac.data.dto.post.response.PostDTO
+import okhttp3.MultipartBody
+import okhttp3.RequestBody
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.Header
+import retrofit2.http.Multipart
 import retrofit2.http.PATCH
 import retrofit2.http.POST
+import retrofit2.http.Part
 import retrofit2.http.Path
 import retrofit2.http.Query
 
@@ -35,17 +37,21 @@ interface PostApi {
         @Path("id") id: Int
     ): PostDTO
 
+    @Multipart
     @POST("posts/")
     suspend fun createPost(
         @Header("Authorization") token: String,
-        @Body request: PostCreateRequestDTO
+        @Part("post") post: RequestBody,
+        @Part image: MultipartBody.Part?
     ): PostDTO
 
+    @Multipart
     @PATCH("posts/{id}/")
     suspend fun updatePost(
         @Header("Authorization") token: String,
         @Path("id") id: Int,
-        @Body request: PostUpdateRequestDTO
+        @Part("post") post: RequestBody,
+        @Part image: MultipartBody.Part?
     ): PostDTO
 
     @DELETE("posts/{id}/")
@@ -95,4 +101,3 @@ interface PostApi {
 //        @Header("Authorization") token: String,
 //        @Path("post_id") postId: Int
 //    ): LikeResponseDTO
-

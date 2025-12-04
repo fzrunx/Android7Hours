@@ -1,5 +1,7 @@
 package com.sesac.community.presentation
 
+import android.content.Context
+import android.net.Uri
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -32,6 +34,9 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.MultipartBody
+import okhttp3.RequestBody.Companion.toRequestBody
 import javax.inject.Inject
 
 
@@ -187,14 +192,15 @@ class CommunityViewModel @Inject constructor(
     // ---------------------------------------------------------
     // 🔥 CRUD
     // ---------------------------------------------------------
-    fun createPost(token: String?, post: Post) {
+    fun createPost(context: Context, token: String?, post: Post, imageUri: Uri?) {
         if (token.isNullOrEmpty()) {
             _createPostState.value = ResponseUiState.Error("로그인이 필요합니다.")
             return
         }
         viewModelScope.launch {
             _createPostState.value = ResponseUiState.Loading
-            postUseCase.createPostUseCase(token, post)
+            val imagePart = imageUri?.toMultipartBodyPart(context, "image")
+            postUseCase.createPostUseCase(token, post, imagePart)
                 .catch { e -> _createPostState.value = ResponseUiState.Error(e.message ?: "알 수 없는 오류") }
                 .collectLatest { result ->
                     val user = sessionUseCase.getUserInfo().first()
@@ -229,10 +235,11 @@ class CommunityViewModel @Inject constructor(
         }
     }
 
-    fun updatePost(token: String, id: Int, post: Post) {
+    fun updatePost(context: Context, token: String, id: Int, post: Post, imageUri: Uri?) {
         viewModelScope.launch {
             _updatePostState.value = ResponseUiState.Loading
-            postUseCase.updatePostUseCase(token, id, post)
+            val imagePart = imageUri?.toMultipartBodyPart(context, "image")
+            postUseCase.updatePostUseCase(token, id, post, imagePart)
                 .catch { e -> _updatePostState.value = ResponseUiState.Error(e.message ?: "알 수 없는 오류") }
                 .collectLatest { result ->
                     when (result) {
@@ -450,6 +457,23 @@ class CommunityViewModel @Inject constructor(
                 if (post.id == postId) newPost else post
             }
             _postList.value = ResponseUiState.Success(currentList.message, updatedPosts)
+        }
+    }
+
+    private fun Uri.toMultipartBodyPart(context: Context, partName: String): MultipartBody.Part? {
+        return try {
+            val contentResolver = context.contentResolver
+            val inputStream = contentResolver.openInputStream(this) ?: return null
+            val fileBytes = inputStream.readBytes()
+            inputStream.close()
+
+            val fileName = "post_image.jpg"
+            val requestFile = fileBytes.toRequestBody("image/jpeg".toMediaTypeOrNull(), 0, fileBytes.size)
+
+            MultipartBody.Part.createFormData(partName, fileName, requestFile)
+        } catch (e: Exception) {
+            Log.e("CommunityViewModel", "Failed to convert Uri to MultipartBody.Part", e)
+            null
         }
     }
 }
