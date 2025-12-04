@@ -78,7 +78,7 @@ fun MypageMainScreen(
             ProfileHeaderView(
                 name = uiState.user?.fullName ?: "",
                 email = uiState.user?.email ?: "",
-                imageUrl = "",
+                imageUrl = uiState.user?.profileImageUrl ?: "https://img.icons8.com/?size=100&id=bk5bg5zVk9sN&format=png&color=000000",
                 onNavigateToProfile = { navController.navigate(MypageNavigationRoute.DetailScreen) }
             )
         }

@@ -8,8 +8,8 @@ data class Pet(
     val birthday: String?,
     val neutering: Boolean,
     val breed: String?,
-    val image: String?,
-    val linkedUser: String?,
+    val image: String? = null,
+    val linkedUser: String? = null,
     val lastLocation: PetLocation?,
 ) {
     companion object {

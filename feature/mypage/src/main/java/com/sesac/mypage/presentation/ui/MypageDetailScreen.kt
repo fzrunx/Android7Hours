@@ -434,11 +434,11 @@ fun MypageDetailHeader(
             // ... (카메라 아이콘 등 기존 코드 유지) ...
             Box(
                 modifier = Modifier.align(Alignment.BottomEnd).size(36.dp)
-                    .background(Primary, CircleShape).border(2.dp, Color.White, CircleShape)
+                    .background(Primary, CircleShape).border(2.dp, White, CircleShape)
                     .clickable(onClick = onCameraClick),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(Icons.Default.PhotoCamera, "Change", tint = Color.White, modifier = Modifier.size(20.dp))
+                Icon(Icons.Default.PhotoCamera, "Change", tint = White, modifier = Modifier.size(20.dp))
             }
         }
         // ... (텍스트 부분 유지) ...
@@ -550,7 +550,7 @@ fun PetInfoCard(
             Column(modifier = Modifier.padding(paddingLarge)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     AsyncImage(
-                        model = cR.drawable.placeholder,
+                        model = pet.image ?: cR.drawable.placeholder,
                         contentDescription = pet.name,
                         modifier = Modifier
                             .size(64.dp)

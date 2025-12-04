@@ -97,7 +97,7 @@ fun ProfileHeaderPreview() {
     ProfileHeaderView(
         name = "홍길동",
         email = "hong@example.com",
-        imageUrl = "", // 혹은 "https://example.com/profile.jpg"
+        imageUrl = "https://img.icons8.com/?size=100&id=bk5bg5zVk9sN&format=png&color=000000", // 혹은 "https://example.com/profile.jpg"
         onNavigateToProfile = { /* 미리보기용 클릭 동작 */ }
     )
 }

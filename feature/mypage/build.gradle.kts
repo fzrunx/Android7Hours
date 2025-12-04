@@ -62,6 +62,8 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.bundles.compose)
     implementation(libs.bundles.navigation)
+
+    // --- Coil ---
     implementation(libs.bundles.coil)
 
     implementation(libs.threetenabp)

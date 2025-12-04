@@ -1,5 +1,7 @@
 package com.sesac.mypage.presentation
 
+import android.content.Context
+import android.net.Uri
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -35,7 +37,9 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
+import okhttp3.RequestBody.Companion.toRequestBody
 import org.threeten.bp.LocalDate
 import javax.inject.Inject
 
@@ -187,7 +191,7 @@ class MypageViewModel @Inject constructor(
         }
     }
 
-    fun addPet(pet: Pet) {
+    fun addPet(context: Context, pet: Pet, imageUri: Uri?) {
         viewModelScope.launch {
             _addPetState.value = ResponseUiState.Loading
             val token = sessionUseCase.getAccessToken().first()
@@ -195,19 +199,21 @@ class MypageViewModel @Inject constructor(
                 _addPetState.value = ResponseUiState.Error("로그인이 필요합니다.")
                 return@launch
             }
-            petUseCase.postUserPetUseCase(token, pet).collectLatest { result ->
+
+            val imagePart = imageUri?.toMultipartBodyPart(context, "image")
+
+            // Assumption: petUseCase.postUserPetUseCase is updated to handle a MultipartBody.Part.
+            // The signature would be: postUserPetUseCase(token: String, image: MultipartBody.Part?, pet: Pet)
+            petUseCase.postUserPetUseCase(token, imagePart, pet).collectLatest { result ->
                 when (result) {
                     is AuthResult.Success -> {
                         getAllUserPets()
                         _addPetState.value = ResponseUiState.Success("반려견이 추가되었습니다.", Unit)
                     }
-
                     is AuthResult.NetworkError -> {
                         _addPetState.value =
                             ResponseUiState.Error(result.exception.message ?: "오류가 발생했습니다.")
                     }
-
-                    is AuthResult.Loading -> {}
                     else -> {
                         _addPetState.value = ResponseUiState.Error("알 수 없는 오류가 발생했습니다.")
                     }
@@ -216,7 +222,7 @@ class MypageViewModel @Inject constructor(
         }
     }
 
-    fun updatePet(pet: Pet) {
+    fun updatePet(context: Context, pet: Pet, imageUri: Uri?) {
         viewModelScope.launch {
             _updatePetState.value = ResponseUiState.Loading
             val token = sessionUseCase.getAccessToken().first()
@@ -225,17 +231,37 @@ class MypageViewModel @Inject constructor(
                 return@launch
             }
 
-            petUseCase.updatePetUseCase(token, pet.id, pet).collectLatest { result ->
+            val imagePart = imageUri?.toMultipartBodyPart(context, "image")
+
+            // Assumption: petUseCase.updatePetUseCase is updated to handle a MultipartBody.Part.
+            // The signature would be: updatePetUseCase(token: String, id: Int, image: MultipartBody.Part?, pet: Pet)
+            petUseCase.updatePetUseCase(token, pet.id, imagePart, pet).collectLatest { result ->
                 when (result) {
                     is AuthResult.Success -> {
                         getAllUserPets()
                         _updatePetState.value = ResponseUiState.Success("반려견 정보가 수정되었습니다.", Unit)
                     }
-
-                    is AuthResult.Loading -> {}
                     else -> _updatePetState.value = ResponseUiState.Error("수정에 실패했습니다.")
                 }
             }
+        }
+    }
+
+    private fun Uri.toMultipartBodyPart(context: Context, partName: String): MultipartBody.Part? {
+        return try {
+            val contentResolver = context.contentResolver
+            val inputStream = contentResolver.openInputStream(this) ?: return null
+            val fileBytes = inputStream.readBytes()
+            inputStream.close()
+
+            // Find the file name from the URI, or use a default.
+            val fileName = "pet_image.jpg" // A more robust way to get the file name could be implemented.
+            val requestFile = fileBytes.toRequestBody("image/jpeg".toMediaTypeOrNull(), 0, fileBytes.size)
+
+            MultipartBody.Part.createFormData(partName, fileName, requestFile)
+        } catch (e: Exception) {
+            Log.e("MypageViewModel", "Failed to convert Uri to MultipartBody.Part", e)
+            null
         }
     }
 
