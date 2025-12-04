@@ -63,7 +63,6 @@ fun HomeScreen(
     val context = LocalContext.current
     val banners by viewModel.bannerList.collectAsStateWithLifecycle()
     val pathList by viewModel.recommendPathList.collectAsStateWithLifecycle()
-    val communityList by viewModel.communityList.collectAsStateWithLifecycle()
     val pagerState = rememberPagerState(pageCount = { banners.size })
     val permissionState = rememberMultiplePermissionsState(
         permissions = listOf(
@@ -130,13 +129,11 @@ fun HomeScreen(
             }
 
             item {
-                if (communityList.isNotEmpty()) {
-                    CommunityCard(
-                        image = communityList.first()?.imageResList?.firstOrNull() ?: cR.drawable.icons8_dog_50,
-                        onClick = onNavigateToCommunity,
-                        modifier = Modifier.padding(horizontal = paddingLarge, vertical = paddingMedium)
-                    )
-                }
+                CommunityCard(
+                    image = cR.drawable.community_banner,
+                    onClick = onNavigateToCommunity,
+                    modifier = Modifier.padding(horizontal = paddingLarge, vertical = paddingMedium)
+                )
             }
         }
     }

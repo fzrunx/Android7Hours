@@ -2,9 +2,6 @@ package com.sesac.android7hours.di
 
 import com.sesac.domain.repository.HomeRepository
 import com.sesac.domain.usecase.home.GetAllBannersUseCase
-import com.sesac.domain.usecase.home.GetAllDogCafeUseCase
-import com.sesac.domain.usecase.home.GetAllTravelDestinationUseCase
-import com.sesac.domain.usecase.home.GetAllWalkPathUseCase
 import com.sesac.domain.usecase.home.HomeUseCase
 import dagger.Module
 import dagger.Provides
@@ -22,9 +19,6 @@ object HomeUseCaseModule {
     fun provideHomeUseCase(repository: HomeRepository): HomeUseCase {
         return HomeUseCase(
             getAllBannersUseCase = GetAllBannersUseCase(repository),
-            getAllDogCafeUseCase = GetAllDogCafeUseCase(repository),
-            getAllTravelDestinationUseCase = GetAllTravelDestinationUseCase(repository),
-            getAllWalkPathUseCase = GetAllWalkPathUseCase(repository),
         )
     }
 }

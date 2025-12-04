@@ -7,12 +7,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.sesac.common.service.CurrentLocationService
 import com.sesac.domain.model.BannerData
-import com.sesac.domain.model.Community
-import com.sesac.domain.usecase.community.CommunityUseCase
-import com.sesac.domain.usecase.home.HomeUseCase
 import com.sesac.domain.model.Path
 import com.sesac.domain.result.AuthResult
 import com.sesac.domain.result.ResponseUiState
+import com.sesac.domain.usecase.home.HomeUseCase
 import com.sesac.domain.usecase.path.PathUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -25,20 +23,16 @@ import javax.inject.Inject
 class HomeViewModel @Inject constructor(
     private val pathUseCase: PathUseCase,
     private val homeUseCase: HomeUseCase,
-    private val communityUseCase: CommunityUseCase,
 ): ViewModel() {
     private val _recommendPathList = MutableStateFlow<ResponseUiState<List<Path?>>>(ResponseUiState.Idle)
     val recommendPathList get() = _recommendPathList.asStateFlow()
     private val _bannerList = MutableStateFlow<List<BannerData?>>(emptyList())
     val bannerList get() = _bannerList.asStateFlow()
-    private val _communityList = MutableStateFlow<List<Community?>>(emptyList())
-    val communityList get() = _communityList.asStateFlow()
 
     init {
         viewModelScope.launch {
             homeUseCase.getAllBannersUseCase().collectLatest { _bannerList.value = it }
             getRecommendedPaths()
-            communityUseCase.getAllCommunityUseCase().collectLatest { _communityList.value = it }
         }
     }
 

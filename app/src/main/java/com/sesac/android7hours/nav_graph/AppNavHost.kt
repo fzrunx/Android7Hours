@@ -35,6 +35,7 @@ fun AppNavHost(
     nav2Home: () -> Unit,
     nav2LoginScreen: () -> Unit,
     onNavigateToPathDetail: (PathParceler?) -> Unit,
+    onNavigateToCommunity: () -> Unit,
     startDestination: Any,
     uiState: AuthUiState,
     onStartFollowing: (Path) -> Unit,
@@ -57,6 +58,7 @@ fun AppNavHost(
         homeRoute(
             uiState = uiState,
             onNavigateToPathDetail = onNavigateToPathDetail,
+            onNavigateToCommunity = onNavigateToCommunity,
         )
         trailRoute(
             trailViewModel = trailViewModel,

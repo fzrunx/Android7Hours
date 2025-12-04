@@ -9,11 +9,13 @@ import com.sesac.home.presentation.ui.HomeScreen
 fun NavGraphBuilder.homeRoute(
     uiState: AuthUiState,
     onNavigateToPathDetail: (PathParceler?) -> Unit,
+    onNavigateToCommunity: () -> Unit,
     ) {
     composable<HomeNavigationRoute.HomeTab> {
         HomeScreen(
             uiState = uiState,
             onNavigateToPathDetail = onNavigateToPathDetail,
+            onNavigateToCommunity =onNavigateToCommunity,
             )
     }
 }

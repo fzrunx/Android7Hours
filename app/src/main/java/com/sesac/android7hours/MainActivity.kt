@@ -46,6 +46,7 @@ import com.sesac.common.component.CommonMapLifecycle
 import com.sesac.common.component.CommonMapView
 import com.sesac.common.service.CurrentLocationService
 import com.sesac.common.ui.theme.Android7HoursTheme
+import com.sesac.community.nav_graph.CommunityNavigationRoute
 import com.sesac.community.presentation.CommunityViewModel
 import com.sesac.home.nav_graph.EntryPointScreen
 import com.sesac.home.nav_graph.HomeNavigationRoute
@@ -245,6 +246,7 @@ class MainActivity : ComponentActivity() {
                                     navController.navigate(NestedNavigationRoute.TrailDetail(it))
                                 }
                             },
+                            onNavigateToCommunity = { navController.navigate(CommunityNavigationRoute.MainTab) },
                             startDestination = startDestination,
                             uiState = uiState,
                             onStartFollowing = { path ->
