@@ -62,6 +62,19 @@ import com.sesac.trail.nav_graph.NestedNavigationRoute
 import com.sesac.trail.presentation.component.FollowGuide
 import com.sesac.trail.utils.toLatLng
 import com.sesac.common.model.toParceler
+import com.sesac.common.ui.theme.ColorBlue
+import com.sesac.common.ui.theme.ColorPink
+import com.sesac.common.ui.theme.LightBlue
+import com.sesac.common.ui.theme.LightBlue2
+import com.sesac.common.ui.theme.LightPurple
+import com.sesac.common.ui.theme.OnError
+import com.sesac.common.ui.theme.Primary
+import com.sesac.common.ui.theme.PrimaryGreenLight
+import com.sesac.common.ui.theme.Purple80
+import com.sesac.common.ui.theme.Red500
+import com.sesac.common.ui.theme.Yellow400
+import com.sesac.common.ui.theme.infoBoxText
+import com.sesac.common.ui.theme.star
 
 enum class WalkPathTab { RECOMMENDED, MY_RECORDS }
 
@@ -281,7 +294,8 @@ fun TrailMainScreen(
                         val marker = Marker().apply {
                             position = place.toLatLng()
                             icon = Marker.DEFAULT_ICON
-
+                            captionText = place.title
+                            captionColor = ColorBlue.toArgb()
                             // 즉시 상세 페이지로 이동
                             setOnClickListener { clickedMarker ->
                                 navController.navigate(
@@ -312,6 +326,67 @@ fun TrailMainScreen(
             onDispose {
                 placeMarkers.forEach { it.map = null }
                 placeMarkers.clear()
+            }
+        }
+
+        // 추천 경로 마커 표시 (지도 준비 후)
+        val recommendedPathMarkers = remember { mutableListOf<Marker>() }
+        LaunchedEffect(recommendedPaths, currentNaverMap, isRecording, isFollowingPath) {
+            val map = currentNaverMap ?: return@LaunchedEffect
+
+            // 녹화나 따라가기 중일 때는 마커 숨기기
+            if (isRecording || isFollowingPath) {
+                recommendedPathMarkers.forEach { it.map = null }
+                recommendedPathMarkers.clear()
+                return@LaunchedEffect
+            }
+
+            // 기존 마커 제거
+            recommendedPathMarkers.forEach { it.map = null }
+            recommendedPathMarkers.clear()
+
+            // 추천 경로 마커 추가
+            when (recommendedPaths) {
+                is ResponseUiState.Success -> {
+                    val paths = (recommendedPaths as ResponseUiState.Success<List<Path>>).result
+                    Log.d("TrailMainScreen", "Recommended Path Markers Success: ${paths.size} paths loaded.")
+
+                    paths.forEach { path ->
+                        path.coord?.firstOrNull()?.let { startCoord ->
+                            val marker = Marker().apply {
+                                position = startCoord.toLatLng()
+                                icon = Marker.DEFAULT_ICON
+                                iconTintColor = 0xFF6200EE.toInt()
+                                captionText = path.pathName
+                                captionColor = ColorPink.toArgb()
+                                setOnClickListener {
+                                    navController.navigate(
+                                        NestedNavigationRoute.TrailDetail(path.toPathParceler())
+                                    )
+                                    true
+                                }
+                                this.map = map
+                            }
+                            recommendedPathMarkers.add(marker)
+                        }
+                    }
+                    Log.d("TrailMainScreen", "✅ 추천 경로 마커 ${recommendedPathMarkers.size}개 표시됨")
+                }
+                is ResponseUiState.Loading -> {
+                    Log.d("TrailMainScreen", "⏳ 추천 경로 데이터 로딩 중...")
+                }
+                is ResponseUiState.Error -> {
+                    Log.e("TrailMainScreen", "❌ 추천 경로 로드 실패: ${(recommendedPaths as ResponseUiState.Error).message}")
+                }
+                else -> {}
+            }
+        }
+
+        // 추천 경로 마커 정리
+        DisposableEffect(Unit) {
+            onDispose {
+                recommendedPathMarkers.forEach { it.map = null }
+                recommendedPathMarkers.clear()
             }
         }
         // 선택된 경로의 폴리라인 표시
