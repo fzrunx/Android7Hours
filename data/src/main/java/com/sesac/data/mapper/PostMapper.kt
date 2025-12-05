@@ -60,7 +60,7 @@ fun PostDTO.toPost(): Post = Post(
     id = this.id,
     userId = this.authId?: -1,
     authUserNickname = this.authUserNickname,
-    authUserProfileImageUrl = null,
+    authUserProfileImageUrl = fixImageUrl(this.authUserProfileImageUrl),
     postType = try {
         PostType.valueOf(this.postType.name)
     } catch (e: Exception) {

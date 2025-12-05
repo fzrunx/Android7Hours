@@ -3,7 +3,6 @@ package com.sesac.data.di
 import com.sesac.common.repository.WebRTCRepository
 import com.sesac.data.repository.AuthRepositoryImpl
 import com.sesac.data.repository.BookmarkRepositoryImpl
-import com.sesac.data.repository.CommentRepositoryImpl
 import com.sesac.data.repository.HomeRepositoryImpl
 import com.sesac.data.repository.LikeRepositoryImpl
 import com.sesac.data.repository.LocationRepositoryImpl
@@ -15,6 +14,7 @@ import com.sesac.data.repository.PostRepositoryImpl
 import com.sesac.data.repository.SessionRepositoryImpl
 import com.sesac.data.repository.UserRepositoryImpl
 import com.sesac.data.repository.WebRTCRepositoryImpl
+import com.sesac.data.repositoryprofile_image.CommentRepositoryImpl
 import com.sesac.domain.repository.AuthRepository
 import com.sesac.domain.repository.BookmarkRepository
 import com.sesac.domain.repository.CommentRepository

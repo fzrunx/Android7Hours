@@ -1,4 +1,4 @@
-package com.sesac.data.repository
+package com.sesac.data.repositoryprofile_image
 
 import android.content.Context
 import com.sesac.data.dto.CommentRequestDTO
@@ -6,9 +6,9 @@ import com.sesac.data.mapper.CommentMapper.toDomain
 import com.sesac.data.source.api.PathApi
 import com.sesac.data.source.api.PostApi
 import com.sesac.domain.model.Comment
-import com.sesac.domain.type.CommentType
 import com.sesac.domain.repository.CommentRepository
 import com.sesac.domain.result.AuthResult
+import com.sesac.domain.type.CommentType
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch

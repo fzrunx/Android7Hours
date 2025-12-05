@@ -1,5 +1,6 @@
 package com.sesac.common.component
 
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -26,6 +27,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.rememberAsyncImagePainter
 import com.sesac.common.ui.theme.Android7HoursTheme
+import com.sesac.common.ui.theme.White
 import com.sesac.domain.model.Comment
 
 @Composable
@@ -46,7 +48,7 @@ fun CommonCommentItem(comment: Comment) {
                 Icon(
                     imageVector = Icons.Default.Person,
                     contentDescription = "기본 프로필",
-                    tint = Color.White,
+                    tint = White,
                     modifier = Modifier.size(20.dp)
                 )
             }
