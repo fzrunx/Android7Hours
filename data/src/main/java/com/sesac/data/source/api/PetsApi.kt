@@ -1,12 +1,12 @@
 package com.sesac.data.source.api
 
 import com.sesac.data.dto.BreedDTO
-import com.sesac.data.dto.PetDTO
 import com.sesac.data.dto.InvitationCodeResponseDTO
+import com.sesac.data.dto.PetDTO
 import com.sesac.data.dto.PetLocationRequestDTO
 import com.sesac.data.dto.PetLocationResponseDTO
 import okhttp3.MultipartBody
-import okhttp3.RequestBody // Added import for RequestBody
+import okhttp3.RequestBody
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
@@ -15,6 +15,7 @@ import retrofit2.http.Multipart
 import retrofit2.http.PATCH
 import retrofit2.http.POST
 import retrofit2.http.Part
+import retrofit2.http.PartMap
 import retrofit2.http.Path
 
 interface PetsApi {
@@ -26,7 +27,7 @@ interface PetsApi {
     suspend fun postPet(
         @Header("Authorization") token: String,
         @Part image: MultipartBody.Part?,
-        @Part("pet") pet: RequestBody // Modified to send PetDTO as RequestBody
+        @PartMap params: Map<String, @JvmSuppressWildcards RequestBody>
     ): Unit
 
     @GET("pets/{id}/")
@@ -38,7 +39,7 @@ interface PetsApi {
         @Header("Authorization") token: String,
         @Path("id") petId: Int,
         @Part image: MultipartBody.Part?,
-        @Part("pet") pet: RequestBody // Modified to send PetDTO as RequestBody
+        @PartMap params: Map<String, @JvmSuppressWildcards RequestBody>
     ): PetDTO
 
     @DELETE("pets/{id}/")

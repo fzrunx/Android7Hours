@@ -1,31 +1,27 @@
 package com.sesac.data.repository
 
 import android.util.Log
-import com.sesac.data.dto.post.request.PostCreateRequestDTO
-import com.sesac.data.dto.post.request.PostUpdateRequestDTO
 import com.sesac.data.mapper.toBookmarkResponse
 import com.sesac.data.mapper.toDomain
 import com.sesac.data.mapper.toPost
-import com.sesac.data.mapper.toPostCreateRequestDTO
-import com.sesac.data.mapper.toPostUpdateRequestDTO
 import com.sesac.data.source.api.PostApi
 import com.sesac.domain.model.BookmarkResponse
 import com.sesac.domain.model.Like
 import com.sesac.domain.model.Post
 import com.sesac.domain.repository.PostRepository
 import com.sesac.domain.result.AuthResult
-import com.squareup.moshi.Moshi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.flow
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
+import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
+import java.util.Locale
 import javax.inject.Inject
 
 class PostRepositoryImpl @Inject constructor(
-    private val postApi: PostApi,
-    private val moshi: Moshi
+    private val postApi: PostApi
 ) : PostRepository {
     // ------------------------------
     // GET LIST
@@ -79,12 +75,12 @@ class PostRepositoryImpl @Inject constructor(
     ): Flow<AuthResult<Post>> = flow {
         emit(AuthResult.Loading)
 
-        val requestDto = post.toPostCreateRequestDTO()
-        val jsonAdapter = moshi.adapter(PostCreateRequestDTO::class.java)
-        val postJson = jsonAdapter.toJson(requestDto)
-        val postRequestBody = postJson.toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull())
+        val params = mutableMapOf<String, RequestBody>()
+        params["title"] = post.title.toRequestBody("text/plain".toMediaTypeOrNull())
+        params["content"] = post.content.toRequestBody("text/plain".toMediaTypeOrNull())
+        params["post_type"] = post.postType.name.lowercase(Locale.ROOT).toRequestBody("text/plain".toMediaTypeOrNull())
 
-        val created = postApi.createPost("Bearer $token", postRequestBody, image)
+        val created = postApi.createPost("Bearer $token", params, image)
         emit(AuthResult.Success(created.toPost()))
 
     }.catch {
@@ -103,12 +99,12 @@ class PostRepositoryImpl @Inject constructor(
     ): Flow<AuthResult<Post>> = flow {
         emit(AuthResult.Loading)
 
-        val requestDto = post.toPostUpdateRequestDTO()
-        val jsonAdapter = moshi.adapter(PostUpdateRequestDTO::class.java)
-        val postJson = jsonAdapter.toJson(requestDto)
-        val postRequestBody = postJson.toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull())
+        val params = mutableMapOf<String, RequestBody>()
+        params["title"] = post.title.toRequestBody("text/plain".toMediaTypeOrNull())
+        params["content"] = post.content.toRequestBody("text/plain".toMediaTypeOrNull())
+        params["post_type"] = post.postType.name.lowercase(Locale.ROOT).toRequestBody("text/plain".toMediaTypeOrNull())
 
-        val updated = postApi.updatePost("Bearer $token", id, postRequestBody, image)
+        val updated = postApi.updatePost("Bearer $token", id, params, image)
         emit(AuthResult.Success(updated.toPost()))
 
     }.catch {
