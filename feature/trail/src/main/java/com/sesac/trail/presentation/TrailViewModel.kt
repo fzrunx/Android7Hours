@@ -161,7 +161,7 @@ class TrailViewModel @Inject constructor(
 
     fun stopRecording() {
         _isRecording.value = false
-        _recordingTime.value = 0L
+//        _recordingTime.value = 0L
     }
 
     fun addRecordingTime(delta: Long) {

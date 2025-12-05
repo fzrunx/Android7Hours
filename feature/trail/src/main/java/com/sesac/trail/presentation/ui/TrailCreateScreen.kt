@@ -109,6 +109,7 @@ fun TrailCreateScreen(
     val updateState by viewModel.updateState.collectAsStateWithLifecycle()
 //    var isLoading by remember { mutableStateOf(false) }
     val isLoading = updateState is ResponseUiState.Loading || createState is ResponseUiState.Loading
+    val recordTime by viewModel.recordingTime.collectAsStateWithLifecycle()
     Log.d("TAG-TrailCreateScree", "is loading : $isLoading")
 
     val scope = rememberCoroutineScope()
@@ -233,7 +234,9 @@ fun TrailCreateScreen(
                     viewModel.updatePath()
                 } else {
                     // 신규 경로: Draft 생성 → RoomDB 저장
-                    val newDraft = viewModel.createDraftPath(selected)
+                    Log.d("TAG-TrailCreateScreen", "recording time : $recordTime")
+                    val duration = if (recordTime == 0L) selected.duration else recordTime.toInt()
+                    val newDraft = viewModel.createDraftPath(selected.copy(duration = duration))
                     viewModel.savePathAndUpload(newDraft)
                     viewModel.resetCreateState()
                     Toast.makeText(context, "산책로가 저장되었습니다!", Toast.LENGTH_SHORT).show()

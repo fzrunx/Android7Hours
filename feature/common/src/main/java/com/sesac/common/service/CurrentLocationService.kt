@@ -84,7 +84,7 @@ class CurrentLocationService: Service() {
                             Log.d("TAG-CurrentLocationService", "Location updated : $coord")
 
                             // Send location to backend
-                            if (userInfo != null && userInfo.isPet ?: true) {
+                            if (userInfo != null && userInfo.isPet ?: false) {
                                 locationUseCase.postPetLocationUseCase(token, petLocation)
                                     .collectLatest { result ->
                                         when (result) {
