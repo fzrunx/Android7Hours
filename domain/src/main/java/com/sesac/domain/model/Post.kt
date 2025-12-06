@@ -1,6 +1,7 @@
 package com.sesac.domain.model
 
 import com.sesac.domain.type.PostType
+import com.squareup.moshi.Json
 import java.util.Date
 
 // 상세 페이지 출력용(게시글 목록 출력용 + content, comments)
@@ -12,7 +13,8 @@ data class Post(
     val authUserProfileImageUrl: String?,
     val postType: PostType,
     val title: String,
-    val image: String?,
+    val image: String? = null,
+    val imageUrl: String? = null,
     val viewCount: Int,
     val commentCount: Int,
     val likeCount: Int,
@@ -56,6 +58,7 @@ data class BookmarkedPost(
     val title: String,
     val content: String,
     val image: String?,
+    val imageUrl: String? = null,
     val viewCount: Int,
     val commentCount: Int,
     val likeCount: Int,
