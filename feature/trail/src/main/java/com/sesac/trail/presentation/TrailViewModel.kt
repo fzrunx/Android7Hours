@@ -627,18 +627,18 @@ class TrailViewModel @Inject constructor(
                     when (result) {
                         is AuthResult.Loading -> {}
                         is AuthResult.Success -> {
-                            Log.d("TrailViewModel", "Path uploaded successfully to server.")
-                            _createState.value =
-                                ResponseUiState.Success("경로가 서버로 업로드되었습니다.", savedPathWithId)
+                            Log.d("TrailViewModel", "Path uploaded successfully to server. ${result.resultData}")
+                            _createState.value = ResponseUiState.Success("경로가 서버로 업로드되었습니다.", result.resultData)
                             // RoomDB 삭제
                             val deleted = deleteDraft(savedPathWithId)
                             if (deleted) {
                                 getMyPaths()
                                 loadDrafts()
-                                _createState.value = ResponseUiState.Success(
-                                    "경로가 서버로 업로드되었습니다.",
-                                    savedPathWithId
-                                )
+//                                _createState.value = ResponseUiState.Success(
+//                                    "경로가 서버로 업로드되었습니다.",
+////                                    savedPathWithId,
+//                                    result.resultData
+//                                )
 
                                 // ✅ 3️⃣ MypageSchedule 생성 및 저장 (isCompleted = false)
                                 val scheduleId = savedPathWithId.id.toLong()
@@ -657,7 +657,7 @@ class TrailViewModel @Inject constructor(
                                         Log.d("TrailViewModel", "✅ Schedule 추가 성공: scheduleId=$scheduleId")
 
                                         // ✅ 4️⃣ 다이어리 생성
-                                        generateAndSaveDiary(scheduleId, savedPathWithId)
+                                        generateAndSaveDiary(scheduleId, result.resultData)
 
                                         // ✅ 5️⃣ Schedule을 isCompleted = true로 업데이트
                                         completeSchedule(scheduleId)

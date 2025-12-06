@@ -13,7 +13,7 @@ import com.sesac.domain.model.Path
 
 fun PathDTO.toPath() = Path(
     id = this.id,
-    uploader = this.authUserNickname,
+    uploader = this.authUserNickname ?: "",
     pathName = this.pathName,
     pathComment = this.pathComment,
     level = when(this.level) {

@@ -234,7 +234,6 @@ fun TrailCreateScreen(
                     viewModel.updatePath()
                 } else {
                     // 신규 경로: Draft 생성 → RoomDB 저장
-                    Log.d("TAG-TrailCreateScreen", "recording time : $recordTime")
                     val duration = if (recordTime == 0L) selected.duration else recordTime.toInt()
                     val newDraft = viewModel.createDraftPath(selected.copy(duration = duration))
                     viewModel.savePathAndUpload(newDraft)

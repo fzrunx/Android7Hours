@@ -6,9 +6,9 @@ import com.squareup.moshi.JsonClass
 @JsonClass(generateAdapter = true)
 data class PathDTO(
     val id: Int = -1,
-    val source: String,
+    val source: String? = null,
     @Json(name = "auth_user_nickname")
-    val authUserNickname: String,
+    val authUserNickname: String? = null,
     @Json(name = "path_name")
     val pathName: String,
     @Json(name = "path_comment")
@@ -23,9 +23,9 @@ data class PathDTO(
     @Json(name = "distance_from_me")
     val distanceFromMe: Float? = null,
     @Json(name = "bookmark_count")
-    val bookmarksCount: Int,
+    val bookmarksCount: Int = 0,
     @Json(name = "is_bookmarked")
-    val isBookmarked: Boolean,
+    val isBookmarked: Boolean = false,
     @Json(name = "markers")
     val markers: List<List<Any>>? = null,
 )
