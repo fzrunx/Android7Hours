@@ -26,6 +26,7 @@ fun PetDTO.toPet() = Pet(
     neutering = neutering,
     breed = breed,
     image = fixImageUrl(image),
+    imageUrl = fixImageUrl(imageUrl),
     linkedUser = linkedUser,
     lastLocation = lastLocation?.toDomain()
 )
