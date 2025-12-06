@@ -18,7 +18,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Chat
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -49,7 +48,6 @@ import com.sesac.common.ui.theme.Error
 import com.sesac.common.ui.theme.OnPrimaryContainer
 import com.sesac.common.ui.theme.Primary
 import com.sesac.common.ui.theme.Surface
-import com.sesac.common.ui.theme.TextDisabled
 import com.sesac.common.ui.theme.TextPrimary
 import com.sesac.common.ui.theme.TextSecondary
 import com.sesac.common.ui.theme.Typography
@@ -64,11 +62,9 @@ import com.sesac.common.ui.theme.primaryContainer
 import com.sesac.common.ui.theme.shapeCard
 import com.sesac.common.ui.theme.shapeImage
 import com.sesac.common.ui.theme.star
-import com.sesac.common.utils.fixImageUrl
 import com.sesac.common.utils.samplePathUrl
 import com.sesac.domain.model.BookmarkedPath
 import com.sesac.domain.model.BookmarkedPost
-import com.sesac.domain.model.FavoriteCommunityPost
 import com.sesac.domain.result.AuthUiState
 import com.sesac.domain.type.BookmarkType
 
@@ -97,7 +93,7 @@ fun BookmarkedPathCard(
                 contentAlignment = Alignment.TopEnd
             ) {
                 AsyncImage(
-                    model = path.thumbnail ?: samplePathUrl,
+                    model = path.thumbnailUrl ?: samplePathUrl,
                     contentDescription = path.pathName,
                     modifier = Modifier
                         .fillMaxSize()
@@ -340,7 +336,7 @@ fun BookmarkedPathCardPreview() {
                 distance = 100.0,
                 duration = 80,
                 pathComment = "패스",
-                thumbnail = samplePathUrl,
+                thumbnailUrl = samplePathUrl,
                 bookmarkCount = 99,
             ),
             onPathClick = {},

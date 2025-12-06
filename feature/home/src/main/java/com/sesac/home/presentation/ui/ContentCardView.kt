@@ -24,16 +24,14 @@ import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import coil3.request.crossfade
 import coil3.size.Scale
-import com.sesac.common.model.PathParceler
 import com.sesac.common.ui.theme.cardHeight
 import com.sesac.common.ui.theme.cardRound
 import com.sesac.common.ui.theme.paddingMedium
-import com.sesac.common.utils.fixImageUrl
 import com.sesac.domain.model.Path
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ContentCardView(data: Path?, onClick: () -> Unit, modifier: Modifier = Modifier) {
+fun ContentCardView(path: Path?, onClick: () -> Unit, modifier: Modifier = Modifier) {
     val context = LocalContext.current
     Card(
         onClick = onClick,
@@ -43,11 +41,11 @@ fun ContentCardView(data: Path?, onClick: () -> Unit, modifier: Modifier = Modif
         Box(modifier = Modifier.fillMaxSize()) {
             AsyncImage(
                 model = ImageRequest.Builder(context)
-                    .data(data?.thumbnail)
+                    .data(path?.imageUrl)
                     .crossfade(true)
                     .scale(Scale.FILL)
                     .build(),
-                contentDescription = data?.pathName,
+                contentDescription = path?.pathName,
                 modifier = Modifier.fillMaxSize(),
                 contentScale = ContentScale.Crop,
             )
@@ -68,7 +66,7 @@ fun ContentCardView(data: Path?, onClick: () -> Unit, modifier: Modifier = Modif
                 verticalArrangement = Arrangement.Bottom
             ) {
                 Text(
-                    text = data?.pathName ?: "정보 없음",
+                    text = path?.pathName ?: "정보 없음",
                     color = MaterialTheme.colorScheme.onPrimary,
                     style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold),
                     maxLines = 1,
