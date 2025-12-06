@@ -21,6 +21,7 @@ data class User(
     val nickname: String?,
     val fullName: String,
     val email: String,
+    val profilImage: String? = null,
     val profileImageUrl: String? = null,
     val isPet: Boolean? = null,
 ) {
@@ -30,7 +31,8 @@ data class User(
             nickname = "",
             fullName = "",
             email = "",
-            profileImageUrl = "",
+            profilImage = null,
+            profileImageUrl = null,
             isPet = false,
         )
     }

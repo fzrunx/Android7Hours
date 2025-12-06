@@ -37,7 +37,8 @@ fun AuthDTO.toUser() = User(
     nickname = this.nickname,
     fullName = this.fullName,
     email = this.email,
-    profileImageUrl = fixImageUrl(this.profileImage),
+//    profileImage = fixImageUrl(this.profileImage),
+    profileImageUrl = fixImageUrl(this.profileImageUrl),
     isPet = this.isPet,
 )
 
