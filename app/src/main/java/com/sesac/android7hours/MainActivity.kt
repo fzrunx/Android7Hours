@@ -48,6 +48,8 @@ import com.sesac.common.service.CurrentLocationService
 import com.sesac.common.ui.theme.Android7HoursTheme
 import com.sesac.community.nav_graph.CommunityNavigationRoute
 import com.sesac.community.presentation.CommunityViewModel
+import com.sesac.domain.model.Coord
+import com.sesac.domain.result.ResponseUiState
 import com.sesac.home.nav_graph.EntryPointScreen
 import com.sesac.home.nav_graph.HomeNavigationRoute
 import com.sesac.home.nav_graph.TopBarAction
@@ -178,8 +180,8 @@ class MainActivity : ComponentActivity() {
             // 초기 위치가 확보되면 추천 경로를 미리 로드
             val initialLocationState by commonViewModel.initialLocation.collectAsStateWithLifecycle()
             LaunchedEffect(initialLocationState) {
-                if (initialLocationState is com.sesac.domain.result.ResponseUiState.Success) {
-                    val coord = (initialLocationState as com.sesac.domain.result.ResponseUiState.Success<com.sesac.domain.model.Coord?>).result
+                if (initialLocationState is ResponseUiState.Success) {
+                    val coord = (initialLocationState as ResponseUiState.Success<Coord?>).result
                     if (coord != null) {
                         trailViewModel.loadInitialPaths(coord)
                     }

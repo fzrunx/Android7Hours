@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
@@ -61,8 +60,8 @@ fun BottomSheetContent(
     onDeleteClick: (Int) -> Unit
 ) {
     Surface(
-        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
-        shadowElevation = 8.dp,
+//        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
+//        shadowElevation = 8.dp,
         color = MaterialTheme.colorScheme.surface,
         modifier = Modifier.fillMaxWidth()
     ) {
@@ -70,14 +69,14 @@ fun BottomSheetContent(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // Handle
-            Box(
-                modifier = Modifier
-                    .padding(vertical = paddingSmall)
-                    .width(SheetHandleWidth)
-                    .height(SheetHandleHeight)
-                    .background(SheetHandle, CircleShape)
-                    .clickable { onSheetOpenToggle() }
-            )
+//            Box(
+//                modifier = Modifier
+//                    .padding(vertical = paddingSmall)
+//                    .width(SheetHandleWidth)
+//                    .height(SheetHandleHeight)
+//                    .background(SheetHandle, CircleShape)
+//                    .clickable { onSheetOpenToggle() }
+//            )
 
             // Record Button
             Button(
@@ -128,7 +127,6 @@ fun BottomSheetContent(
             Box(
                 modifier = Modifier
                     .padding(horizontal = paddingLarge)
-                    .heightIn(max = 240.dp)
                     .padding(bottom = paddingLarge)
             ) {
                 val pathsToShow = if (activeTab == WalkPathTab.RECOMMENDED) recommendedPaths else myPaths

@@ -56,6 +56,7 @@ val postImageHeight = 192.dp
 
 // Buttons & Handle
 val circularButtonSize = 80.dp
+val SheetMinHeight = 240.dp
 val SheetHandleWidth = 40.dp
 val SheetHandleHeight = 4.dp
 val bottomSheetMaxHeight = 240.dp

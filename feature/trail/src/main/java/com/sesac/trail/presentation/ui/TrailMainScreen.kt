@@ -9,12 +9,15 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.*
+import androidx.compose.material3.BottomSheetScaffold
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SheetValue
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberBottomSheetScaffoldState
+import androidx.compose.material3.rememberStandardBottomSheetState
 import androidx.compose.runtime.*
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -64,21 +67,13 @@ import com.sesac.trail.utils.toLatLng
 import com.sesac.common.model.toParceler
 import com.sesac.common.ui.theme.ColorBlue
 import com.sesac.common.ui.theme.ColorPink
-import com.sesac.common.ui.theme.LightBlue
-import com.sesac.common.ui.theme.LightBlue2
-import com.sesac.common.ui.theme.LightPurple
-import com.sesac.common.ui.theme.OnError
-import com.sesac.common.ui.theme.Primary
-import com.sesac.common.ui.theme.PrimaryGreenLight
-import com.sesac.common.ui.theme.Purple80
-import com.sesac.common.ui.theme.Red500
-import com.sesac.common.ui.theme.Yellow400
-import com.sesac.common.ui.theme.infoBoxText
-import com.sesac.common.ui.theme.star
+import com.sesac.common.ui.theme.SheetMinHeight
+import kotlinx.coroutines.launch
 
 enum class WalkPathTab { RECOMMENDED, MY_RECORDS }
 
 // --- Main Page Composable ---
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TrailMainScreen(
     viewModel: TrailViewModel = hiltViewModel(),
@@ -98,7 +93,6 @@ fun TrailMainScreen(
     val recommendedPaths by viewModel.recommendedPaths.collectAsStateWithLifecycle()
     val myPaths by viewModel.myPaths.collectAsStateWithLifecycle()
     val userInfo by viewModel.userInfo.collectAsStateWithLifecycle()
-    val isSheetOpen by viewModel.isSheetOpen.collectAsStateWithLifecycle()
     val isFollowingPath by viewModel.isFollowingPath.collectAsStateWithLifecycle()
     val isRecording by viewModel.isRecording.collectAsStateWithLifecycle()
     val recordingTime by viewModel.recordingTime.collectAsStateWithLifecycle()
@@ -145,8 +139,6 @@ fun TrailMainScreen(
     // Place 마커 관리 (ViewModel 외부)
     val placeMarkers = remember { mutableListOf<Marker>() }
 
-    var initialCameraMoved by remember(currentNaverMap) { mutableStateOf(false) }
-
     // 폴리라인 좌표 업데이트
     LaunchedEffect(tempPathCoords.size, isRecording) {
         val currentPolyline = polylineFromVM
@@ -154,10 +146,8 @@ fun TrailMainScreen(
         if (isRecording && tempPathCoords.size >= 2) {
             currentPolyline?.coords = tempPathCoords.toList()
             currentPolyline?.map = currentNaverMap
-            Log.d("TrailMainScreen", "📊 폴리라인 업데이트:  ${tempPathCoords.size}개 좌표")
         } else {
             currentPolyline?.map = null
-            Log.d("TrailMainScreen", "❌ 폴리라인 지도에서 제거")
         }
     }
     // Draft, 경로 목록, 사용자 정보 초기화
@@ -178,383 +168,47 @@ fun TrailMainScreen(
         viewModel.getCurrentUserInfo() // 현재 사용자 정보 요청
     }
 
-    // 녹화 종료 시 초기화
-    LaunchedEffect(isRecording) {
-        if (!isRecording) {
-            Log.d("TrailMainScreen", "🧹 녹화 중지 시 폴리라인, 마커, 좌표 초기화 완료")
-        }
-    }
-
-
     // --- 타이머 로직 (녹화 중일 때 시간 증가) ---
     LaunchedEffect(lifecycleState, isRecording) {
         while (isRecording && lifecycleState == Lifecycle.State.RESUMED) {
             delay(1000)
             viewModel.updateRecordingTime(1)
         }
-        Log.d("effectPauseStop", "타이머 자동 정지됨 (lifecycle or paused)")
     }
-    // effectPauseStop 적용  // 화면 Pause/Stop 시 MapView도 같이 pause/stop 호출
+    // effectPauseStop 적용
     lifecycle.EffectPauseStop {
         commonMapLifecycle.mapView?.onPause()
         commonMapLifecycle.mapView?.onStop()
-        Log.d("TrailMainScreen", "📌 Trail Pause/Stop → MapView pause/stop 호출됨")
     }
 
     DisposableEffect(Unit) {
         onDispose {
-            currentNaverMap?.locationSource = null // NaverMap에서 locationSource 해제
-            locationSource.deactivate() // FusedLocationSource 비활성화
-            Log.d("TrailMainScreen", "📍 화면 사라짐, 위치 업데이트 중지 및 NaverMap locationSource 해제")
+            currentNaverMap?.locationSource = null
+            locationSource.deactivate()
         }
     }
 
+    val sheetState = rememberStandardBottomSheetState(
+        initialValue = SheetValue.Hidden,
+        skipHiddenState = false
+    )
+    val scaffoldState = rememberBottomSheetScaffoldState(
+        bottomSheetState = sheetState
+    )
+    val scope = rememberCoroutineScope()
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-    ) {
-        // 지도 영역 (AsyncImage → AndroidView 로 대체) // 🔹 AndroidView 안에서 attach 처리
-        key(lifecycleState) {
-            if (lifecycleState.isAtLeast(Lifecycle.State.CREATED)) {
-                AndroidView(
-                    modifier = Modifier.fillMaxSize(),
-                    factory = { context ->
-                        // 1. MapView 가져오기
-                        val mapView = commonMapLifecycle.mapView ?: CommonMapView.getMapView(context).also {
-                            commonMapLifecycle.setMapView(it)
-                        }
-
-                        // 2. 이미 부모가 있으면 제거 (IllegalStateException 방지)
-                        (mapView.parent as? ViewGroup)?.removeView(mapView)
-
-                        // 3. MapView start/resume
-                        mapView.onStart()
-                        mapView.onResume()
-                        mapView.getMapAsync{ naverMap ->
-                            currentNaverMap = naverMap   // ready 된 지도 저장!!
-                            naverMap.locationSource = locationSource
-                            naverMap.locationTrackingMode = LocationTrackingMode.Follow
-                            // Trail 용 지도 세팅 (기본 위치 / UI 세팅 등)
-                            naverMap.uiSettings.isLocationButtonEnabled = true
-                            naverMap.uiSettings.isZoomControlEnabled = false
-                            onMapReady?.invoke(naverMap) // 화면마다 콜백 재등록
-                            Log.d("TrailMainScreen", "지도 준비 완료")
-
-                            // 지도에 연결하는 것은 LaunchedEffect(pathCoords.size, isRecording)에서 관리합니다.
-                            val newPolyline = PolylineOverlay().apply {
-                                color = 0xFF0000FF.toInt()
-                                width = 10
-                                capType = PolylineOverlay.LineCap.Round
-                                joinType = PolylineOverlay.LineJoin.Round
-                            }
-                            viewModel.setPolylineInstance(newPolyline)  // ⭐ 항상 새로운 폴리라인 객체로 갱신
-
-                            // 롱 클릭: 메모 입력
-                            naverMap.setOnMapLongClickListener { _, coord ->
-                                if (isRecording) {
-                                    selectedCoord = coord
-                                    memoText = ""
-                                    showMemoDialog = true
-                                }
-                            }
-                        }
-                        mapView
-                    },
-                    update = {
-                        it.requestLayout()
-                    }
-                )
-            }
+    // 녹화 또는 따라가기 시작 시 시트 숨기기
+    LaunchedEffect(isRecording, isFollowingPath) {
+        if (isRecording || isFollowingPath) {
+            scope.launch { sheetState.hide() }
         }
-        // Place 마커 표시 (지도 준비 후)
-        LaunchedEffect(placesState, currentNaverMap, isRecording, isFollowingPath) {
-            Log.d("TAG-TrailMainScreen", "Place Marker Effect Triggered: isRecording=$isRecording, isFollowingPath=$isFollowingPath, placesState=${placesState.javaClass.simpleName}")
-            val map = currentNaverMap ?: return@LaunchedEffect
+    }
 
-            // 녹화나 따라가기 중일 때는 Place 마커 숨기기
-            if (isRecording || isFollowingPath) {
-                Log.d("TrailMainScreen", "Place Markers Hidden: isRecording or isFollowingPath is true.")
-                placeMarkers.forEach { it.map = null }
-                placeMarkers.clear()
-                return@LaunchedEffect
-            }
-
-            // 기존 마커 제거
-            placeMarkers.forEach { it.map = null }
-            placeMarkers.clear()
-
-            // Place 마커 추가
-            when (placesState) {
-                is ResponseUiState.Success -> {
-                    val places = (placesState as ResponseUiState.Success<List<Place>>).result
-                    Log.d("TrailMainScreen", "Place Markers Success: ${places.size} places loaded.")
-
-                    places.forEach { place ->
-                        val marker = Marker().apply {
-                            position = place.toLatLng()
-                            icon = Marker.DEFAULT_ICON
-                            captionText = place.title
-                            captionColor = ColorBlue.toArgb()
-                            // 즉시 상세 페이지로 이동
-                            setOnClickListener { clickedMarker ->
-                                navController.navigate(
-                                    NestedNavigationRoute.PlaceDetail(place.toParceler())
-                                )
-                                true // 이벤트 소비 완료를 나타냄
-                            }
-
-                            this.map = map
-                        }
-                        placeMarkers.add(marker)
-                    }
-
-                    Log.d("TrailMainScreen", "✅ 병원 마커 ${places.size}개 표시됨")
-                }
-                is ResponseUiState.Loading -> {
-                    Log.d("TrailMainScreen", "⏳ 병원 데이터 로딩 중...")
-                }
-                is ResponseUiState.Error -> {
-                    Log.e("TrailMainScreen", "❌ 병원 로드 실패: ${(placesState as ResponseUiState.Error).message}")
-                }
-                else -> {}
-            }
-        }
-
-        // Place 마커 정리
-        DisposableEffect(Unit) {
-            onDispose {
-                placeMarkers.forEach { it.map = null }
-                placeMarkers.clear()
-            }
-        }
-
-        // 추천 경로 마커 표시 (지도 준비 후)
-        val recommendedPathMarkers = remember { mutableListOf<Marker>() }
-        LaunchedEffect(recommendedPaths, currentNaverMap, isRecording, isFollowingPath) {
-            val map = currentNaverMap ?: return@LaunchedEffect
-
-            // 녹화나 따라가기 중일 때는 마커 숨기기
-            if (isRecording || isFollowingPath) {
-                recommendedPathMarkers.forEach { it.map = null }
-                recommendedPathMarkers.clear()
-                return@LaunchedEffect
-            }
-
-            // 기존 마커 제거
-            recommendedPathMarkers.forEach { it.map = null }
-            recommendedPathMarkers.clear()
-
-            // 추천 경로 마커 추가
-            when (recommendedPaths) {
-                is ResponseUiState.Success -> {
-                    val paths = (recommendedPaths as ResponseUiState.Success<List<Path>>).result
-                    Log.d("TrailMainScreen", "Recommended Path Markers Success: ${paths.size} paths loaded.")
-
-                    paths.forEach { path ->
-                        path.coord?.firstOrNull()?.let { startCoord ->
-                            val marker = Marker().apply {
-                                position = startCoord.toLatLng()
-                                icon = Marker.DEFAULT_ICON
-                                iconTintColor = 0xFF6200EE.toInt()
-                                captionText = path.pathName
-                                captionColor = ColorPink.toArgb()
-                                setOnClickListener {
-                                    navController.navigate(
-                                        NestedNavigationRoute.TrailDetail(path.toPathParceler())
-                                    )
-                                    true
-                                }
-                                this.map = map
-                            }
-                            recommendedPathMarkers.add(marker)
-                        }
-                    }
-                    Log.d("TrailMainScreen", "✅ 추천 경로 마커 ${recommendedPathMarkers.size}개 표시됨")
-                }
-                is ResponseUiState.Loading -> {
-                    Log.d("TrailMainScreen", "⏳ 추천 경로 데이터 로딩 중...")
-                }
-                is ResponseUiState.Error -> {
-                    Log.e("TrailMainScreen", "❌ 추천 경로 로드 실패: ${(recommendedPaths as ResponseUiState.Error).message}")
-                }
-                else -> {}
-            }
-        }
-
-        // 추천 경로 마커 정리
-        DisposableEffect(Unit) {
-            onDispose {
-                recommendedPathMarkers.forEach { it.map = null }
-                recommendedPathMarkers.clear()
-            }
-        }
-        // 선택된 경로의 폴리라인 표시
-        DisposableEffect(isFollowingPath, selectedPath, currentNaverMap) {
-            Log.d("TrailMainScreen", "🔹 DisposableEffect 진입: isFollowing=$isFollowingPath, path=${selectedPath?.pathName}, map=$currentNaverMap")
-            val map = currentNaverMap
-            val path = selectedPath
-
-            val followPolyline: PolylineOverlay?
-            val startMarker: Marker?
-            val endMarker: Marker?
-
-            if (map != null && isFollowingPath && path != null) {
-                val coords = path.coord?.map { it.toLatLng() } ?: emptyList()
-
-                if (coords.size < 2) {
-                    Log.e("TrailMainScreen", "❌ 좌표 부족")
-                    followPolyline = null
-                    startMarker = null
-                    endMarker = null
-                } else {
-                    // 폴리라인
-                    followPolyline = PolylineOverlay().apply {
-                        this.coords = coords
-                        color = 0xFF6200EE.toInt()
-                        width = 12
-                        capType = PolylineOverlay.LineCap.Round
-                        joinType = PolylineOverlay.LineJoin.Round
-                        this.map = map
-                    }
-
-                    // 시작 마커 (초록색)
-                    startMarker = Marker().apply {
-                        position = coords.first()
-                        icon = OverlayImage.fromResource(android.R.drawable.ic_input_add) // 또는 커스텀 아이콘
-                        captionText = "출발"
-                        captionColor = Color.Green.toArgb()
-                        this.map = map
-                    }
-
-                    // 종료 마커 (빨간색)
-                    endMarker = Marker().apply {
-                        position = coords.last()
-                        icon = OverlayImage.fromResource(android.R.drawable.ic_menu_close_clear_cancel)
-                        captionText = "도착"
-                        captionColor = Color.Red.toArgb()
-                        this.map = map
-                    }
-
-                    // 카메라 이동
-                    val cameraUpdate = CameraUpdate.scrollTo(coords.first())
-                    map.moveCamera(cameraUpdate)
-
-                    Log.d("TrailMainScreen", "✅ 폴리라인 + 시작/종료 마커 생성 완료")
-                }
-            } else {
-                followPolyline = null
-                startMarker = null
-                endMarker = null
-            }
-
-            onDispose {
-                followPolyline?.map = null
-                startMarker?.map = null
-                endMarker?.map = null
-                Log.d("TrailMainScreen", "🧹 폴리라인 + 마커 제거")
-            }
-        }
-                // 사용자 현재 위치 마커
-                val userLocation by viewModel.userLocationMarker.collectAsStateWithLifecycle()
-                var userMarker by remember { mutableStateOf<Marker?>(null) }
-        
-                LaunchedEffect(userLocation, currentNaverMap, isFollowingPath) {
-                    Log.d(
-                        "TrailMainScreen",
-                        "🔹 마커 LaunchedEffect: location=$userLocation, map=$currentNaverMap, isFollowing=$isFollowingPath"
-                    )
-                    val map = currentNaverMap ?: return@LaunchedEffect
-                    val location = userLocation
-        
-                    if (isFollowingPath && location != null) {
-                        try {
-                            if (userMarker == null) {
-                                Log.d("TrailMainScreen", "🎯 마커 생성 시작...")
-                                userMarker = Marker().apply {
-                                    this.position = location // Set position FIRST
-                                    this.icon = OverlayImage.fromResource(android.R.drawable.ic_menu_mylocation)
-                                    this.width = 60
-                                    this.height = 60
-                                    this.map = map // Set map LAST
-                                }
-                                Log.d("TrailMainScreen", "✅ 마커 생성 완료")
-                            } else {
-                                // If marker already exists, just update its position
-                                userMarker?.position = location
-                            }
-                            Log.d(
-                                "TrailMainScreen",
-                                "📍 마커 위치 업데이트: (${location.latitude}, ${location.longitude})"
-                            )
-                        } catch (e: Exception) {
-                            Log.e("TrailMainScreen", "❌ 마커 생성/업데이트 실패: ${e.message}", e)
-                        }
-                    } else {
-                        if (userMarker != null) {
-                            Log.d("TrailMainScreen", "🗑️ 마커 제거")
-                        }
-                        userMarker?.map = null
-                        userMarker = null
-                    }
-                }
-
-        // 따라가기 안내 UI
-        AnimatedVisibility(
-            visible = isFollowingPath,
-            modifier = Modifier
-                .align(Alignment.TopCenter)
-                .padding(top = 80.dp)
-        ) {
-            FollowGuide(viewModel = viewModel,
-                onStopFollowing = {
-                    viewModel.stopFollowing()
-                    viewModel.updateIsFollowingPath(false)
-                    viewModel.clearUserLocationMarker()
-                }
-            )
-        }
-
-        // 메모 마커 표시 (ViewModel 상태 기반)
-        val memoMarkers by viewModel.memoMarkers.collectAsStateWithLifecycle()
-        LaunchedEffect(memoMarkers, currentNaverMap, isRecording, isFollowingPath) {
-            val map = currentNaverMap ?: return@LaunchedEffect
-
-            // 녹화 또는 따라가기 중일 때만 마커 표시
-            if (!isRecording && !isFollowingPath) {
-                // 기존 마커 정리
-                currentMarkers.forEach { it.map = null }
-                currentMarkers.clear()
-                return@LaunchedEffect
-            }
-
-            // 기존 마커 정리
-            currentMarkers.forEach { it.map = null }
-            currentMarkers.clear()
-
-            // 새 마커 추가
-            memoMarkers.forEach { memoMarker ->
-                addMemoMarker(
-                    context = context,
-                    naverMap = map,
-                    coord = LatLng(memoMarker.latitude, memoMarker.longitude),
-                    memo = memoMarker.memo ?: "",
-                    markers = currentMarkers,
-                    infoWindowStates = infoWindowStates
-                )
-            }
-        }
-
-        // 하단 Bottom Sheet
-        AnimatedVisibility(
-            visible = isSheetOpen && !isRecording && !isFollowingPath,
-            modifier = Modifier.align(Alignment.BottomCenter),
-            enter = slideInVertically { it },
-            exit = slideOutVertically(
-                targetOffsetY = { it }, // 필요하면 0으로도 설정 가능
-                animationSpec = tween(durationMillis = 0) // 0ms로 즉시 사라지도록
-            )
-        ) {
+    BottomSheetScaffold(
+        scaffoldState = scaffoldState,
+        sheetPeekHeight = SheetMinHeight,
+        sheetContainerColor = MaterialTheme.colorScheme.surface,
+        sheetContent = {
             val activeState = if (activeTab == WalkPathTab.RECOMMENDED) recommendedPaths else myPaths
 
             when(activeState) {
@@ -575,10 +229,17 @@ fun TrailMainScreen(
                         recommendedPaths = (recommendedPaths as? ResponseUiState.Success)?.result ?: emptyList(),
                         myPaths = (myPaths as? ResponseUiState.Success)?.result ?: emptyList(),
                         currentUser = userInfo,
-                        onSheetOpenToggle = { viewModel.updateIsSheetOpen(null) },
+                        onSheetOpenToggle = {
+                            scope.launch {
+                                if (sheetState.currentValue == SheetValue.PartiallyExpanded) {
+                                    sheetState.expand()
+                                } else {
+                                    sheetState.partialExpand()
+                                }
+                            }
+                        },
                         onStartRecording = {
                             viewModel.startRecording()
-                            viewModel.updateIsSheetOpen(false)
                         },
                         onTabChange = { viewModel.updateActiveTab(it) },
                         onPathClick = {
@@ -595,80 +256,278 @@ fun TrailMainScreen(
                 }
             }
         }
-
-        // 시트 다시 열기 버튼
-        AnimatedVisibility(
-            visible = !isSheetOpen && !isRecording && !isFollowingPath,
+    ) { innerPadding ->
+        Box(
             modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .padding(bottom = paddingLarge * 2)
+                .fillMaxSize()
         ) {
-            ReopenSheetButton(onClick = { viewModel.updateIsSheetOpen(true) })
-        }
+            // 지도 영역
+            key(lifecycleState) {
+                if (lifecycleState.isAtLeast(Lifecycle.State.CREATED)) {
+                    AndroidView(
+                        modifier = Modifier.fillMaxSize(),
+                        factory = { context ->
+                            val mapView = commonMapLifecycle.mapView ?: CommonMapView.getMapView(context).also {
+                                commonMapLifecycle.setMapView(it)
+                            }
+                            (mapView.parent as? ViewGroup)?.removeView(mapView)
+                            mapView.onStart()
+                            mapView.onResume()
+                            mapView.getMapAsync { naverMap ->
+                                currentNaverMap = naverMap
+                                naverMap.locationSource = locationSource
+                                naverMap.locationTrackingMode = LocationTrackingMode.Follow
+                                naverMap.uiSettings.isLocationButtonEnabled = true
+                                naverMap.uiSettings.isZoomControlEnabled = false
+                                onMapReady?.invoke(naverMap)
 
-        // 녹화 중 UI
-        AnimatedVisibility(
-            visible = isRecording,
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .padding(bottom = paddingLarge * 2)
-        ) {
-            RecordingControls(
-                recordingTime = recordingTime,
-                onStopRecording = {
-                    viewModel.resetCreateState()
-                    viewModel.resetUpdateState()
-                    // 현재 기록된 좌표(LatLng)를 도메인 모델의 Coord로 변환
-                    val recordedCoords = tempPathCoords.map { latLng -> Coord(latLng.latitude, latLng.longitude) } // ← MODIFIED
+                                val newPolyline = PolylineOverlay().apply {
+                                    color = 0xFF0000FF.toInt()
+                                    width = 10
+                                    capType = PolylineOverlay.LineCap.Round
+                                    joinType = PolylineOverlay.LineJoin.Round
+                                }
+                                viewModel.setPolylineInstance(newPolyline)
 
-                    // 🔥 마커 데이터 포함
-                    val currentMemoMarkers = viewModel.memoMarkers.value
-                    val newPath = Path.EMPTY.copy(
-                        coord = recordedCoords,
-                        markers = currentMemoMarkers
+                                naverMap.setOnMapLongClickListener { _, coord ->
+                                    if (isRecording) {
+                                        selectedCoord = coord
+                                        memoText = ""
+                                        showMemoDialog = true
+                                    }
+                                }
+                            }
+                            mapView
+                        },
+                        update = {
+                            it.requestLayout()
+                        }
                     )
+                }
+            }
+            // Place 마커 표시
+            LaunchedEffect(placesState, currentNaverMap, isRecording, isFollowingPath) {
+                val map = currentNaverMap ?: return@LaunchedEffect
+                if (isRecording || isFollowingPath) {
+                    placeMarkers.forEach { it.map = null }
+                    placeMarkers.clear()
+                    return@LaunchedEffect
+                }
+                placeMarkers.forEach { it.map = null }
+                placeMarkers.clear()
 
-                    // ViewModel에 새로 생성된 경로를 업데이트
-                    viewModel.updateSelectedPath(newPath)
+                if (placesState is ResponseUiState.Success) {
+                    val places = (placesState as ResponseUiState.Success<List<Place>>).result
+                    places.forEach { place ->
+                        val marker = Marker().apply {
+                            position = place.toLatLng()
+                            icon = Marker.DEFAULT_ICON
+                            captionText = place.title
+                            captionColor = ColorBlue.toArgb()
+                            setOnClickListener {
+                                navController.navigate(NestedNavigationRoute.PlaceDetail(place.toParceler()))
+                                true
+                            }
+                            this.map = map
+                        }
+                        placeMarkers.add(marker)
+                    }
+                }
+            }
 
-                    // 녹화 관련 상태 초기화
-                    viewModel.updateIsRecording(false)
-                    viewModel.stopRecording()
-                    viewModel.updateIsFollowingPath(false)
+            // Place 마커 정리
+            DisposableEffect(Unit) {
+                onDispose {
+                    placeMarkers.forEach { it.map = null }
+                    placeMarkers.clear()
+                }
+            }
 
-                    viewModel.clearAllMapObjects(currentNaverMap)
+            // 추천 경로 마커 표시
+            val recommendedPathMarkers = remember { mutableListOf<Marker>() }
+            LaunchedEffect(recommendedPaths, currentNaverMap, isRecording, isFollowingPath) {
+                val map = currentNaverMap ?: return@LaunchedEffect
+                if (isRecording || isFollowingPath) {
+                    recommendedPathMarkers.forEach { it.map = null }
+                    recommendedPathMarkers.clear()
+                    return@LaunchedEffect
+                }
+                recommendedPathMarkers.forEach { it.map = null }
+                recommendedPathMarkers.clear()
 
-                    currentNaverMap?.locationTrackingMode = LocationTrackingMode.Follow
+                if (recommendedPaths is ResponseUiState.Success) {
+                    val paths = (recommendedPaths as ResponseUiState.Success<List<Path>>).result
+                    paths.forEach { path ->
+                        path.coord?.firstOrNull()?.let { startCoord ->
+                            val marker = Marker().apply {
+                                position = startCoord.toLatLng()
+                                icon = Marker.DEFAULT_ICON
+                                iconTintColor = 0xFF6200EE.toInt()
+                                captionText = path.pathName
+                                captionColor = ColorPink.toArgb()
+                                setOnClickListener {
+                                    navController.navigate(NestedNavigationRoute.TrailDetail(path.toPathParceler()))
+                                    true
+                                }
+                                this.map = map
+                            }
+                            recommendedPathMarkers.add(marker)
+                        }
+                    }
+                }
+            }
 
-                    // 화면 이동
-                    navController.navigate(TrailNavigationRoute.TrailCreateTab)
+            // 추천 경로 마커 정리
+            DisposableEffect(Unit) {
+                onDispose {
+                    recommendedPathMarkers.forEach { it.map = null }
+                    recommendedPathMarkers.clear()
+                }
+            }
+
+            // 선택된 경로의 폴리라인 표시
+            DisposableEffect(isFollowingPath, selectedPath, currentNaverMap) {
+                val map = currentNaverMap
+                val path = selectedPath
+                val followPolyline: PolylineOverlay?
+                val startMarker: Marker?
+                val endMarker: Marker?
+
+                if (map != null && isFollowingPath && path != null) {
+                    val coords = path.coord?.map { it.toLatLng() } ?: emptyList()
+                    if (coords.size >= 2) {
+                        followPolyline = PolylineOverlay().apply {
+                            this.coords = coords
+                            color = 0xFF6200EE.toInt()
+                            width = 12
+                            capType = PolylineOverlay.LineCap.Round
+                            joinType = PolylineOverlay.LineJoin.Round
+                            this.map = map
+                        }
+                        startMarker = Marker().apply {
+                            position = coords.first()
+                            icon = OverlayImage.fromResource(android.R.drawable.ic_input_add)
+                            captionText = "출발"
+                            captionColor = Color.Green.toArgb()
+                            this.map = map
+                        }
+                        endMarker = Marker().apply {
+                            position = coords.last()
+                            icon = OverlayImage.fromResource(android.R.drawable.ic_menu_close_clear_cancel)
+                            captionText = "도착"
+                            captionColor = Color.Red.toArgb()
+                            this.map = map
+                        }
+                        val cameraUpdate = CameraUpdate.scrollTo(coords.first())
+                        map.moveCamera(cameraUpdate)
+                    } else {
+                        followPolyline = null
+                        startMarker = null
+                        endMarker = null
+                    }
+                } else {
+                    followPolyline = null
+                    startMarker = null
+                    endMarker = null
+                }
+
+                onDispose {
+                    followPolyline?.map = null
+                    startMarker?.map = null
+                    endMarker?.map = null
+                }
+            }
+
+            // 사용자 현재 위치 마커
+            val userLocation by viewModel.userLocationMarker.collectAsStateWithLifecycle()
+            var userMarker by remember { mutableStateOf<Marker?>(null) }
+            LaunchedEffect(userLocation, currentNaverMap, isFollowingPath) {
+                val map = currentNaverMap ?: return@LaunchedEffect
+                val location = userLocation
+                if (isFollowingPath && location != null) {
+                    try {
+                        if (userMarker == null) {
+                            userMarker = Marker().apply {
+                                this.position = location
+                                this.icon = OverlayImage.fromResource(android.R.drawable.ic_menu_mylocation)
+                                this.width = 60
+                                this.height = 60
+                                this.map = map
+                            }
+                        } else {
+                            userMarker?.position = location
+                        }
+                    } catch (e: Exception) {
+                        Log.e("TrailMainScreen", "❌ 마커 생성/업데이트 실패: ${e.message}", e)
+                    }
+                } else {
+                    userMarker?.map = null
+                    userMarker = null
+                }
+            }
+
+            // 시트 다시 열기 버튼
+            AnimatedVisibility(
+                visible = sheetState.currentValue == SheetValue.Hidden && !isRecording && !isFollowingPath,
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(bottom = paddingLarge * 2)
+            ) {
+                ReopenSheetButton(onClick = { scope.launch { sheetState.partialExpand() } })
+            }
+
+            // 따라가기 안내 UI
+            AnimatedVisibility(
+                visible = isFollowingPath,
+                modifier = Modifier.align(Alignment.TopCenter).padding(top = 80.dp)
+            ) {
+                FollowGuide(viewModel = viewModel,
+                    onStopFollowing = {
+                        viewModel.stopFollowing()
+                        viewModel.updateIsFollowingPath(false)
+                        viewModel.clearUserLocationMarker()
+                    }
+                )
+            }
+
+            // 녹화 중 UI
+            AnimatedVisibility(
+                visible = isRecording,
+                modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 128.dp)
+            ) {
+                RecordingControls(
+                    recordingTime = recordingTime,
+                    onStopRecording = {
+                        val recordedCoords = tempPathCoords.map { latLng -> Coord(latLng.latitude, latLng.longitude) }
+                        val currentMemoMarkers = viewModel.memoMarkers.value
+                        val newPath = Path.EMPTY.copy(coord = recordedCoords, markers = currentMemoMarkers)
+                        viewModel.updateSelectedPath(newPath)
+                        viewModel.stopRecording()
+                        viewModel.clearAllMapObjects(currentNaverMap)
+                        currentNaverMap?.locationTrackingMode = LocationTrackingMode.Follow
+                        navController.navigate(TrailNavigationRoute.TrailCreateTab)
+                    }
+                )
+            }
+
+            MemoDialog(
+                show = showMemoDialog,
+                memoText = memoText,
+                onTextChange = { memoText = it },
+                onCancel = { showMemoDialog = false },
+                onConfirm = {
+                    selectedCoord?.let {
+                        viewModel.addMemoMarker(it.latitude, it.longitude, memoText)
+                    }
+                    viewModel.selectedPath.value?.let { currentPath ->
+                        val currentDescription = currentPath.pathComment ?: ""
+                        val newDescription = if (currentDescription.isEmpty()) memoText else "$currentDescription\n\n$memoText"
+                        viewModel.updateSelectedPath(currentPath.copy(pathComment = newDescription))
+                    }
+                    showMemoDialog = false
                 }
             )
         }
-        MemoDialog(
-            show = showMemoDialog,
-            memoText = memoText,
-            onTextChange = { memoText = it },
-            onCancel = { showMemoDialog = false },
-            onConfirm = {
-                selectedCoord?.let {
-                    viewModel.addMemoMarker(it.latitude, it.longitude, memoText)
-                }
-
-                // Append the memo to the description in the ViewModel
-                viewModel.selectedPath.value?.let { currentPath ->
-                    val currentDescription = currentPath.pathComment ?: ""
-                    val newDescription = if (currentDescription.isEmpty()) {
-                        memoText
-                    } else {
-                        "$currentDescription\n\n$memoText"
-                    }
-                    viewModel.updateSelectedPath(currentPath.copy(pathComment = newDescription))
-                }
-
-                showMemoDialog = false
-            }
-        )
     }
 }
 
