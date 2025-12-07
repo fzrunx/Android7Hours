@@ -1,19 +1,13 @@
 package com.sesac.monitor.presentation.ui
 
 import android.Manifest
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -22,7 +16,6 @@ import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import com.sesac.common.ui.theme.paddingLarge
 import com.sesac.common.ui.theme.paddingMedium
 import com.sesac.common.ui_state.MonitorUiState
-import com.sesac.domain.model.Pet
 import com.sesac.monitor.presentation.MonitorViewModel
 import org.webrtc.EglBase
 import org.webrtc.RendererCommon
@@ -62,12 +55,6 @@ fun MonitorCamScreen(viewModel: MonitorViewModel = hiltViewModel()) {
                     CircularProgressIndicator()
                 }
             }
-            is MonitorUiState.OwnerScreen -> {
-                PetSelectionContent(
-                    pets = state.pets,
-                    onPetSelect = { pet -> viewModel.startCall(pet) }
-                )
-            }
             is MonitorUiState.PetScreen -> {
                 PetStreamingReadyContent(onStartClick = { viewModel.prepareStreaming() })
             }
@@ -105,6 +92,14 @@ fun MonitorCamScreen(viewModel: MonitorViewModel = hiltViewModel()) {
             is MonitorUiState.Error -> {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Text(text = state.message)
+                }
+            }
+            // OwnerScreen is handled by MonitorMainScreen now
+            is MonitorUiState.OwnerScreen -> {
+                // This case is now handled before navigating to the dashboard.
+                // You can show a loading indicator or a placeholder.
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator()
                 }
             }
         }
@@ -150,42 +145,6 @@ fun VideoView(
         // update 람다는 DisposableEffect가 sink 관리를 처리하므로 필요 없음
         modifier = modifier
     )
-}
-
-@Composable
-fun PetSelectionContent(pets: List<Pet>, onPetSelect: (Pet) -> Unit) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(paddingLarge),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text("모니터링할 펫을 선택하세요", style = MaterialTheme.typography.titleLarge)
-        Spacer(modifier = Modifier.height(paddingLarge))
-        if (pets.isEmpty()) {
-            Text("모니터링 가능한 펫이 없습니다.")
-        } else {
-            LazyColumn(verticalArrangement = Arrangement.spacedBy(paddingMedium)) {
-                items(pets) { pet ->
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { onPetSelect(pet) },
-                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(paddingLarge),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(Icons.Default.Pets, contentDescription = null, modifier = Modifier.size(40.dp))
-                            Spacer(modifier = Modifier.width(paddingMedium))
-                            Text(pet.name, style = MaterialTheme.typography.bodyLarge)
-                        }
-                    }
-                }
-            }
-        }
-    }
 }
 
 @Composable

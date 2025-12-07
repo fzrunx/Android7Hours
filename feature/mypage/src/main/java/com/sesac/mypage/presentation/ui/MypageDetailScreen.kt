@@ -293,7 +293,7 @@ fun AddPetOptionsDialog(
                     onClick = onInviteUser,
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text("친구 위치 추적 (초대)", color = White)
+                    Text("반려견 기기 등록 코드 생성", color = White)
                 }
             }
         },

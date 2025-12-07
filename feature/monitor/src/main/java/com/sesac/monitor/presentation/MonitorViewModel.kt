@@ -44,6 +44,9 @@ class MonitorViewModel @Inject constructor(
         MutableStateFlow<ResponseUiState<List<Pet>>>(ResponseUiState.Idle) // NEW STATE
     val monitorablePets = _monitorablePets.asStateFlow() // NEW EXPOSED STATE
 
+    private val _selectedPet = MutableStateFlow<Pet?>(null)
+    val selectedPet = _selectedPet.asStateFlow()
+
     private val _remoteVideoTrack = MutableStateFlow<VideoTrack?>(null)
     val remoteVideoTrack = _remoteVideoTrack.asStateFlow()
 
@@ -67,6 +70,13 @@ class MonitorViewModel @Inject constructor(
         }
     }
 
+    fun selectPet(pet: Pet?) {
+        _selectedPet.value = pet
+        if (pet == null) {
+            endCall()
+        }
+    }
+
     /**
      * 현재 로그인된 사용자의 역할을 확인하고, 역할에 맞는 초기 화면 상태를 설정합니다.
      */
@@ -84,29 +94,10 @@ class MonitorViewModel @Inject constructor(
                 // 사용자가 '펫'인 경우, 스트리밍 준비
                 prepareStreaming()
             } else {
-                // 사용자가 '주인'인 경우, 등록된 펫 목록을 가져옵니다.
-                val token = sessionUseCase.getAccessToken().first()
-                if (token.isNullOrEmpty()) {
-                    _uiState.value = MonitorUiState.Error("인증 정보가 없습니다.")
-                    return@launch
-                }
-                petUseCase.getUserPetsUseCase(token).collectLatest { result ->
-                    when (result) {
-                        is AuthResult.Success -> {
-                            val monitorablePets = result.resultData.filter { it.linkedUser != null }
-                            _uiState.value = MonitorUiState.OwnerScreen(monitorablePets)
-                        }
-
-                        is AuthResult.NetworkError -> {
-                            _uiState.value =
-                                MonitorUiState.Error(result.exception.message ?: "펫 목록 로드 실패")
-                        }
-
-                        else -> { // Loading
-                            _uiState.value = MonitorUiState.Loading
-                        }
-                    }
-                }
+                // 사용자가 '주인'인 경우, 펫 목록을 가져옵니다.
+                // UI는 selectedPet 상태에 따라 PetSelectionScreen 또는 Dashboard를 표시합니다.
+                getMonitorablePets()
+                _uiState.value = MonitorUiState.OwnerScreen(emptyList()) // 초기 상태
             }
         }
     }
@@ -206,8 +197,7 @@ class MonitorViewModel @Inject constructor(
                     }
 
                     is AuthResult.NetworkError -> {
-                        _uiState.value = MonitorUiState.Error(result.exception.message ?: "펫 목록 로드 실패") // 이 부분이 _uiState로 가서 수정
-                        // _monitorablePets.value = ResponseUiState.Error(result.exception.message ?: "네트워크 오류")
+                        _monitorablePets.value = ResponseUiState.Error(result.exception.message ?: "네트워크 오류")
                     }
 
                     else -> {
@@ -313,6 +303,7 @@ class MonitorViewModel @Inject constructor(
             Log.d("MonitorViewModel", "Ending call.")
             webRTCUseCase.closeSession()
             // 역할에 따라 이전 화면으로 돌아갑니다.
+            selectPet(null)
             checkUserRole()
         }
     }

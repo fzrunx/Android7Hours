@@ -75,4 +75,5 @@ dependencies {
     androidTestImplementation(libs.androidx.espresso.core)
     implementation(libs.map.sdk)  // 해당 부분 넣어야됨
     implementation(libs.play.services.location)
+    implementation(libs.androidx.compose.ui.tooling.preview)
 }
