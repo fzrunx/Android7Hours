@@ -51,6 +51,7 @@ import com.sesac.community.presentation.CommunityViewModel
 import com.sesac.home.nav_graph.EntryPointScreen
 import com.sesac.home.nav_graph.HomeNavigationRoute
 import com.sesac.home.nav_graph.TopBarAction
+import com.sesac.mypage.nav_graph.MypageNavigationRoute
 import com.sesac.mypage.presentation.MypageViewModel
 import com.sesac.trail.nav_graph.NestedNavigationRoute
 import com.sesac.trail.presentation.TrailViewModel
@@ -160,9 +161,12 @@ class MainActivity : ComponentActivity() {
                 listOf(
                     TopBarAction.TextAction(text = uiState.user?.nickname ?: "User"),
                     TopBarAction.IconAction(
-                        icon = Icons.AutoMirrored.Filled.ExitToApp,
+//                        icon = Icons.AutoMirrored.Filled.ExitToApp,
+//                        contentDescription = "Logout",
+//                        onClick = { commonViewModel.onLogout() }
+                        icon = uiState.user?.profileImageUrl ?: Icons.Default.AccountCircle,
                         contentDescription = "Logout",
-                        onClick = { commonViewModel.onLogout() }
+                        onClick = { navController.navigate(MypageNavigationRoute.MainTab) }
                     )
                 )
             } else {

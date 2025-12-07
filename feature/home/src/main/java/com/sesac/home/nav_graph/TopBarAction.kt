@@ -4,7 +4,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 
 sealed interface TopBarAction {
     data class IconAction(
-        val icon: ImageVector,
+        val icon: Any,
         val contentDescription: String,
         val onClick: () -> Unit
     ) : TopBarAction

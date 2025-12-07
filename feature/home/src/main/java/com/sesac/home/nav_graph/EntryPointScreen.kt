@@ -1,7 +1,13 @@
 package com.sesac.home.nav_graph
 
+import android.util.Log
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Search
@@ -24,12 +30,22 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
+import coil3.compose.AsyncImage
+import coil3.request.CachePolicy
+import coil3.request.ImageRequest
 import com.sesac.common.component.LocalIsSearchOpen
+import com.sesac.common.ui.theme.White
+import com.sesac.common.ui.theme.paddingMicro
 import com.sesac.common.ui.theme.paddingNone
 import com.sesac.common.R as cR
 
@@ -48,6 +64,7 @@ fun EntryPointScreen(
     screensWithCustomTopBar: List<String>, // New parameter
     navHost: @Composable (PaddingValues) -> Unit,
 ) {
+    val context = LocalContext.current
     // 2. 현재 화면의 Route(경로) 감지 -> Community 탭일 때 TopBar 숨기기
     val isHideTopBar by remember(appTopBarData.title, screensWithCustomTopBar) {
         derivedStateOf {
@@ -110,8 +127,8 @@ fun EntryPointScreen(
                         },
                         actions = {
                             appTopBarData.actions.forEach { action ->
-                                when (action) {
-                                    is TopBarAction.IconAction -> {
+                                when {
+                                    action is TopBarAction.IconAction && action.icon is ImageVector -> {
                                         IconButton(onClick = action.onClick) {
                                             Icon(
                                                 imageVector = action.icon,
@@ -119,7 +136,28 @@ fun EntryPointScreen(
                                             )
                                         }
                                     }
-                                    is TopBarAction.TextAction -> {
+
+                                    action is TopBarAction.IconAction && action.icon is String -> {
+                                        IconButton(onClick = action.onClick) {
+                                            AsyncImage(
+                                                model = ImageRequest.Builder(context)
+                                                    .data(action.icon ?: cR.drawable.placeholder)
+                                                    .build(),
+                                                contentDescription = "Profile Picture",
+                                                modifier = Modifier
+                                                    .fillMaxSize()
+                                                    .padding(paddingMicro)
+                                                    .clip(CircleShape),
+                                                contentScale = ContentScale.Crop,
+                                                placeholder = painterResource(id = cR.drawable.placeholder),
+                                                error = painterResource(id = cR.drawable.placeholder),
+                                                // 에러 발생 시 로그 출력 (디버깅용)
+                                                onError = { Log.e("IMAGE_LOAD", "실패 원인: ${it.result.throwable.message}") }
+                                            )
+                                        }
+                                    }
+
+                                    action is TopBarAction.TextAction -> {
                                         if (action.isButton) {
                                             TextButton(onClick = action.onClick) {
                                                 Text(text = action.text)

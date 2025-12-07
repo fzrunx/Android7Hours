@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -189,14 +190,14 @@ fun TrailCreateScreen(
         timeString = selectedPath?.duration?.takeIf { it > 0 }?.toString() ?: ""
     }*/
 
-    val imagePickerLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetContent()
-    ) { uri ->
-        if (uri != null) {
-            uploadedImageUri = uri.toString()
-            scope.launch{ Toast.makeText(context, "이미지가 업로드되었습니다", Toast.LENGTH_SHORT).show() }
-        }
-    }
+//    val imagePickerLauncher = rememberLauncherForActivityResult(
+//        contract = ActivityResultContracts.GetContent()
+//    ) { uri ->
+//        if (uri != null) {
+//            uploadedImageUri = uri.toString()
+//            scope.launch{ Toast.makeText(context, "이미지가 업로드되었습니다", Toast.LENGTH_SHORT).show() }
+//        }
+//    }
 
     val handleTagToggle: (String) -> Unit = { tag ->
         selectedPath?.let {
@@ -254,14 +255,15 @@ fun TrailCreateScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
+                .imePadding()
                 .padding(paddingLarge),
             verticalArrangement = Arrangement.spacedBy(PaddingSection)
         ) {
-            ImageUploader(
-                imageUri = uploadedImageUri,
-                onUploadClick = { imagePickerLauncher.launch("image/*") },
-                onRemoveClick = { uploadedImageUri = null }
-            )
+//            ImageUploader(
+//                imageUri = uploadedImageUri,
+//                onUploadClick = { imagePickerLauncher.launch("image/*") },
+//                onRemoveClick = { uploadedImageUri = null }
+//            )
 
             Row(
                 modifier = Modifier

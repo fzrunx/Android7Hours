@@ -422,7 +422,7 @@ fun MypageDetailHeader(
                     modifier = Modifier
                         .size(120.dp)
                         .clip(CircleShape)
-                        .border(2.dp, Color.White, CircleShape),
+                        .border(2.dp, White, CircleShape),
                     contentScale = ContentScale.Crop,
                     placeholder = painterResource(id = cR.drawable.placeholder),
                     error = painterResource(id = cR.drawable.placeholder),

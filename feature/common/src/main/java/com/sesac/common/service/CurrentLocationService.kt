@@ -181,7 +181,7 @@ class CurrentLocationService: Service() {
         val notification = NotificationCompat.Builder(this, channelId)
             .setContentTitle("사용자 위치를 10초마다 추적 중")
             .setContentText("앱이 현재 위치를 추적하고 있습니다.")
-            .setSmallIcon(R.mipmap.ic_launcher)
+            .setSmallIcon(R.drawable.image_7hours_foreground)
             /**
              * [사용자가 실수로 끄면 안 되는 중요한 작업에 대한 알림에 사용]
              * finish : stopForeground(true), NotificationManager.cancel(notificationId)

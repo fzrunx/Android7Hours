@@ -189,7 +189,7 @@ fun CommunityMainScreen(
                     }
                 }
                 CommonFilterTabs(
-                    filterOptions = listOf("전체", "인기글", "산책후기", "정보공유"),
+                    filterOptions = listOf("전체", "산책후기", "정보공유"),
                     selectedFilter = activeFilter,
                     onFilterSelected = { viewModel.onFilterChange(it) }
                 )

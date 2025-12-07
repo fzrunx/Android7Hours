@@ -19,14 +19,16 @@
     <uses-feature android:name="android.hardware.camera.autofocus" />
 
 
+    <!--        android:icon="@mipmap/ic_launcher"-->
+<!--    android:roundIcon="@mipmap/ic_launcher_round"-->
     <application
         android:name=".common.A7HApplication"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
-        android:icon="@mipmap/ic_launcher"
+        android:icon="@mipmap/image_7hours"
         android:label="@string/app_name"
-        android:roundIcon="@mipmap/ic_launcher_round"
+        android:roundIcon="@mipmap/image_7hours_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.Android7Hours"
         android:usesCleartextTraffic="true"
