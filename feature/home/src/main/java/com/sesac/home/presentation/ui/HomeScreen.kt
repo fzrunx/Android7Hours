@@ -62,27 +62,6 @@ fun HomeScreen(
     val banners by viewModel.bannerList.collectAsStateWithLifecycle()
     val pathList by viewModel.recommendPathList.collectAsStateWithLifecycle()
     val pagerState = rememberPagerState(pageCount = { banners.size })
-    val permissionState = rememberMultiplePermissionsState(
-        permissions = listOf(
-            Manifest.permission.ACCESS_FINE_LOCATION,
-            Manifest.permission.ACCESS_COARSE_LOCATION
-        )
-    )
-
-    // ✅ 로그인 상태일 때만 Service 시작
-    LaunchedEffect(uiState.isLoggedIn, permissionState.allPermissionsGranted) {
-        if (uiState.isLoggedIn && permissionState.allPermissionsGranted) {
-            viewModel.startLocationService(context)
-        } else {
-            viewModel.stopLocationService(context)
-        }
-    }
-
-    if (!permissionState.allPermissionsGranted) {
-        Button(onClick = { permissionState.launchMultiplePermissionRequest() }) {
-            Text("위치 권한 허용")
-        }
-    }
 
     LaunchedEffect(Unit) {
         viewModel.getRecommendedPaths()

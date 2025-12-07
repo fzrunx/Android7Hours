@@ -63,27 +63,25 @@ import com.sesac.common.R as cR
 class MainActivity : ComponentActivity() {
 
     private val commonViewModel: CommonViewModel by viewModels()
-    // 권한 요청 런처
+
     private val permissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
         val allGranted = permissions.all { it.value }
         if (allGranted) {
-            startLocationServiceIfNeeded()
+            // 권한 획득 시 초기 위치 1회 로드
+//            commonViewModel.fetchInitialLocation()
         } else {
-            // 권한 거부 처리
             showPermissionDeniedDialog()
         }
     }
 
-    // 권한 체크 및 요청
     private fun checkAndRequestPermissions() {
         val requiredPermissions = mutableListOf(
             Manifest.permission.ACCESS_FINE_LOCATION,
             Manifest.permission.ACCESS_COARSE_LOCATION
         )
 
-        // Android 13 이상: 알림 권한 추가
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             requiredPermissions.add(Manifest.permission.POST_NOTIFICATIONS)
         }
@@ -93,16 +91,14 @@ class MainActivity : ComponentActivity() {
         }
 
         if (deniedPermissions.isEmpty()) {
-            // 모든 권한 있음 -> Service 시작
-            startLocationServiceIfNeeded()
+            // 모든 권한이 이미 있으면 초기 위치 1회 로드
+//            commonViewModel.fetchInitialLocation()
         } else {
-            // 권한 요청
             permissionLauncher.launch(deniedPermissions.toTypedArray())
         }
     }
 
-    // Service 시작
-    private fun startLocationServiceIfNeeded() {
+    private fun startLocationService() {
         try {
             val intent = Intent(this, CurrentLocationService::class.java)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -110,7 +106,8 @@ class MainActivity : ComponentActivity() {
             } else {
                 startService(intent)
             }
-            Log.d("TAG-MainActivity", "Location service started")
+            commonViewModel.updateLocationServiceState(true)
+            Log.d("TAG-MainActivity", "Location service started.")
         } catch (e: SecurityException) {
             Log.e("TAG-MainActivity", "SecurityException: ${e.message}")
             showPermissionDeniedDialog()
@@ -119,11 +116,16 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    // 권한 거부 시 안내 다이얼로그
+    private fun stopLocationService() {
+        stopService(Intent(this, CurrentLocationService::class.java))
+        commonViewModel.updateLocationServiceState(false)
+        Log.d("TAG-MainActivity", "Location service stopped.")
+    }
+
     private fun showPermissionDeniedDialog() {
         AlertDialog.Builder(this)
             .setTitle("권한 필요")
-            .setMessage("위치 추적 서비스를 사용하려면 위치 권한과 알림 권한이 필요합니다.")
+            .setMessage("앱의 전체 기능을 사용하려면 위치 권한과 알림 권한이 필요합니다.")
             .setPositiveButton("설정으로 이동") { _, _ ->
                 openAppSettings()
             }
@@ -131,7 +133,6 @@ class MainActivity : ComponentActivity() {
             .show()
     }
 
-    // 앱 설정 화면으로 이동
     private fun openAppSettings() {
         val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
             data = Uri.fromParts("package", packageName, null)
@@ -142,11 +143,17 @@ class MainActivity : ComponentActivity() {
     @OptIn(ExperimentalPermissionsApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // 앱 시작 시 권한 요청
+        checkAndRequestPermissions()
+
         enableEdgeToEdge()
         setContent {
             val context = LocalContext.current
             val uiState by commonViewModel.uiState.collectAsStateWithLifecycle()
-         // 🔹 공통 MapView + 공통 LifecycleHelper 생성 (앱 전체 공유)
+            val isLocationServiceRunning by commonViewModel.isLocationServiceRunning.collectAsStateWithLifecycle()
+
+            // 🔹 공통 MapView + 공통 LifecycleHelper 생성 (앱 전체 공유)
             val commonMapView = remember { CommonMapView.getMapView(context) }
             val lifecycle = LocalLifecycleOwner.current.lifecycle
             val commonMapLifecycle = remember { CommonMapLifecycle(lifecycle) }
@@ -157,15 +164,35 @@ class MainActivity : ComponentActivity() {
             val startDestination = HomeNavigationRoute.HomeTab
             val navBackStackEntry by navController.currentBackStackEntryAsState()
 
+            // 서비스 실행 로직 중앙화
+            LaunchedEffect(uiState, isLocationServiceRunning) {
+                val shouldBeRunning = uiState.isLoggedIn && uiState.user?.isPet == true
+
+                if (shouldBeRunning && !isLocationServiceRunning) {
+                    startLocationService()
+                } else if (!shouldBeRunning && isLocationServiceRunning) {
+                    stopLocationService()
+                }
+            }
+
+            // 초기 위치가 확보되면 추천 경로를 미리 로드
+            val initialLocationState by commonViewModel.initialLocation.collectAsStateWithLifecycle()
+            LaunchedEffect(initialLocationState) {
+                if (initialLocationState is com.sesac.domain.result.ResponseUiState.Success) {
+                    val coord = (initialLocationState as com.sesac.domain.result.ResponseUiState.Success<com.sesac.domain.model.Coord?>).result
+                    if (coord != null) {
+                        trailViewModel.loadInitialPaths(coord)
+                    }
+                }
+            }
+
+
             val topBarActions = if (uiState.isLoggedIn) {
                 listOf(
                     TopBarAction.TextAction(text = uiState.user?.nickname ?: "User"),
                     TopBarAction.IconAction(
-//                        icon = Icons.AutoMirrored.Filled.ExitToApp,
-//                        contentDescription = "Logout",
-//                        onClick = { commonViewModel.onLogout() }
                         icon = uiState.user?.profileImageUrl ?: Icons.Default.AccountCircle,
-                        contentDescription = "Logout",
+                        contentDescription = "Mypage",
                         onClick = { navController.navigate(MypageNavigationRoute.MainTab) }
                     )
                 )
@@ -198,16 +225,6 @@ class MainActivity : ComponentActivity() {
             val isSearchOpen = remember { mutableStateOf(false) }
             val permissionStates = remember { mutableStateMapOf<String, Boolean>() }
             val isRecording by trailViewModel.isRecording.collectAsStateWithLifecycle()
-
-            // 로그인 상태 변경 시 권한 체크
-            LaunchedEffect(uiState.isLoggedIn) {
-                if (uiState.isLoggedIn) {
-                    checkAndRequestPermissions()
-                } else {
-                    stopService(Intent(context, CurrentLocationService::class.java))
-                }
-            }
-
 
             Android7HoursTheme {
                 LaunchedEffect(uiState) {

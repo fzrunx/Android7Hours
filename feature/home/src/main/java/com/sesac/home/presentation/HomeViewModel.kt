@@ -36,20 +36,6 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    fun startLocationService(context: Context) {
-        val intent = Intent(context, CurrentLocationService::class.java)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            context.startForegroundService(intent)
-        } else {
-            context.startService(intent)
-        }
-    }
-
-    fun stopLocationService(context: Context) {
-        val intent = Intent(context, CurrentLocationService::class.java)
-        context.stopService(intent)
-    }
-
     fun getRecommendedPaths() {
         viewModelScope.launch {
             pathUseCase.getAllRecommendedPathsUseCase(null, null).collectLatest { result ->

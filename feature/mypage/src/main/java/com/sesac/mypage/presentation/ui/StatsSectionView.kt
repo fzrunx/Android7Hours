@@ -126,8 +126,8 @@ fun StatCard(item: MyPathStats, modifier: Modifier = Modifier) {
 fun StatsSectionPreview() {
     val previewStats = listOf(
         MyPathStats(Icons.Default.LocationOn, "산책 거리", "42.5km", StatPurple),
-        MyPathStats(Icons.Default.Schedule, "산책 시간", "12.5시간", StatBlue),
-        MyPathStats(Icons.Default.CalendarToday, "산책 횟수", "28회", StatGreen),
+//        MyPathStats(Icons.Default.Schedule, "산책 시간", "12.5시간", StatBlue),
+//        MyPathStats(Icons.Default.CalendarToday, "산책 횟수", "28회", StatGreen),
     )
     Android7HoursTheme {
         StatsSectionView(

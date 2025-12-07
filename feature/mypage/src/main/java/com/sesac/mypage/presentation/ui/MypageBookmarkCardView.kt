@@ -67,6 +67,7 @@ import com.sesac.domain.model.BookmarkedPath
 import com.sesac.domain.model.BookmarkedPost
 import com.sesac.domain.result.AuthUiState
 import com.sesac.domain.type.BookmarkType
+import java.util.Locale
 
 @Composable
 fun BookmarkedPathCard(
@@ -145,7 +146,8 @@ fun BookmarkedPathCard(
                 Spacer(modifier = Modifier.height(paddingSmall))
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
-                        path.distance.toString(),
+//                        path.distance.toString(),
+                        String.format(Locale.getDefault(), "%.2f", path.distance/1000) + " km",
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Bold,
                         color = Primary
@@ -153,7 +155,7 @@ fun BookmarkedPathCard(
                     Spacer(modifier = Modifier.width(paddingSmall))
                     Text(
 //                        "★ ${path.rating}",
-                        path.bookmarkCount.toString(),
+                        path.bookmarkCount.toString() + " 개",
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Bold,
                         color = star
@@ -333,7 +335,7 @@ fun BookmarkedPathCardPreview() {
                 uploader = "작성자",
                 pathName = "산책로",
                 level = 3,
-                distance = 100.0,
+                distance = 1300.0,
                 duration = 80,
                 pathComment = "패스",
                 thumbnailUrl = samplePathUrl,

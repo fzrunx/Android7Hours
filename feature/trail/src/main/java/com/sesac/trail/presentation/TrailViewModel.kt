@@ -59,6 +59,7 @@ class TrailViewModel @Inject constructor(
     private val _invalidToken = Channel<UiEvent>()
     val invalidToken = _invalidToken.receiveAsFlow()
     private var lastRecommendedPathFetchLocation: LatLng? = null
+    private var areInitialPathsLoaded = false
 
     // =================================================================
     // 📌 1. 지도 녹화 관련 데이터 (MainScreen에서 사용)
@@ -228,10 +229,11 @@ class TrailViewModel @Inject constructor(
     private val _selectedPath = MutableStateFlow<Path?>(null)
     val selectedPath get() = _selectedPath.asStateFlow()
 
-//    init {
-//        getRecommendedPaths()
-//        getMyRecords()
-//    }
+    fun loadInitialPaths(coord: Coord) {
+        if (areInitialPathsLoaded) return
+        getRecommendedPaths(coord)
+        areInitialPathsLoaded = true
+    }
 
     fun getCurrentUserInfo() {
         viewModelScope.launch {
@@ -1187,4 +1189,3 @@ class TrailViewModel @Inject constructor(
     }
 
 }
-

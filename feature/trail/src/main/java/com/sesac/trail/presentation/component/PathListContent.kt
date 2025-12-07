@@ -222,7 +222,7 @@ fun PathItem(
                     // m 단위를 km로 변환하여 표시
                     val distanceInKm = "%.1f".format(path.distance / 1000f)
                     InfoChip(icon = Icons.Outlined.Route, text = "${distanceInKm}km", iconTint = ColorGreen)
-                    InfoChip(icon = Icons.Outlined.Timer, text = "${path.duration}분", iconTint = ColorBlue)
+                    InfoChip(icon = Icons.Outlined.Timer, text = "${path.duration/60}분", iconTint = ColorBlue)
                     InfoChip(icon = Icons.Outlined.BarChart, text = "난이도 ${path.level}", iconTint = ColorOrange)
                 }
 
@@ -306,7 +306,7 @@ private fun InfoChip(
 fun PathListContentPreview() {
     Android7HoursTheme {
         PathListContent(
-            paths = listOf(Path.EMPTY),
+            paths = listOf(Path.EMPTY.copy(duration = 120)),
             currentUser = User(username = "tt", nickname = "nn", fullName = "name", email = ""),
             onPathClick = {},
             onDeleteClick = {},
