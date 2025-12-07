@@ -178,7 +178,14 @@ class AuthViewModel @Inject constructor(
                             _joinUiState.value = JoinUiState.Success("Login successful!")
                         }
                         is AuthResult.NetworkError -> {
-                            _joinUiState.value = JoinUiState.Error(result.exception.message ?: "Network Error")
+//                            _joinUiState.value = JoinUiState.Error(result.exception.message ?: "Network Error")
+                            val errorMassage = result.exception.message?: "Unknown Error"
+                            val resultMessage = when {
+                                errorMassage.contains("Bad Request") -> "아이디 혹은 비밀번호가 잘못되었습니다."
+                                errorMassage.contains("Failed to connect") -> "네트워크 연결을 확인해주세요"
+                                else -> "알수없는 오류"
+                            }
+                            _joinUiState.value = JoinUiState.Error(resultMessage)
                         }
                         is AuthResult.Loading -> {
                             _joinUiState.value = JoinUiState.Loading

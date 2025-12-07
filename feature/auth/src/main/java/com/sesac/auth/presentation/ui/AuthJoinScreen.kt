@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -67,6 +68,7 @@ fun AuthJoinScreen(
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
+            .imePadding()
             .padding(horizontal = 24.dp, vertical = 32.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(paddingLarge)
@@ -143,8 +145,8 @@ fun AuthJoinScreen(
         CommonLabelledTextField(
             value = formState.invitationCode,
             onValueChange = viewModel::onInvitationCodeChange,
-            labelContent = { Text("초대 코드 (선택)") },
-            placeholder = { Text("초대 코드가 있다면 입력해주세요") }
+            labelContent = { Text("펫 등록 코드 (선택)") },
+            placeholder = { Text("펫 등록 코드가 있다면 입력해주세요") }
         )
 
         Spacer(modifier = Modifier.height(paddingSmall))

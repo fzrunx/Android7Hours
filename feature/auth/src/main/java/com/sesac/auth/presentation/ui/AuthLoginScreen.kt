@@ -1,5 +1,12 @@
 package com.sesac.auth.presentation.ui
 
+import android.content.Context
+import android.content.pm.PackageManager
+import android.content.pm.Signature
+import android.os.Build
+import android.util.Base64
+import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -7,14 +14,24 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.DirectionsRun
+import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material.icons.rounded.DirectionsRun
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton // [추가] 텍스트 버튼
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -25,56 +42,52 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color // [추가] 색상 지정을 위해
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalInspectionMode
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.style.TextAlign
 import androidx.navigation.NavController
+import com.kakao.sdk.common.model.ClientError
+import com.kakao.sdk.common.model.ClientErrorCause
+import com.kakao.sdk.user.UserApiClient
 import com.sesac.auth.nav_graph.AuthNavigationRoute
 import com.sesac.auth.presentation.AuthViewModel
-import com.sesac.domain.result.JoinUiState
 import com.sesac.common.R
+import com.sesac.common.ui.theme.TextSecondary
+import com.sesac.common.ui.theme.White
+import com.sesac.common.ui.theme.iconSizeLarge
+import com.sesac.common.ui.theme.paddingExtraLarge
 import com.sesac.common.ui.theme.paddingLarge
 import com.sesac.common.ui.theme.paddingMedium
 import com.sesac.common.ui.theme.paddingSmall
-
-// --- 카카오 SDK import ---
-import android.util.Log
-import android.widget.Toast
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalInspectionMode
-import com.kakao.sdk.common.model.ClientError
-import com.kakao.sdk.common.model.ClientErrorCause
-import com.kakao.sdk.auth.model.OAuthToken
-import android.content.pm.PackageManager
-import android.content.pm.Signature
-import android.os.Build
-import android.util.Base64
-import com.kakao.sdk.user.UserApiClient
+import com.sesac.domain.result.JoinUiState
 import java.security.MessageDigest
-// ---
 
 @Composable
 fun AuthLoginScreen(
     viewModel: AuthViewModel,
     navController: NavController,
     onLoginSuccess: () -> Unit,
-    onNavigateToFindAccount: () -> Unit // [추가] 아이디/비번 찾기 화면으로 이동하는 콜백
+    onNavigateToFindAccount: () -> Unit
 ) {
     val email by remember { viewModel.loginEmail }
     val password by remember { viewModel.loginPassword }
     val uiState by viewModel.joinUiState.collectAsState()
-
-    // --- 카카오 로그인 전용 로직 (기존 코드 유지) ---
     var isLoading by remember { mutableStateOf(false) }
     val context = LocalContext.current
 
+    // 카카오 SDK 해시키 로깅 (개발용)
     if (!LocalInspectionMode.current) {
         LaunchedEffect(Unit) {
-            // (해시 키 로깅 로직 생략 - 기존과 동일)
+//            logHashKey(context)
         }
     }
-    // ---
 
     DisposableEffect(Unit) {
         viewModel.resetUiState()
@@ -93,80 +106,177 @@ fun AuthLoginScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(paddingLarge),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
+            .verticalScroll(rememberScrollState()) // 1. 스크롤 가능하도록 변경
+            .imePadding() // 2. 키보드가 올라올 때 화면이 가려지지 않도록 패딩 추가
+            .padding(horizontal = paddingLarge),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center // 키보드가 없을 때 콘텐츠를 화면 중앙에 배치
     ) {
-        Text(stringResource(R.string.auth_login_button), style = MaterialTheme.typography.headlineMedium)
-        Spacer(modifier = Modifier.height(paddingLarge))
+        // 1. 로고 및 앱 이름
+        Icon(
+            painterResource(R.drawable.image7hours),
+            contentDescription = "App Logo",
+            modifier = Modifier.size(iconSizeLarge),
+//            tint = MaterialTheme.colorScheme.primary,
+            tint = Color.Unspecified,
+        )
+        Spacer(modifier = Modifier.height(paddingMedium))
+        Text(
+            text = stringResource(id = R.string.app_name),
+            style = MaterialTheme.typography.headlineLarge
+        )
+        Spacer(modifier = Modifier.height(paddingExtraLarge))
 
+        // 2. 입력 필드
         OutlinedTextField(
             value = email,
             onValueChange = { viewModel.loginEmail.value = it },
+            modifier = Modifier.fillMaxWidth(),
+            label = { Text(stringResource(R.string.auth_join_email_label)) },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-            maxLines = 1,
-            label = { Text(stringResource(R.string.auth_join_email_label)) }
+            singleLine = true,
         )
         Spacer(modifier = Modifier.height(paddingSmall))
 
         OutlinedTextField(
             value = password,
             onValueChange = { viewModel.loginPassword.value = it },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+            modifier = Modifier.fillMaxWidth(),
+            label = { Text(stringResource(R.string.auth_join_password_label)) },
             visualTransformation = PasswordVisualTransformation(),
-            maxLines = 1,
-            label = { Text(stringResource(R.string.auth_join_password_label)) }
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+            singleLine = true,
         )
         Spacer(modifier = Modifier.height(paddingLarge))
 
-        // --- 로딩 및 버튼 영역 ---
+        // 3. 로딩 인디케이터 또는 버튼 영역
         if (uiState is JoinUiState.Loading || isLoading) {
-            CircularProgressIndicator()
+            CircularProgressIndicator(modifier = Modifier.padding(vertical = paddingLarge))
         } else {
-            // 1. 로그인 & 회원가입 버튼 행
-            Row(horizontalArrangement = Arrangement.SpaceEvenly, modifier = Modifier.fillMaxWidth()) {
-                Button(onClick = { viewModel.onLoginClick() }) {
-                    Text(stringResource(R.string.auth_login_button))
-                }
-                Button(
-                    modifier = Modifier.padding(horizontal = paddingMedium),
-                    onClick = { navController.navigate(AuthNavigationRoute.JoinTab) },
-                ) {
-                    Text(stringResource(R.string.auth_signup_button))
-                }
-            }
-
-            // [추가] 2. 아이디/비밀번호 찾기 버튼 (텍스트 버튼 형태)
-            TextButton(
-                onClick = onNavigateToFindAccount,
-                modifier = Modifier.padding(vertical = paddingSmall)
+            // 로그인 버튼
+            Button(
+                onClick = { viewModel.onLoginClick() },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(iconSizeLarge)
             ) {
                 Text(
-                    text = "아이디 / 비밀번호 찾기",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = Color.Gray // 너무 튀지 않게 회색 처리
+                    text = stringResource(R.string.auth_login_button),
+                    style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold),
+                    color = White,
                 )
+            }
+            Spacer(modifier = Modifier.height(paddingMedium))
+
+            // 카카오 로그인 버튼
+            Button(
+                onClick = {
+                    handleKakaoLogin(context, { accessToken ->
+                        viewModel.onKakaoLoginSuccess(accessToken)
+                    }) {
+                        isLoading = false
+                    }
+                    isLoading = true
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(iconSizeLarge),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFEE500))
+            ) {
+                Text("카카오 로그인", color = Color.Black, style = MaterialTheme.typography.bodyLarge)
             }
         }
 
-        // 에러 메시지
+        // 4. 에러 메시지
         if (uiState is JoinUiState.Error) {
-            Spacer(modifier = Modifier.height(paddingSmall))
-            Text((uiState as JoinUiState.Error).message, color = MaterialTheme.colorScheme.error)
+            Toast.makeText(context, (uiState as JoinUiState.Error).message, Toast.LENGTH_SHORT)
+                .show()
         }
 
-        Spacer(modifier = Modifier.height(paddingLarge))
 
-        // --- 카카오 로그인 버튼 ---
-        Button(
-            onClick = {
-                // (카카오 로그인 로직 생략 - 기존과 동일)
-                isLoading = true
-                // ... (생략) ...
-            },
-            modifier = Modifier.fillMaxWidth()
+        // 5. 회원가입 및 계정 찾기
+
+        Row(
+            modifier = Modifier.padding(top = paddingSmall),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Text("Kakao Login")
+            TextButton(onClick = { navController.navigate(AuthNavigationRoute.JoinTab) }) {
+                Text(stringResource(id = R.string.auth_signup_button))
+            }
+            Text("|", color = TextSecondary)
+            TextButton(onClick = onNavigateToFindAccount) {
+                Text(stringResource(R.string.auth_find_id_and_password))
+            }
         }
+    }
+}
+/**
+ * Kakao Login 로직을 처리하는 Helper 함수
+ */
+private fun handleKakaoLogin(
+    context: Context,
+    onSuccess: (String) -> Unit,
+    onFailure: () -> Unit
+) {
+    if (UserApiClient.instance.isKakaoTalkLoginAvailable(context)) {
+        UserApiClient.instance.loginWithKakaoTalk(context) { token, error ->
+            if (error != null) {
+                Log.e("KakaoLogin", "카카오톡으로 로그인 실패", error)
+                if (error is ClientError && error.reason == ClientErrorCause.Cancelled) {
+                    onFailure()
+                    return@loginWithKakaoTalk
+                }
+                // 카톡 로그인 실패 시 계정 로그인으로 fallback
+                loginWithKakaoAccount(context, onSuccess, onFailure)
+            } else if (token != null) {
+                Log.i("KakaoLogin", "카카오톡으로 로그인 성공 ${token.accessToken}")
+                onSuccess(token.accessToken)
+            }
+        }
+    } else {
+        loginWithKakaoAccount(context, onSuccess, onFailure)
+    }
+}
+
+private fun loginWithKakaoAccount(
+    context: Context,
+    onSuccess: (String) -> Unit,
+    onFailure: () -> Unit
+) {
+    UserApiClient.instance.loginWithKakaoAccount(context) { token, error ->
+        if (error != null) {
+            Log.e("KakaoLogin", "카카오계정으로 로그인 실패", error)
+            onFailure()
+        } else if (token != null) {
+            Log.i("KakaoLogin", "카카오계정으로 로그인 성공 ${token.accessToken}")
+            onSuccess(token.accessToken)
+        }
+    }
+}
+
+/**
+ * Kakao SDK에 등록할 해시키를 Logcat에 출력합니다.
+ */
+private fun logHashKey(context: Context) {
+    try {
+        val packageInfo = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            context.packageManager.getPackageInfo(
+                context.packageName,
+                PackageManager.PackageInfoFlags.of(PackageManager.GET_SIGNATURES.toLong())
+            )
+        } else {
+            @Suppress("DEPRECATION")
+            context.packageManager.getPackageInfo(
+                context.packageName,
+                PackageManager.GET_SIGNATURES
+            )
+        }
+//        val signature: Signature = packageInfo.signatures?.first() ?: Signature()
+//        val md = MessageDigest.getInstance("SHA")
+//        md.update(signature.toByteArray())
+//        Log.d("HashKey", "KeyHash: ${Base64.encodeToString(md.digest(), Base64.DEFAULT)}")
+    } catch (e: Exception) {
+        Log.e("HashKey", "Hash key retrieval failed", e)
     }
 }

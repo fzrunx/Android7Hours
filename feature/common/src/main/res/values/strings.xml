@@ -2,6 +2,7 @@
 
 
 <resources>
+    <string name="app_name">7Hours</string>
     <!-- ========= Home ========== -->
     <string name="home_carousel_title_trail_recommendation" >산책로 추천</string>
     <string name="home_carousel_title_community_recommendation">커뮤니티</string>
@@ -115,6 +116,7 @@
     <string name="auth_join_phone_label">전화번호 (선택)</string>
     <string name="auth_join_submit_button">가입하기</string>
     <string name="auth_login_button">Log in</string>
+    <string name="auth_find_id_and_password">아이디/비밀번호 찾기</string>
     <string name="auth_signup_button">회원 가입</string>
     <string name="auth_signout_button">회원 탈퇴</string>
     <string name="auth_logout_button">로그아웃</string>
