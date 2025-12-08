@@ -1,0 +1,5 @@
+package com.sesac.domain.usecase.home
+
+data class HomeUseCase(
+    val getAllBannersUseCase: GetAllBannersUseCase,
+)

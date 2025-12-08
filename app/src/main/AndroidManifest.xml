@@ -1,27 +1,81 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
+    <!--권한 부분 집어넣어야 함 -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
+    <!-- WebRTC 필수 권한 -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
+
+    <!-- WebRTC 하드웨어 기능 명시 -->
+    <uses-feature android:name="android.hardware.camera" />
+    <uses-feature android:name="android.hardware.camera.autofocus" />
+
+
+    <!--        android:icon="@mipmap/ic_launcher"-->
+<!--    android:roundIcon="@mipmap/ic_launcher_round"-->
     <application
+        android:name=".common.A7HApplication"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
-        android:icon="@mipmap/ic_launcher"
+        android:icon="@mipmap/image_7hours"
         android:label="@string/app_name"
-        android:roundIcon="@mipmap/ic_launcher_round"
+        android:roundIcon="@mipmap/image_7hours_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.Android7Hours">
-        <activity
-            android:name=".MainActivity"
+        android:theme="@style/Theme.Android7Hours"
+        android:usesCleartextTraffic="true"
+        tools:targetApi="31">
+
+        <activity android:name=".SplashActivity"
             android:exported="true"
-            android:label="@string/app_name"
-            android:theme="@style/Theme.Android7Hours">
+            android:screenOrientation="portrait"
+            tools:ignore="DiscouragedApi,LockedOrientationActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <activity
+            android:name=".MainActivity"
+            android:exported="false"
+            android:theme="@style/Theme.Android7Hours">
+        </activity>
+
+        <service
+            android:name="com.sesac.common.service.CurrentLocationService"
+            android:enabled="true"
+            android:foregroundServiceType="location"
+            tools:ignore="ExportedService"
+            android:stopWithTask="false"/>
+
+        <!--여기 meta-data 부분 인증 정보 집어넣어야 함 -->
+        <meta-data
+            android:name="com.naver.maps.map.NCP_KEY_ID"
+            android:value="${NAVER_MAPS_API_KEY}" />
+
+        <activity
+            android:name="com.kakao.sdk.auth.AuthCodeHandlerActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data
+                    android:host="oauth"
+                    android:scheme="kakaoed184dc28ad9ddca367ba81671a4c137" />
+            </intent-filter>
+        </activity>
+
+
     </application>
 
 </manifest>
